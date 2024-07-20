@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Perform optimal global alignment of two nucleotide \
 or amino acid sequences using the Needleman-Wunsch algorithm.
+
+References:
+https://web.stanford.edu/class/cs262/archives/presentations/lecture3.pdf
+https://ocw.mit.edu/courses/6-096-algorithms-for-computational-biology-spring-2005/01f55f348ea1e95f7015bd1b40586012_lecture5.pdf
 """
 
 import sys
@@ -51,6 +55,43 @@ def moves_to_result(moves:list) -> tuple[str]:
     'game' of the alignment of the two sequences,
 
     """
+
+def init_partial_dynamic_prog_matrix(
+    gap_existence_cost:int, 
+    seq_1:str,
+    seq_2:str,
+    scoring_mat:dict[dict], 
+    dynamic_prog_num_cols:int
+) -> list[list]:
+    
+    mat = [
+        [0]*(dynamic_prog_num_cols) for i in range(2)
+    ]
+    # Take care of initialization with gap scores.
+  
+    # Loop prep
+    # Start in column 1
+    j = 1
+    gap_score_cum_sum = 0
+
+    seq_2_index = j - 1
+    cur_gap_score = -gap_existence_cost + scoring_mat["-"][seq_2[seq_2_index]]
+    mat[0][j] = cur_gap_score
+
+    for j in range(2, dynamic_prog_num_cols):
+        # Prep for this iteration
+        # The sequence indices are always one behind
+        # the row/column indices.
+        seq_2_index = j - 1
+        gap_score_cum_sum += cur_gap_score
+
+        # body of loop
+        cur_gap_score = cur_gap_score + scoring_mat["-"][seq_2[seq_2_index]]
+        mat[0][j] = cur_gap_score
+
+    mat[1][0] = -gap_existence_cost + scoring_mat[seq_1[0]]["-"]
+    return mat
+
 
 if __name__ == "__main__":
     sys.exit(main())
