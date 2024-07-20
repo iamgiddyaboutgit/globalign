@@ -64,6 +64,7 @@ def init_partial_dynamic_prog_matrix(
     dynamic_prog_num_cols:int
 ) -> list[list]:
     
+    # https://www.freecodecamp.org/news/list-within-a-list-in-python-initialize-a-nested-list/
     mat = [
         [0]*(dynamic_prog_num_cols) for i in range(2)
     ]
