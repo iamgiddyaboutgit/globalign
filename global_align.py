@@ -46,7 +46,7 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
     # Check that the product of the lengths of the sequences does
     # not exceed 400_000_000. If it does, then error.
     # Read in scoring matrix file.
-    read_scoring_mat(scoring_mat_path=path_to_score_matrix_file)
+    scoring_mat = read_scoring_mat(scoring_mat_path=path_to_score_matrix_file)
     # Verify format of scoring matrix file.
     # Get the data from the scoring matrix into a nested dictionary
     # with codes for the letters as keys.
