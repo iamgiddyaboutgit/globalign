@@ -47,6 +47,7 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
     # not exceed 400_000_000. If it does, then error.
     # Read in scoring matrix file.
     scoring_mat = read_scoring_mat(scoring_mat_path=path_to_score_matrix_file)
+    
     # Verify format of scoring matrix file.
     # Get the data from the scoring matrix into a nested dictionary
     # with codes for the letters as keys.
@@ -75,24 +76,38 @@ def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
     with scoring_mat_path.open() as f:
         header = f.readline()
         letters = header.upper().split()
+        # Check that we do have single characters in letters.
+        if not all([len(letter) == 1 for letter in letters]):
+            raise RuntimeError("The header row did not have single letters spaced apart.")
         scoring_mat = dict.fromkeys(letters)
 
+        # Prep for loop
+        outer_dict_letter_id = -1
         for line in f:
+            # Prep for this iteration
+            outer_dict_letter_id += 1
+            # Body of loop
             split_line = line.split()
 
             outer_dict_letter = split_line[0]
+            # Check that the outer_dict_letter was also 
+            # present in the header in the same
+            # relative position.
+            if not (outer_dict_letter == letters[outer_dict_letter_id]):
+                raise RuntimeError("Row headers do not match column headers.")
+
             # Make inner dict for this line's outer_dict_letter.
             scoring_mat[outer_dict_letter] = dict.fromkeys(letters)
             # prep for loop
-            letter_id = 0
+            inner_dict_letter_id = 0
             for inner_dict_letter in letters:
                 # prep for iteration
-                letter_id += 1
+                inner_dict_letter_id += 1
                 # loop body
                 inner_dict_letter_2 = inner_dict_letter.upper()
                 # Get the score for outer_dict_letter paired 
                 # with inner_dict_letter.
-                score = int(split_line[letter_id])
+                score = int(split_line[inner_dict_letter_id])
                 
                 # Place values into inner dict for the current inner_dict_letter.
                 scoring_mat[outer_dict_letter][inner_dict_letter_2] = score
