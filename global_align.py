@@ -8,6 +8,8 @@ https://ocw.mit.edu/courses/6-096-algorithms-for-computational-biology-spring-20
 """
 
 import sys
+import argparse
+from pathlib import Path
 
 # The cost for a gap just to exist.
 # This cost should be non-negative.
@@ -17,6 +19,25 @@ import sys
 GAP_EXISTENCE_COST = 0
 
 def main():
+    usage = "Perform optimal global alignment of two nucleotide \
+or amino acid sequences using the Needleman-Wunsch algorithm."
+    # Create an object to store arguments passed from the command 
+    # line.
+    parser = argparse.ArgumentParser(description=usage)
+    # The nargs="+" here allows all command-line args present 
+    # to be gathered into a list. Additionally, an error message 
+    # will be generated if there wasn’t at least one command-line 
+    # argument present.
+    parser.add_argument(
+        "-s", 
+        required=True,
+        help="file path to scoring matrix text file"
+    ) 
+
+    cmd_line_args = parser.parse_args()
+
+    path_to_score_matrix_file = Path(cmd_line_args.s)
+    
     # Read in FASTA file.
     # Verify FASTA file is in the correct format.
     # Extract sequences.
@@ -25,6 +46,7 @@ def main():
     # Check that the product of the lengths of the sequences does
     # not exceed 400_000_000. If it does, then error.
     # Read in scoring matrix file.
+    read_scoring_mat(scoring_mat_path=path_to_score_matrix_file)
     # Verify format of scoring matrix file.
     # Get the data from the scoring matrix into a nested dictionary
     # with codes for the letters as keys.
@@ -44,6 +66,38 @@ def main():
 
 
     ...
+
+def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
+    """Read in scoring matrix."""
+    if not scoring_mat_path.is_file():
+        raise FileNotFoundError("scoring_mat_path does not point to a valid file.")
+    
+    with scoring_mat_path.open() as f:
+        header = f.readline()
+        letters = header.upper().split()
+        scoring_mat = dict.fromkeys(letters)
+
+        for line in f:
+            split_line = line.split()
+
+            outer_dict_letter = split_line[0]
+            # Make inner dict for this line's outer_dict_letter.
+            scoring_mat[outer_dict_letter] = dict.fromkeys(letters)
+            # prep for loop
+            letter_id = 0
+            for inner_dict_letter in letters:
+                # prep for iteration
+                letter_id += 1
+                # loop body
+                inner_dict_letter_2 = inner_dict_letter.upper()
+                # Get the score for outer_dict_letter paired 
+                # with inner_dict_letter.
+                score = int(split_line[letter_id])
+                
+                # Place values into inner dict for the current inner_dict_letter.
+                scoring_mat[outer_dict_letter][inner_dict_letter_2] = score
+             
+    return scoring_mat
 
 def align(
     seq_1:str, 
