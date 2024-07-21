@@ -10,6 +10,7 @@ https://ocw.mit.edu/courses/6-096-algorithms-for-computational-biology-spring-20
 import sys
 import argparse
 from pathlib import Path
+import math
 
 def main():
     usage = "Perform optimal global alignment of two nucleotide \
@@ -56,9 +57,7 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
             desc_2, seq_2 = desc_and_seq
         else:
             break
-   
-    print("seq_2")
-    print(seq_2)
+
     # Verify FASTA file is in the correct format.
     # Extract sequences.
     # Verify sequences are formatted correctly.
@@ -202,84 +201,6 @@ def read_seq_from_fasta(fasta_path:Path):
             raise RuntimeError("Empty sequence detected in FASTA.")
         
         yield (desc, seq)
-
-        
-    # with fasta_path.open() as f:
-    #     # Prep for loop
-    #     desc = None
-    #     seq_list = []
-
-    #     # Get the first desc.
-    #     line = f.readline()
-    #     line_stripped = line.strip()
-
-    #     is_desc = line_stripped.startswith(">")
-    #     if not is_desc:
-    #         raise RuntimeError("Invalid FASTA format. Expected the first line to start with '>'.")
-        
-    #     desc = line_stripped
-  
-    #     for line in f:
-    #         line_stripped = line.strip()
-    #         is_desc = line_stripped.startswith(">")
-    #         is_seq = (not is_desc) and (line_stripped != "")
-            
-    #         if is_seq:
-    #             # Append what is there and then
-    #             # go to the next line to possibly
-    #             # append more.
-    #             seq_list.append(line_stripped)
-    #             continue
-    #         elif is_desc:
-    #             desc = line_stripped
-    #             seq = "".join(seq_list)
-    #             yield (desc, seq)
-
-    #     # We have consumed the entire FASTA file.        
-    #     seq = "".join(seq_list)
-    #     yield (desc, seq)
-        
-        ###########
-
-        #     is_seq = (not is_desc) and line_stripped.isalpha() 
-            
-        #     if is_seq:
-        #         # Append what is there and then
-        #         # go to the next line to possibly
-        #         # append more.
-        #         seq_list.append(line_stripped)
-        #         continue
-        #     elif is_desc:
-        #         desc = line_stripped
-
-        #     seq = "".join(seq_list)
-        #     if desc is not None and seq is not None:
-        #         yield (desc, seq)
-        #         desc = None
-        #         seq = None
-
-        # for line in f:
-        #     line_stripped = line.strip()
-        #     is_desc = line_stripped.startswith(">")
-        #     is_seq = (not is_desc) and line_stripped.isalpha() 
-            
-        #     if is_seq:
-        #         # Append what is there and then
-        #         # go to the next line to possibly
-        #         # append more.
-        #         seq_list.append(line_stripped)
-        #         continue
-        #     elif is_desc:
-        #         desc = line_stripped
-
-        #     seq = "".join(seq_list)
-        #     if desc is not None and seq is not None:
-        #         yield (desc, seq)
-        #         desc = None
-        #         seq = None
-
-
-    
 
 
 def align(
@@ -543,14 +464,33 @@ def init_partial_dynamic_prog_matrix(
     mat[1][0] = -gap_existence_cost + scoring_mat[seq_1[0]]["-"]
     return mat
 
-def print_alignment(desc_1:str, desc_2:str, alignment:tuple[str, str, str, int]):
+def print_alignment(desc_1:str, desc_2:str, alignment:tuple[str, str, str, int], chars_per_line:int=70):
     # TODO: Handle long alignments with proper line breaking.
     print(desc_1)
     print(desc_2)
     print("")
-    print(alignment[0])
-    print(alignment[1])
-    print(alignment[2])
+
+    seq_1_aligned, mid, seq_2_aligned, score = alignment
+    alignment_len = len(seq_1_aligned)
+    num_sets_needed = math.ceil(alignment_len / chars_per_line)
+    
+    # Prep for loop
+    lower = 0
+    if num_sets_needed == 1:
+        upper = None
+    else:   
+        upper = chars_per_line
+
+    for u in range(num_sets_needed):
+        # Loop body
+        print(seq_1_aligned[lower:upper])
+        print(mid[lower:upper])
+        print(seq_2_aligned[lower:upper])
+        # Prep for next iteration
+        print("")
+        lower = upper
+        upper = lower + chars_per_line
+
     print(f"score={str(alignment[3])}")
 
 
