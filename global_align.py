@@ -269,7 +269,7 @@ def align(
     # aligns with seq_2[j].
     # 
     # To be find the best score up to a certain point, we consider
-    # the max(partial_A_mat[i][j], partial_B_mat[i][j], partial_C_mat[i][j]).
+    # the max(partial_C_mat[i][j], partial_A_mat[i][j], partial_B_mat[i][j]).
     partial_A_mat, partial_B_mat, partial_C_mat = (init_partial_dynamic_prog_matrix(
         gap_existence_cost=gap_existence_cost,
         seq_1=seq_1,
@@ -285,11 +285,15 @@ def align(
     # the best_paths_mat.)  We only need to keep two rows each of 
     # partial_A_mat, partial_B_mat, and partial_C_mat in memory 
     # at a time.
-    best_paths_mat = [[0]*dynamic_prog_num_cols for i in range(dynamic_prog_num_rows)]
+    best_paths_mat = [[1]*dynamic_prog_num_cols for i in range(dynamic_prog_num_rows)]
 
-    # Get 1's in the beginning of each row.
+    
+    # Based on the order of arguments to every
+    # call to max, we decide to put 
+    # 2's in the beginning of each row
+    # because 2 indicates moving up.
     for i in range(1, dynamic_prog_num_rows):
-        best_paths_mat[i][0] = 1
+        best_paths_mat[i][0] = 2
 
     # Pre loop
     i = 1
@@ -303,38 +307,47 @@ def align(
 
         # body of loop
         # Consider partial_A_mat
+        # Always do the max operations with partial_C_mat first
+        # because a max there is better than the same max somewhere else.
         partial_A_mat[partial_mat_cur_row_id][j] = max(
+            partial_C_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
             partial_A_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]],
-            partial_B_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
-            partial_C_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
+            partial_B_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
         )
 
         # Consider partial_B_mat
         partial_B_mat[partial_mat_cur_row_id][j] = max(
+            partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
             partial_A_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
-            partial_B_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]],
-            partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
+            partial_B_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]]
         )
 
         # Consider partial_C_mat
         prev_best = max(
+            partial_C_mat[partial_mat_prev_row_id][j - 1],
             partial_A_mat[partial_mat_prev_row_id][j - 1],
-            partial_B_mat[partial_mat_prev_row_id][j - 1],
-            partial_C_mat[partial_mat_prev_row_id][j - 1]
+            partial_B_mat[partial_mat_prev_row_id][j - 1]
         )
         partial_C_mat[partial_mat_cur_row_id][j] = scoring_mat[seq_1[seq_1_index]][seq_2[seq_2_index]] + prev_best
         
         # Choose the best move.
         possible_new_scores = [
-            partial_A_mat[partial_mat_cur_row_id][j],
-            partial_B_mat[partial_mat_cur_row_id][j],
             partial_C_mat[partial_mat_cur_row_id][j],
+            partial_A_mat[partial_mat_cur_row_id][j],
+            partial_B_mat[partial_mat_cur_row_id][j]
         ]
         max_possible_new_score = max(possible_new_scores)
         
         best_type_of_path = possible_new_scores.index(max_possible_new_score)
         
         best_paths_mat[i][j] = best_type_of_path
+
+        # print("partial_A_mat")
+        # print(partial_A_mat)
+        # print("partial_B_mat")
+        # print(partial_B_mat)
+        # print("partial_C_mat")
+        # print(partial_C_mat)
 
     for i in range(2, dynamic_prog_num_rows):
         # Prep for a new row iteration.
@@ -354,37 +367,45 @@ def align(
             # body of loop
             # Consider partial_A_mat
             partial_A_mat[partial_mat_cur_row_id][j] = max(
+                partial_C_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
                 partial_A_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]],
-                partial_B_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
-                partial_C_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
+                partial_B_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
             )
 
             # Consider partial_B_mat
             partial_B_mat[partial_mat_cur_row_id][j] = max(
+                partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
                 partial_A_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
-                partial_B_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]],
-                partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
+                partial_B_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]]
             )
 
             # Consider partial_C_mat
             prev_best = max(
+                partial_C_mat[partial_mat_prev_row_id][j - 1],
                 partial_A_mat[partial_mat_prev_row_id][j - 1],
-                partial_B_mat[partial_mat_prev_row_id][j - 1],
-                partial_C_mat[partial_mat_prev_row_id][j - 1]
+                partial_B_mat[partial_mat_prev_row_id][j - 1]
             )
             partial_C_mat[partial_mat_cur_row_id][j] = scoring_mat[seq_1[seq_1_index]][seq_2[seq_2_index]] + prev_best
             
             # Choose the best move.
             possible_new_scores = [
-                partial_A_mat[partial_mat_cur_row_id][j],
-                partial_B_mat[partial_mat_cur_row_id][j],
                 partial_C_mat[partial_mat_cur_row_id][j],
+                partial_A_mat[partial_mat_cur_row_id][j],
+                partial_B_mat[partial_mat_cur_row_id][j]
             ]
             max_possible_new_score = max(possible_new_scores)
-            
+            print("max_possible_new_score")
+            print(max_possible_new_score)
             best_type_of_path = possible_new_scores.index(max_possible_new_score)
             
             best_paths_mat[i][j] = best_type_of_path
+
+            # print("partial_A_mat")
+            # print(partial_A_mat)
+            # print("partial_B_mat")
+            # print(partial_B_mat)
+            # print("partial_C_mat")
+            # print(partial_C_mat)
 
     score = max_possible_new_score
 
@@ -400,6 +421,13 @@ def align(
     seq_1_index = m - 1
     seq_2_index = n - 1
 
+    print("seq_1")
+    print(seq_1)
+    print("seq_2")
+    print(seq_2)
+    print("best_paths_mat")
+    print(best_paths_mat)
+
     for w in range(num_alignment_moves):
         # Prep for this iteration.
         # Because of the initial row and column in
@@ -412,16 +440,7 @@ def align(
         path_indicator = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
 
         if path_indicator == 0:
-            middle_part.append(" ")
-            seq_1_aligned.append("-")
-            seq_2_aligned.append(seq_2[seq_2_index])
-            seq_2_index -= 1
-        elif path_indicator == 1:
-            middle_part.append(" ")
-            seq_1_aligned.append(seq_1[seq_1_index])
-            seq_1_index -= 1
-            seq_2_aligned.append("-")
-        else:
+            # match/mismatch is the best move
             seq_1_letter = seq_1[seq_1_index]
             seq_2_letter = seq_2[seq_2_index]
             if seq_1_letter == seq_2_letter:
@@ -435,6 +454,19 @@ def align(
             seq_1_index -= 1
             seq_2_aligned.append(seq_2[seq_2_index])
             seq_2_index -= 1
+        elif path_indicator == 1:
+            # gap in seq_1 is the best move
+            middle_part.append(" ")
+            seq_1_aligned.append("-")
+            seq_2_aligned.append(seq_2[seq_2_index])
+            seq_2_index -= 1
+        else:
+            # gap in seq_2 is the best move
+            middle_part.append(" ")
+            seq_1_aligned.append(seq_1[seq_1_index])
+            seq_1_index -= 1
+            seq_2_aligned.append("-")
+
 
     seq_1_aligned.reverse()
     middle_part.reverse()
@@ -469,7 +501,6 @@ def init_partial_dynamic_prog_matrix(
     # Loop prep
     # Start in column 1
     j = 1
-    gap_score_cum_sum = 0
 
     seq_2_index = j - 1
     cur_gap_score = -gap_existence_cost + scoring_mat["-"][seq_2[seq_2_index]]
@@ -480,7 +511,6 @@ def init_partial_dynamic_prog_matrix(
         # The sequence indices are always one behind
         # the row/column indices.
         seq_2_index = j - 1
-        gap_score_cum_sum += cur_gap_score
 
         # body of loop
         cur_gap_score = cur_gap_score + scoring_mat["-"][seq_2[seq_2_index]]
