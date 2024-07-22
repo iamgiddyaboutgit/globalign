@@ -96,16 +96,19 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
     # should be greater than or equal to the other entries in the row.
     if not check_big_main_diag(mat=scoring_mat):
         raise RuntimeError("The scoring matrix does not make sense because the maximum for each row does not occur on the main diagonal.")
-    # Determine whether we are aligning amino acid residues
-    # or nucleotides by checking both sequences and the
-    # scoring matrix.  If there's a mismatch, then 
-    # raise an exception.  In other words, the sequences
-    # should only contain letters present in the scoring matrix.
+    # Check that the sequences
+    # only contain letters present in the scoring matrix.
     scoring_mat_letters = scoring_mat.keys()
-    if not all([letter in scoring_mat_letters for letter in seq_1]):
-        raise RuntimeError("There were letters in seq_1 not present in scoring_mat.")
-    if not all([letter in scoring_mat_letters for letter in seq_2]):
-        raise RuntimeError("There were letters in seq_2 not present in scoring_mat.")
+    seq_1_letter_ok = [letter in scoring_mat_letters for letter in seq_1]
+    if not all(seq_1_letter_ok):
+        not_ok_letters = [letter for letter in seq_1 if letter not in scoring_mat_letters]
+        raise RuntimeError(f"There were letters in seq_1 not present in scoring_mat, i.e. {not_ok_letters}")
+    
+    seq_2_letter_ok = [letter in scoring_mat_letters for letter in seq_2]
+    if not all(seq_2_letter_ok):
+        not_ok_letters = [letter for letter in seq_2 if letter not in scoring_mat_letters]
+        raise RuntimeError(f"There were letters in seq_2 not present in scoring_mat, i.e. {not_ok_letters}")
+    
     # Perform the alignment, insert gaps, and compute the score.
     alignment = align(
         seq_1=seq_1,
@@ -126,8 +129,7 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
         desc_2=desc_2,
         alignment=alignment
     )
-
-    
+    return None
 
 def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
     """Read in scoring matrix."""
@@ -552,7 +554,7 @@ def print_alignment(desc_1:str, desc_2:str, alignment:tuple[str, str, str, int],
     # Prep for loop
     lower = 0
     if num_sets_needed == 1:
-        upper = None
+        upper = alignment_len
     else:   
         upper = chars_per_line
 
