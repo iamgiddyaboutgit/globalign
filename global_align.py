@@ -88,11 +88,14 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
     # with codes for the letters as keys.
     scoring_mat = read_scoring_mat(scoring_mat_path=path_to_score_matrix_file)
     
-    
     # Check that the scoring matrix is symmetric.
+    if not check_symmetric(mat=scoring_mat):
+        raise RuntimeError("The scoring matrix is not symmetric.")
+    
     # For each row, the entry on the main diagonal
     # should be greater than or equal to the other entries in the row.
-
+    if not check_big_main_diag(mat=scoring_mat):
+        raise RuntimeError("The scoring matrix does not make sense because the maximum for each row does not occur on the main diagonal.")
     # Determine whether we are aligning amino acid residues
     # or nucleotides by checking both sequences and the
     # scoring matrix.  If there's a mismatch, then 
@@ -506,7 +509,34 @@ def check_symmetric(mat:dict[dict]) -> bool:
                 return False
     
     return True
+
+def check_big_main_diag(mat:dict[dict]) -> bool:
+    """Check if each row of a matrix has its maximum 
+    in the main diagonal entry.
     
+    Args:
+        mat: nested dictionary representing a matrix
+    
+    Returns:
+        True if each row of mat has its maximum 
+        in the main diagonal entry; otherwise, False.
+    """
+    # https://realpython.com/iterate-through-dictionary-python/#traversing-a-dictionary-directly
+    for outer_key in mat.keys():
+
+        outer_key_max_val = max(mat[outer_key].values())
+        try:
+            # Test if the main diagonal entry of mat
+            # is the same as the outer_key_max_val.
+            has_max_in_main_diag = mat[outer_key][outer_key] == outer_key_max_val
+        except KeyError:
+            raise RuntimeError("mat is not a proper nested dict representation of a matrix.")
+        
+        if not has_max_in_main_diag:
+            return False
+        
+    return has_max_in_main_diag 
+
 
 def print_alignment(desc_1:str, desc_2:str, alignment:tuple[str, str, str, int], chars_per_line:int=70):
     
