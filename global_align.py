@@ -18,10 +18,7 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
     # Create an object to store arguments passed from the command 
     # line.
     parser = argparse.ArgumentParser(description=usage)
-    # The nargs="+" here allows all command-line args present 
-    # to be gathered into a list. Additionally, an error message 
-    # will be generated if there wasn’t at least one command-line 
-    # argument present.
+
     parser.add_argument(
         "-s", 
         required=True,
@@ -41,13 +38,32 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
         help="Cost for opening a run of gaps. Should be non-negative."
     ) 
 
+    parser.add_argument(
+        "-o", 
+        required=True,
+        help="Output file path to write a FASTA file containing the global alignment."
+    )
+
     cmd_line_args = parser.parse_args()
 
+    # Transform and validate command line arguments.
     path_to_score_matrix_file = Path(cmd_line_args.s)
     path_to_fasta_file = Path(cmd_line_args.i)
+    if not path_to_fasta_file.is_file():
+        raise FileNotFoundError("path_to_fasta_file does not point to a valid file.")
     gap_existence_cost = int(cmd_line_args.g)
+    path_to_output = Path(cmd_line_args.o)
+    if not path_to_output.parent.exists():
+        raise FileNotFoundError("The parent directory of path_to_output does not exist.")
     
+    #################################################################
+    #################################################################
+
     # Read in descriptions and sequences from FASTA file.
+    # Verify FASTA file is in the correct format.
+    # Extract sequences.
+    # Verify sequences are formatted correctly.
+    # Handle sequences of 0 length.
     counter = 0
     for desc_and_seq in read_seq_from_fasta(fasta_path=path_to_fasta_file):
         counter += 1
@@ -58,18 +74,21 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
         else:
             break
 
-    # Verify FASTA file is in the correct format.
-    # Extract sequences.
-    # Verify sequences are formatted correctly.
-    # Handle sequences of 0 length.
-    # Check that the product of the lengths of the sequences does
-    # not exceed 400_000_000. If it does, then error.
-    # Read in scoring matrix file.
-    scoring_mat = read_scoring_mat(scoring_mat_path=path_to_score_matrix_file)
     
+    # Check that the product of the lengths of the sequences is
+    # less than 20_000_000.  
+    m = len(seq_1)
+    n = len(seq_2)
+    seq_len_prod = m*n
+    if not seq_len_prod < 20_000_000:
+        raise RuntimeError(f"Your sequences are too long.  They have lengths of {m} and {n}")
+    # Read in scoring matrix file.
     # Verify format of scoring matrix file.
     # Get the data from the scoring matrix into a nested dictionary
     # with codes for the letters as keys.
+    scoring_mat = read_scoring_mat(scoring_mat_path=path_to_score_matrix_file)
+    
+    
     # Check that the scoring matrix is symmetric.
     # For each row, the entry on the main diagonal
     # should be greater than or equal to the other entries in the row.
@@ -98,9 +117,14 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
     )
    
     # Write the outputs to a file.
+    write_alignment(
+        out_path=path_to_output,
+        desc_1=desc_1,
+        desc_2=desc_2,
+        alignment=alignment
+    )
 
-
-    ...
+    
 
 def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
     """Read in scoring matrix."""
@@ -158,10 +182,6 @@ def read_seq_from_fasta(fasta_path:Path):
     See: NCBI FASTA specification
     https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=BlastHelp
     """
-    if not fasta_path.is_file():
-        raise FileNotFoundError("fasta_path does not point to a valid file.")
-    
-    
     with fasta_path.open() as f:
         desc_and_seq_complete = False
         seq_list = []
@@ -180,7 +200,7 @@ def read_seq_from_fasta(fasta_path:Path):
                 # We have reached a description
                 # other than the first one.
                 # We are ready to yield.
-                seq = "".join(seq_list)
+                seq = "".join(seq_list).upper()
                 if not (len(seq) > 0):
                     raise RuntimeError("Empty sequence detected in FASTA.")
                 yield (desc, seq)
@@ -196,7 +216,7 @@ def read_seq_from_fasta(fasta_path:Path):
 
         # We have reached the end of the file.
         # We are ready to yield.
-        seq = "".join(seq_list)
+        seq = "".join(seq_list).upper()
         if not (len(seq) > 0):
             raise RuntimeError("Empty sequence detected in FASTA.")
         
@@ -464,13 +484,38 @@ def init_partial_dynamic_prog_matrix(
     mat[1][0] = -gap_existence_cost + scoring_mat[seq_1[0]]["-"]
     return mat
 
+def check_symmetric(mat:dict[dict]) -> bool:
+    """Check if a matrix is symmetric.
+    
+    Args:
+        mat: nested dictionary representing a matrix
+    
+    Returns:
+        True if mat is symmetric and False otherwise.
+    """
+    # https://realpython.com/iterate-through-dictionary-python/#traversing-a-dictionary-directly
+    for outer_key in mat.keys():
+        # Assume that the outer and inner
+        # keys are the same.
+        for inner_key in mat.keys():
+            try:
+                has_eq_vals = mat[outer_key][inner_key] == mat[inner_key][outer_key]
+            except KeyError:
+                return False
+            if not has_eq_vals:
+                return False
+    
+    return True
+    
+
 def print_alignment(desc_1:str, desc_2:str, alignment:tuple[str, str, str, int], chars_per_line:int=70):
-    # TODO: Handle long alignments with proper line breaking.
+    
     print(desc_1)
     print(desc_2)
     print("")
 
     seq_1_aligned, mid, seq_2_aligned, score = alignment
+    # Handle long alignments with proper line breaking.
     alignment_len = len(seq_1_aligned)
     num_sets_needed = math.ceil(alignment_len / chars_per_line)
     
@@ -491,8 +536,24 @@ def print_alignment(desc_1:str, desc_2:str, alignment:tuple[str, str, str, int],
         lower = upper
         upper = lower + chars_per_line
 
-    print(f"score={str(alignment[3])}")
+    print(f"score={str(score)}")
 
+
+def write_alignment(out_path:Path, desc_1:str, desc_2:str, alignment:tuple[str, str, str, int]):
+    seq_1_aligned, mid, seq_2_aligned, score = alignment
+    with out_path.open(mode="w") as f:
+        f.writelines([
+            "".join([desc_1, "; score=", str(score)]),
+            "\n",
+            seq_1_aligned,
+            "\n"
+        ])
+        f.writelines([
+            "".join([desc_2, "; score=", str(score)]),
+            "\n",
+            seq_2_aligned,
+            "\n"
+        ])
 
 if __name__ == "__main__":
     sys.exit(main())
