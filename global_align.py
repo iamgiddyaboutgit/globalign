@@ -517,80 +517,12 @@ def align(
 
     score = max_possible_new_score
 
-    # traceback
-    # Prepare for loop.
-    seq_1_aligned = []
-    seq_2_aligned = []
-    middle_part = []
-
-    num_alignment_moves = max(dynamic_prog_num_rows, dynamic_prog_num_cols) - 1
-
-    # Start at the bottom-right.
-    seq_1_index = m - 1
-    seq_2_index = n - 1
-
-    # print("seq_1")
-    # print(seq_1)
-    # print("seq_2")
-    # print(seq_2)
-    print("best_paths_mat")
-    print(best_paths_mat)
-    # print("partial_A_mat")
-    # print(partial_A_mat)
-    # print("partial_B_mat")
-    # print(partial_B_mat)
-    # print("partial_C_mat")
-    # print(partial_C_mat)
-
-    for w in range(num_alignment_moves):
-        # Prep for this iteration.
-        # Because of the initial row and column in
-        # best_paths_mat that doesn't align with
-        # any parts of the two sequence, the indices
-        # are off by one.
-        best_paths_mat_row_index = seq_1_index + 1
-        best_paths_mat_col_index = seq_2_index + 1
-
-        path_indicator = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
-        # print("path_indicator")
-        # print(path_indicator)
-        if path_indicator == 0:
-            # match/mismatch is the best move
-            seq_1_letter = seq_1[seq_1_index]
-            seq_2_letter = seq_2[seq_2_index]
-            if seq_1_letter == seq_2_letter:
-                # There was a match.
-                middle_part.append("|")
-            else:
-                # There was not a match.
-                middle_part.append("*")
-
-            seq_1_aligned.append(seq_1[seq_1_index])
-            seq_1_index -= 1
-            seq_2_aligned.append(seq_2[seq_2_index])
-            seq_2_index -= 1
-        elif path_indicator == 1:
-            # gap in seq_1 is the best move
-            middle_part.append(" ")
-            seq_1_aligned.append("-")
-            seq_2_aligned.append(seq_2[seq_2_index])
-            seq_2_index -= 1
-        else:
-            # gap in seq_2 is the best move
-            middle_part.append(" ")
-            seq_1_aligned.append(seq_1[seq_1_index])
-            seq_1_index -= 1
-            seq_2_aligned.append("-")
-
-
-    seq_1_aligned.reverse()
-    middle_part.reverse()
-    seq_2_aligned.reverse()
-
-    seq_1_aligned_out = "".join(seq_1_aligned)
-    middle_part_out = "".join(middle_part)
-    seq_2_aligned_out = "".join(seq_2_aligned)
-
+    seq_1_aligned_out, middle_part_out, seq_2_aligned_out = traceback(
+        best_paths_mat=best_paths_mat,
+        seq_1=seq_1,
+        seq_2=seq_2
+    )
+    
     return (
         seq_1_aligned_out,
         middle_part_out,
