@@ -299,19 +299,11 @@ def align(
     # 0 = ↖ (match/mismatch)
     # 1 = ← (new gap or continuation of run of gaps in seq_1)
     # 2 = ↑ (new gap or continuation of run of gaps in seq_2)
-    # Based on the order of arguments to every
-    # call to max, we initialize with
-    # 1's because 1 indicates moving left.
-    best_paths_mat = [[1]*dynamic_prog_num_cols for i in range(dynamic_prog_num_rows)]
-
+    best_paths_mat = init_best_paths_matrix(
+        dynamic_prog_num_rows=dynamic_prog_num_rows,
+        dynamic_prog_num_cols=dynamic_prog_num_cols
+    )
     
-    # Based on the order of arguments to every
-    # call to max, we decide to put 
-    # 2's in the beginning of each row
-    # because 2 indicates moving up.
-    for i in range(1, dynamic_prog_num_rows):
-        best_paths_mat[i][0] = 2
-
     # Pre loop
     i = 1
     partial_mat_prev_row_id = 0
@@ -408,13 +400,13 @@ def align(
         
         best_paths_mat[i][j] = best_type_of_path
 
-    print("Before going to the index=2 row of the dynamic programming matrix ensemble, we have:")
-    print("partial_A_mat")
-    print(partial_A_mat)
-    print("partial_B_mat")
-    print(partial_B_mat)
-    print("partial_C_mat")
-    print(partial_C_mat)
+    # print("Before going to the index=2 row of the dynamic programming matrix ensemble, we have:")
+    # print("partial_A_mat")
+    # print(partial_A_mat)
+    # print("partial_B_mat")
+    # print(partial_B_mat)
+    # print("partial_C_mat")
+    # print(partial_C_mat)
 
     for i in range(2, dynamic_prog_num_rows):
         # Prep for a new row iteration.
@@ -455,12 +447,13 @@ def align(
                 
             partial_A_mat[partial_mat_cur_row_id][j] = scoring_mat[seq_1[seq_1_index]][seq_2[seq_2_index]] + prev_best
             if j == 1:
-                print('partial_C_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost')
-                print(str(partial_C_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost))
-                print('partial_A_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]]')
-                print(str(partial_A_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]]))
-                print('partial_B_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost')
-                print(partial_B_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost)
+                ...
+                # print('partial_C_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost')
+                # print(str(partial_C_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost))
+                # print('partial_A_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]]')
+                # print(str(partial_A_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]]))
+                # print('partial_B_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost')
+                # print(partial_B_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost)
             # Consider partial_B_mat
             score_choices = [
                 partial_A_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
@@ -605,6 +598,85 @@ def align(
         score
     )
 
+def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str, str]:
+    """Perform traceback through best_paths_mat
+    
+    to find the alignment.
+
+    Args: 
+        best_paths_mat: list of length len(seq_1) + 1
+            where each element is a list of length 
+            len(seq_2) + 1
+    """
+    # Prepare for loop.
+    seq_1_aligned = []
+    seq_2_aligned = []
+    middle_part = []
+
+    m = len(seq_1)
+    n = len(seq_2)
+    dynamic_prog_num_rows = m + 1
+    dynamic_prog_num_cols = n + 1
+
+    num_alignment_moves = max(dynamic_prog_num_rows, dynamic_prog_num_cols) - 1
+
+    # Start at the bottom-right.
+    seq_1_index = m - 1
+    seq_2_index = n - 1
+
+    for w in range(num_alignment_moves):
+        # Prep for this iteration.
+        # Because of the initial row and column in
+        # best_paths_mat that doesn't align with
+        # any parts of the two sequences, the indices
+        # are off by one.
+        best_paths_mat_row_index = seq_1_index + 1
+        best_paths_mat_col_index = seq_2_index + 1
+
+        path_indicator = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
+
+        if path_indicator == 0:
+            # match/mismatch is the best move
+            seq_1_letter = seq_1[seq_1_index]
+            seq_2_letter = seq_2[seq_2_index]
+            if seq_1_letter == seq_2_letter:
+                # There was a match.
+                middle_part.append("|")
+            else:
+                # There was not a match.
+                middle_part.append("*")
+
+            seq_1_aligned.append(seq_1[seq_1_index])
+            seq_1_index -= 1
+            seq_2_aligned.append(seq_2[seq_2_index])
+            seq_2_index -= 1
+        elif path_indicator == 1:
+            # gap in seq_1 is the best move
+            middle_part.append(" ")
+            seq_1_aligned.append("-")
+            seq_2_aligned.append(seq_2[seq_2_index])
+            seq_2_index -= 1
+        else:
+            # gap in seq_2 is the best move
+            middle_part.append(" ")
+            seq_1_aligned.append(seq_1[seq_1_index])
+            seq_1_index -= 1
+            seq_2_aligned.append("-")
+
+
+    seq_1_aligned.reverse()
+    middle_part.reverse()
+    seq_2_aligned.reverse()
+
+    seq_1_aligned_out = "".join(seq_1_aligned)
+    middle_part_out = "".join(middle_part)
+    seq_2_aligned_out = "".join(seq_2_aligned)
+
+    return (
+        seq_1_aligned_out,
+        middle_part_out,
+        seq_2_aligned_out
+    )
 
 def init_partial_dynamic_prog_matrix(
     gap_existence_cost:int, 
