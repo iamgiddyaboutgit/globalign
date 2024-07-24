@@ -12,6 +12,7 @@ References:
      Freiburg RNA tools: a central online resource for RNA-focused research and teaching
      Nucleic Acids Research, 46(W1), W25-W29, 2018.
 5. https://doi.org/10.1016/0022-2836(82)90398-9
+6. http://www.cs.cmu.edu/~durand/03-711/2017/Lectures/Sequence-Alignment-2017.pdf
 """
 
 import sys
@@ -124,9 +125,9 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
         gap_existence_cost=gap_existence_cost
     )
     print_alignment(
+        *alignment,
         desc_1=desc_1,
-        desc_2=desc_2,
-        alignment=alignment
+        desc_2=desc_2
     )
    
     # Write the outputs to a file.
@@ -534,6 +535,11 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
     """Perform traceback through best_paths_mat
     
     to find the alignment.
+    There are 3 possible values for each entry in the best_paths_mat
+    to indicate one of the following alignment "moves":
+    0 = ↖ (match/mismatch)
+    1 = ← (new gap or continuation of run of gaps in seq_1)
+    2 = ↑ (new gap or continuation of run of gaps in seq_2)
 
     Args: 
         best_paths_mat: list of length len(seq_1) + 1
@@ -547,16 +553,15 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
 
     m = len(seq_1)
     n = len(seq_2)
-    dynamic_prog_num_rows = m + 1
-    dynamic_prog_num_cols = n + 1
 
-    num_alignment_moves = max(dynamic_prog_num_rows, dynamic_prog_num_cols) - 1
+    # http://www.cs.cmu.edu/~durand/03-711/2017/Lectures/Sequence-Alignment-2017.pdf
+    max_num_alignment_moves = m + n
 
     # Start at the bottom-right.
     seq_1_index = m - 1
     seq_2_index = n - 1
 
-    for w in range(num_alignment_moves):
+    for w in range(max_num_alignment_moves):
         # Prep for this iteration.
         # Because of the initial row and column in
         # best_paths_mat that doesn't align with
@@ -566,7 +571,7 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
         best_paths_mat_col_index = seq_2_index + 1
 
         path_indicator = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
-
+        print(path_indicator)
         if path_indicator == 0:
             # match/mismatch is the best move
             seq_1_letter = seq_1[seq_1_index]
@@ -595,6 +600,9 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
             seq_1_index -= 1
             seq_2_aligned.append("-")
 
+        # Determine whether the loop should continue.
+        if seq_1_index == -1 and seq_2_index == -1:
+            break
 
     seq_1_aligned.reverse()
     middle_part.reverse()
@@ -730,13 +738,20 @@ def check_big_main_diag(mat:dict[dict]) -> bool:
     return has_max_in_main_diag 
 
 
-def print_alignment(desc_1:str, desc_2:str, alignment:tuple[str, str, str, int], chars_per_line:int=70):
+def print_alignment(
+    seq_1_aligned:str, 
+    mid:str, 
+    seq_2_aligned:str, 
+    score:int|float|str=math.nan, 
+    desc_1:str="seq_1", 
+    desc_2:str="seq_2", 
+    chars_per_line:int=70
+):
     
     print(desc_1)
     print(desc_2)
     print("")
 
-    seq_1_aligned, mid, seq_2_aligned, score = alignment
     # Handle long alignments with proper line breaking.
     alignment_len = len(seq_1_aligned)
     num_sets_needed = math.ceil(alignment_len / chars_per_line)
