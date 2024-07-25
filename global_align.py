@@ -13,6 +13,7 @@ References:
      Nucleic Acids Research, 46(W1), W25-W29, 2018.
 5. https://doi.org/10.1016/0022-2836(82)90398-9
 6. http://www.cs.cmu.edu/~durand/03-711/2017/Lectures/Sequence-Alignment-2017.pdf
+7. https://bioboot.github.io/bimm143_W20/class-material/nw/
 """
 
 import sys
@@ -401,13 +402,13 @@ def align(
         
         best_paths_mat[i][j] = best_type_of_path
 
-    # print("Before going to the index=2 row of the dynamic programming matrix ensemble, we have:")
-    # print("partial_A_mat")
-    # print(partial_A_mat)
-    # print("partial_B_mat")
-    # print(partial_B_mat)
-    # print("partial_C_mat")
-    # print(partial_C_mat)
+    print("Before going to the index=2 row of the dynamic programming matrix ensemble, we have:")
+    print("partial_A_mat")
+    print(partial_A_mat)
+    print("partial_B_mat")
+    print(partial_B_mat)
+    print("partial_C_mat")
+    print(partial_C_mat)
 
     for i in range(2, dynamic_prog_num_rows):
         # Prep for a new row iteration.
@@ -516,6 +517,9 @@ def align(
             # print("partial_C_mat")
             # print(partial_C_mat)
 
+    print("best_paths_mat")
+    print(best_paths_mat)
+
     score = max_possible_new_score
 
     seq_1_aligned_out, middle_part_out, seq_2_aligned_out = traceback(
@@ -618,6 +622,15 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
         seq_2_aligned_out
     )
 
+def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list]:
+    """Make a matrix as a nested list.
+    
+    See: https://www.freecodecamp.org/news/list-within-a-list-in-python-initialize-a-nested-list/
+    """
+    return [
+        [fill_val]*(num_cols) for i in range(num_rows)
+    ]
+
 def init_partial_dynamic_prog_matrix(
     gap_existence_cost:int, 
     seq_1:str,
@@ -625,11 +638,12 @@ def init_partial_dynamic_prog_matrix(
     scoring_mat:dict[dict], 
     dynamic_prog_num_cols:int
 ) -> list[list]:
-    
-    # https://www.freecodecamp.org/news/list-within-a-list-in-python-initialize-a-nested-list/
-    mat = [
-        [0]*(dynamic_prog_num_cols) for i in range(2)
-    ]
+    # TODO: Init index = 1 rows intelligently
+    mat = make_matrix(
+        num_rows=2,
+        num_cols=dynamic_prog_num_cols,
+        fill_val=0
+    )
     # Take care of initialization with gap scores.
   
     # Loop prep
