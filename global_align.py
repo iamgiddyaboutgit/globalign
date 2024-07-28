@@ -336,7 +336,13 @@ def align(
         score=score
     )
 
-    print("in align")
+    print("in align LINE 339")
+    print("partial_A_mat")
+    print(partial_A_mat)
+    print("partial_B_mat")
+    print(partial_B_mat)
+    print("partial_C_mat")
+    print(partial_C_mat)
     print("best_paths_mat before traceback")
     print(best_paths_mat)
 
@@ -771,6 +777,9 @@ def do_core_align(
     Find a global alignment of the subsequences
     
     seq_1[1:] (assuming len(seq_1) > 1) and seq_2.  
+    If len(seq_1) == 1, then no additional aligning
+    is done.
+
     Args:
         gap_existence_cost: The cost for a gap just to exist.
             This cost should be non-negative.
@@ -822,12 +831,25 @@ def do_core_align(
         # Update the 1-index columns based on how gaps are penalized.
         j = 1
         seq_2_index = j - 1
+        
+        # There's no need for the usual max operation
+        # for partial_A_mat because partial_A_mat,
+        # partial_B_mat, and partial_C_mat all have the same 0-index
+        # column.
+        prev_best = partial_A_mat[partial_mat_prev_row_id][j - 1]
+        partial_A_mat[partial_mat_cur_row_id][j] = scoring_mat[seq_1[seq_1_index]][seq_2[seq_2_index]] + prev_best
+        
         # The gap existence cost is always paid for partial_B_mat
         # and partial_C_mat because j == 1.
         # There couldn't have been a pre-existing gap in seq_1.
-        partial_A_mat[partial_mat_cur_row_id][j] = partial_A_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]]
         partial_B_mat[partial_mat_cur_row_id][j] = partial_B_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
-        partial_C_mat[partial_mat_cur_row_id][j] = partial_C_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
+        
+        # Consider partial_C_mat
+        partial_C_mat[partial_mat_cur_row_id][j] = max(
+            partial_A_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
+            partial_B_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
+            partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] 
+        )
         
         best_paths_mat, score = update_best_paths_mat(
             best_paths_mat=best_paths_mat,
