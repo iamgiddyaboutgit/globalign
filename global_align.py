@@ -14,6 +14,7 @@ References:
 5. https://doi.org/10.1016/0022-2836(82)90398-9
 6. http://www.cs.cmu.edu/~durand/03-711/2017/Lectures/Sequence-Alignment-2017.pdf
 7. https://bioboot.github.io/bimm143_W20/class-material/nw/
+8. https://www.ncbi.nlm.nih.gov/CBBresearch/Przytycka/download/lectures/PCB_Lect02_Pairwise_allign.pdf
 """
 
 import sys
@@ -251,7 +252,14 @@ def align(
             This cost should be non-negative.
             It can be incurred multiple times
             if there are multiple runs of gaps in the
-            alignment.
+            alignment. Note that an alignment like
+
+                    AT-CG
+                    ||  |
+                    ATT-G
+
+            incurs the gap_existence_cost twice.
+
 
     Returns:
         (
@@ -897,7 +905,10 @@ def warmup_align(
     """
     Find a global alignment of the subsequences
     
-    seq_1[0] and seq_2.  
+    seq_1[0] and seq_2.  In other words, solve some of the 
+    subproblmes relevant to the global alignment of seq_1
+    and seq_2.
+
     Args:
         gap_existence_cost: The cost for a gap just to exist.
             This cost should be non-negative.
@@ -1048,12 +1059,12 @@ def init_partial_dynamic_prog_matrix(
     scoring_mat:dict[dict], 
     dynamic_prog_num_cols:int
 ) -> list[list]:
-    """This is the base function used in init_partial_A_mat, 
+    """Initialze matrices for the NW algorithm. 
     
-    init_partial_B_mat, and init_partial_C_mat.  It initializes
-    correctly for the 0-index rows and the 0-index columns.
-    However, it leaves complete initialization of partial_A_mat,
-    partial_B_mat, and partial_C_mat to other functions.
+    It initializes correctly for the 0-index rows and the 0-index 
+    columns.  However, it leaves complete initialization of 
+    partial_A_mat, partial_B_mat, and partial_C_mat to other 
+    functions.
     """
     mat = make_matrix(
         num_rows=2,
