@@ -93,7 +93,7 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
     n = len(seq_2)
     seq_len_prod = m*n
     if not seq_len_prod < 20_000_000:
-        raise RuntimeError(f"Your sequences are too long.  They have lengths of {m} and {n}")
+        raise RuntimeError(f"Your sequences are too long.  The product of their lengths should be less than 20,000,000.  They have lengths of {m} and {n}")
     # Read in scoring matrix file.
     # Verify format of scoring matrix file.
     # Get the data from the scoring matrix into a nested dictionary
@@ -296,6 +296,15 @@ def align(
         dynamic_prog_num_cols=dynamic_prog_num_cols
     ) for u in range(3))
 
+    # Initialize a matrix where the entry in row i and column j
+    # indicates the best final score for the alignment of the 
+    # subsequences seq_1[0:(i - 1)] and seq_2[0:(j - 1)].
+    D_mat = make_matrix(
+        num_rows=dynamic_prog_num_rows,
+        num_cols=dynamic_prog_num_cols,
+        fill_val=0
+    )
+
     best_paths_mat = init_best_paths_matrix(
         dynamic_prog_num_rows=dynamic_prog_num_rows,
         dynamic_prog_num_cols=dynamic_prog_num_cols
@@ -336,15 +345,15 @@ def align(
         score=score
     )
 
-    print("in align LINE 339")
-    print("partial_A_mat")
-    print(partial_A_mat)
-    print("partial_B_mat")
-    print(partial_B_mat)
-    print("partial_C_mat")
-    print(partial_C_mat)
-    print("best_paths_mat before traceback")
-    print(best_paths_mat)
+    # print("in align LINE 339")
+    # print("partial_A_mat")
+    # print(partial_A_mat)
+    # print("partial_B_mat")
+    # print(partial_B_mat)
+    # print("partial_C_mat")
+    # print(partial_C_mat)
+    # print("best_paths_mat before traceback")
+    # print(best_paths_mat)
 
     seq_1_aligned_out, middle_part_out, seq_2_aligned_out = traceback(
         best_paths_mat=best_paths_mat,
@@ -659,7 +668,7 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
         best_paths_mat_col_index = seq_2_index + 1
 
         path_indicator = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
-        print(path_indicator)
+        # print(path_indicator)
         if path_indicator == 0:
             # match/mismatch is the best move
             seq_1_letter = seq_1[seq_1_index]
@@ -690,16 +699,16 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
 
         # Determine whether the loop should continue.
         if seq_1_index == -1 and seq_2_index == -1:
-            print("seq_1_index")
-            print(seq_1_index)
-            print("seq_2_index")
-            print(seq_2_index)
+            # print("seq_1_index")
+            # print(seq_1_index)
+            # print("seq_2_index")
+            # print(seq_2_index)
             break
 
-    print("seq_1_index")
-    print(seq_1_index)
-    print("seq_2_index")
-    print(seq_2_index)
+    # print("seq_1_index")
+    # print(seq_1_index)
+    # print("seq_2_index")
+    # print(seq_2_index)
     seq_1_aligned.reverse()
     middle_part.reverse()
     seq_2_aligned.reverse()
@@ -825,9 +834,6 @@ def do_core_align(
         partial_B_mat[partial_mat_cur_row_id][j] = partial_B_mat[partial_mat_prev_row_id][j] + scoring_mat[seq_1[seq_1_index]]["-"]
         partial_C_mat[partial_mat_cur_row_id][j] = partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat[seq_1[seq_1_index]]["-"]
         
-   
-        print("best_paths_mat line 817")
-        print(best_paths_mat)
         # Update the 1-index columns based on how gaps are penalized.
         j = 1
         seq_2_index = j - 1
@@ -840,7 +846,7 @@ def do_core_align(
         partial_A_mat[partial_mat_cur_row_id][j] = scoring_mat[seq_1[seq_1_index]][seq_2[seq_2_index]] + prev_best
         
         # The gap existence cost is always paid for partial_B_mat
-        # and partial_C_mat because j == 1.
+        # because j == 1.
         # There couldn't have been a pre-existing gap in seq_1.
         partial_B_mat[partial_mat_cur_row_id][j] = partial_B_mat[partial_mat_cur_row_id][j - 1] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
         
@@ -922,6 +928,7 @@ def warmup_align(
     partial_A_mat:list[list],
     partial_B_mat:list[list],
     partial_C_mat:list[list],
+    D_mat:list[list],
     best_paths_mat:list[list]
 ) -> tuple[list[list], list[list], list[list], list[list], int|float]:
     """
@@ -943,6 +950,7 @@ def warmup_align(
             0-index column.
         partial_C_mat: already initialized for 0-index row and 
             0-index column.
+        D_mat: 
         best_paths_mat: already initialized for 0-index row and 
             0-index column.
 
@@ -951,6 +959,7 @@ def warmup_align(
             partial_A_mat,
             partial_B_mat,
             partial_C_mat,
+            D_mat,
             best_paths_mat,
             score
         )
@@ -994,6 +1003,7 @@ def warmup_align(
         partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
     )
     
+    D_mat[i]
     # Choose one of the best moves.
     best_paths_mat, score = update_best_paths_mat(
         best_paths_mat=best_paths_mat,
@@ -1130,6 +1140,43 @@ def init_partial_dynamic_prog_matrix(
     mat[1][0] = -gap_existence_cost + scoring_mat[seq_1[0]]["-"]
     return mat
 
+
+def init_D_mat(
+    dynamic_prog_num_rows,
+    dynamic_prog_num_cols,
+    partial_A_mat,
+    partial_B_mat,
+    partial_C_mat    
+) -> list[list]:
+    """Initialize a matrix where the entry in row i and column j
+    
+    indicates the best final score for the alignment of the 
+    subsequences seq_1[0:(i - 1)] and seq_2[0:(j - 1)].
+    
+    Args:
+        dynamic_prog_num_rows: len(seq_1) + 1
+        dynamic_prog_num_cols: len(seq_2) + 1
+    Returns:
+        D_mat as a nested list where each entry in the list
+            is a list representing a row of D_mat.
+    """
+    D_mat = make_matrix(
+        num_rows=dynamic_prog_num_rows,
+        num_cols=dynamic_prog_num_cols,
+        fill_val=0
+    )
+
+    for i in range(dynamic_prog_num_rows):
+        for j in range(dynamic_prog_num_cols):
+            D_mat[i][j] = max(
+                partial_A_mat[i][j],
+                partial_B_mat[i][j],
+                partial_C_mat[i][j],
+            )
+
+    return D_mat
+
+
 def init_best_paths_matrix(
     dynamic_prog_num_rows,
     dynamic_prog_num_cols    
@@ -1167,6 +1214,7 @@ def init_best_paths_matrix(
         best_paths_mat[i][0] = 2
 
     return best_paths_mat
+
 
 def check_symmetric(mat:dict[dict]) -> bool:
     """Check if a matrix is symmetric.
