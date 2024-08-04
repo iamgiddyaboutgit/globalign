@@ -21,6 +21,7 @@ import sys
 import argparse
 from pathlib import Path
 import math
+import random
 
 import numpy as np
 
@@ -260,7 +261,6 @@ def align(
 
             incurs the gap_existence_cost twice.
 
-
     Returns:
         (
             seq_1_aligned_out,
@@ -299,10 +299,12 @@ def align(
     # Initialize a matrix where the entry in row i and column j
     # indicates the best final score for the alignment of the 
     # subsequences seq_1[0:(i - 1)] and seq_2[0:(j - 1)].
-    D_mat = make_matrix(
-        num_rows=dynamic_prog_num_rows,
-        num_cols=dynamic_prog_num_cols,
-        fill_val=0
+    D_mat = init_D_mat(
+        dynamic_prog_num_rows=dynamic_prog_num_rows,
+        dynamic_prog_num_cols=dynamic_prog_num_cols,
+        partial_A_mat=partial_A_mat,
+        partial_B_mat=partial_B_mat,
+        partial_C_mat=partial_C_mat
     )
 
     best_paths_mat = init_best_paths_matrix(
@@ -310,7 +312,7 @@ def align(
         dynamic_prog_num_cols=dynamic_prog_num_cols
     )
 
-    partial_A_mat, partial_B_mat, partial_C_mat, best_paths_mat, score = warmup_align(
+    partial_A_mat, partial_B_mat, partial_C_mat, D_mat, best_paths_mat, score = warmup_align(
         seq_1=seq_1,
         seq_2=seq_2,
         scoring_mat=scoring_mat,
@@ -319,6 +321,7 @@ def align(
         partial_A_mat=partial_A_mat,
         partial_B_mat=partial_B_mat,
         partial_C_mat=partial_C_mat,
+        D_mat=D_mat,
         best_paths_mat=best_paths_mat
     )
     print("after warmup_align")
@@ -331,7 +334,7 @@ def align(
     print("best_paths_mat")
     print(best_paths_mat)
 
-    partial_A_mat, partial_B_mat, partial_C_mat, best_paths_mat, score = do_core_align(
+    partial_A_mat, partial_B_mat, partial_C_mat, D_mat, best_paths_mat, score = do_core_align(
         seq_1=seq_1,
         seq_2=seq_2,
         scoring_mat=scoring_mat,
@@ -341,13 +344,15 @@ def align(
         partial_A_mat=partial_A_mat,
         partial_B_mat=partial_B_mat,
         partial_C_mat=partial_C_mat,
+        D_mat=D_mat,
         best_paths_mat=best_paths_mat,
         score=score
     )
+    
 
-    # print("in align LINE 339")
-    # print("partial_A_mat")
-    # print(partial_A_mat)
+    # print("in align LINE 350")
+    print("D_mat")
+    print(D_mat)
     # print("partial_B_mat")
     # print(partial_B_mat)
     # print("partial_C_mat")
@@ -760,10 +765,39 @@ def update_best_paths_mat(
         partial_C_mat[partial_mat_cur_row_id][partial_dp_matrix_col_id]
     ]
     max_possible_new_score = max(possible_new_scores)
+    max_possible_new_score_indices = [i for i, s 
+        in enumerate(possible_new_scores)
+        if s == max_possible_new_score]
+    best_type_of_path = random.choice(max_possible_new_score_indices)
+    #######
+
+    # # possible_new_scores_sorted is in ascending order. 
+    # possible_new_scores_sorted = sorted(possible_new_scores)
+
+    # # Because possible_new_scores_sorted is in ascending order,
+    # # the last entry is a maximum.
+    # # max_possible_new_score = possible_new_scores_sorted[-1]
+    # # Check for ties
+    # if max_possible_new_score != possible_new_scores_sorted[-2]:
+    #     # The maximum is unique.
+    #     # Find the index corresponding to where the maximum
+    #     # is achieved.
+    #     best_type_of_path = possible_new_scores.index(max_possible_new_score)
+    # elif max_possible_new_score != possible_new_scores_sorted[-3]:
+    #     # The max was achieved 2 times.
+    #     # Break the 2-way tie randomly.
+    #     possible_new_scores.index(max_possible_new_score)
+    # else:
+    #     # The max was achieved 3 times.
+    #     # Break the 3-way tie randomly.
+    #     best_type_of_path = random.randint(0, 2)
+    # # if max_possible_new_score == possible_new_scores_sorted[-2]:
+    # #     # The max was achieved at least twice.
+    # #     # Check if it was achieved 3 times.
+    # #     if max_possible_new_score == possible_new_scores_sorted[-3]:
+            
     
-    # Find the index corresponding to where the maximum
-    # is first achieved.
-    best_type_of_path = possible_new_scores.index(max_possible_new_score)
+    
     
     best_paths_mat[best_paths_mat_row_id][best_paths_mat_col_id] = best_type_of_path
 
@@ -779,9 +813,10 @@ def do_core_align(
     partial_A_mat:list[list],
     partial_B_mat:list[list],
     partial_C_mat:list[list],
+    D_mat:list[list],
     best_paths_mat:list[list],
     score:int|float
-) -> tuple[list[list], list[list], list[list], list[list], int]:
+) -> tuple[list[list], list[list], list[list], list[list], list[list], int]:
     """
     Find a global alignment of the subsequences
     
@@ -801,6 +836,7 @@ def do_core_align(
             of the algorithm.
         partial_C_mat: already filled from an initial run
             of the algorithm.
+        D_mat:
         best_paths_mat: already filled for the first two
             rows from an initial run of the algorithm.
 
@@ -809,6 +845,7 @@ def do_core_align(
             partial_A_mat,
             partial_B_mat,
             partial_C_mat,
+            D_mat,
             best_paths_mat,
             score
         )
@@ -833,7 +870,11 @@ def do_core_align(
         partial_A_mat[partial_mat_cur_row_id][j] = partial_A_mat[partial_mat_prev_row_id][j] + scoring_mat[seq_1[seq_1_index]]["-"]
         partial_B_mat[partial_mat_cur_row_id][j] = partial_B_mat[partial_mat_prev_row_id][j] + scoring_mat[seq_1[seq_1_index]]["-"]
         partial_C_mat[partial_mat_cur_row_id][j] = partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat[seq_1[seq_1_index]]["-"]
-        
+        D_mat[i][j] = max(
+            partial_A_mat[partial_mat_cur_row_id][j],
+            partial_B_mat[partial_mat_cur_row_id][j],
+            partial_C_mat[partial_mat_cur_row_id][j],
+        )
         # Update the 1-index columns based on how gaps are penalized.
         j = 1
         seq_2_index = j - 1
@@ -855,6 +896,11 @@ def do_core_align(
             partial_A_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
             partial_B_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
             partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] 
+        )
+        D_mat[i][j] = max(
+            partial_A_mat[partial_mat_cur_row_id][j],
+            partial_B_mat[partial_mat_cur_row_id][j],
+            partial_C_mat[partial_mat_cur_row_id][j],
         )
         
         best_paths_mat, score = update_best_paths_mat(
@@ -898,6 +944,11 @@ def do_core_align(
                 partial_B_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
                 partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] 
             )
+            D_mat[i][j] = max(
+                partial_A_mat[partial_mat_cur_row_id][j],
+                partial_B_mat[partial_mat_cur_row_id][j],
+                partial_C_mat[partial_mat_cur_row_id][j],
+            )
             
             best_paths_mat, score = update_best_paths_mat(
                 best_paths_mat=best_paths_mat,
@@ -914,6 +965,7 @@ def do_core_align(
         partial_A_mat,
         partial_B_mat,
         partial_C_mat,
+        D_mat,
         best_paths_mat,
         score
     )
@@ -930,7 +982,7 @@ def warmup_align(
     partial_C_mat:list[list],
     D_mat:list[list],
     best_paths_mat:list[list]
-) -> tuple[list[list], list[list], list[list], list[list], int|float]:
+) -> tuple[list[list], list[list], list[list], list[list], list[list], int|float]:
     """
     Find a global alignment of the subsequences
     
@@ -1003,7 +1055,12 @@ def warmup_align(
         partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
     )
     
-    D_mat[i]
+    D_mat[i][j] = max(
+        partial_A_mat[partial_mat_cur_row_id][j],
+        partial_B_mat[partial_mat_cur_row_id][j],
+        partial_C_mat[partial_mat_cur_row_id][j],
+    )
+
     # Choose one of the best moves.
     best_paths_mat, score = update_best_paths_mat(
         best_paths_mat=best_paths_mat,
@@ -1047,6 +1104,12 @@ def warmup_align(
             partial_B_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost,
             partial_C_mat[partial_mat_prev_row_id][j] + scoring_mat["-"][seq_2[seq_2_index]] - gap_existence_cost
         )
+
+        D_mat[i][j] = max(
+            partial_A_mat[partial_mat_cur_row_id][j],
+            partial_B_mat[partial_mat_cur_row_id][j],
+            partial_C_mat[partial_mat_cur_row_id][j],
+        )
         
         # Choose one of the best moves.
         best_paths_mat, score = update_best_paths_mat(
@@ -1063,6 +1126,7 @@ def warmup_align(
         partial_A_mat,
         partial_B_mat,
         partial_C_mat,
+        D_mat,
         best_paths_mat,
         score
     )
@@ -1142,16 +1206,20 @@ def init_partial_dynamic_prog_matrix(
 
 
 def init_D_mat(
-    dynamic_prog_num_rows,
-    dynamic_prog_num_cols,
-    partial_A_mat,
-    partial_B_mat,
-    partial_C_mat    
+    dynamic_prog_num_rows:int,
+    dynamic_prog_num_cols:int,
+    partial_A_mat:list[list],
+    partial_B_mat:list[list],
+    partial_C_mat:list[list]    
 ) -> list[list]:
     """Initialize a matrix where the entry in row i and column j
     
     indicates the best final score for the alignment of the 
     subsequences seq_1[0:(i - 1)] and seq_2[0:(j - 1)].
+    The matrix representations of partial_A_mat, partial_B_mat,
+    and partial_C_mat should all have the same dimensions.
+    The length of each of partial_A_mat, partial_B_mat,
+    and partial_C_mat should be 2.
     
     Args:
         dynamic_prog_num_rows: len(seq_1) + 1
@@ -1166,13 +1234,31 @@ def init_D_mat(
         fill_val=0
     )
 
-    for i in range(dynamic_prog_num_rows):
-        for j in range(dynamic_prog_num_cols):
-            D_mat[i][j] = max(
-                partial_A_mat[i][j],
-                partial_B_mat[i][j],
-                partial_C_mat[i][j],
-            )
+    # D_mat[i][j] is always max(
+    #     partial_A_mat[i][j],
+    #     partial_B_mat[i][j],
+    #     partial_C_mat[i][j],
+    # )
+    # but because the other matrices only
+    # have 2 rows, and because the other matrices
+    # are assumed to only be initialized properly
+    # for the 0-index rows and 0-index columns,
+    # we only fill in some of the entries 
+    # of D_mat.
+    i = 0
+    for j in range(dynamic_prog_num_cols):
+        D_mat[i][j] = max(
+            partial_A_mat[i][j],
+            partial_B_mat[i][j],
+            partial_C_mat[i][j],
+        )
+    i = 1
+    j = 0
+    D_mat[i][j] = max(
+            partial_A_mat[i][j],
+            partial_B_mat[i][j],
+            partial_C_mat[i][j],
+        )
 
     return D_mat
 
