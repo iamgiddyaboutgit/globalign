@@ -11,10 +11,30 @@ References:
 4. Martin Raden, Syed M Ali, Omer S Alkhnbashi, Anke Busch, Fabrizio Costa, Jason A Davis, Florian Eggenhofer, Rick Gelhausen, Jens Georg, Steffen Heyne, Michael Hiller, Kousik Kundu, Robert Kleinkauf, Steffen C Lott, Mostafa M Mohamed, Alexander Mattheis, Milad Miladi, Andreas S Richter, Sebastian Will, Joachim Wolff, Patrick R Wright, and Rolf Backofen
      Freiburg RNA tools: a central online resource for RNA-focused research and teaching
      Nucleic Acids Research, 46(W1), W25-W29, 2018.
-5. https://doi.org/10.1016/0022-2836(82)90398-9
+5. An improved algorithm for matching biological sequences. Osamu Gotoh. https://doi.org/10.1016/0022-2836(82)90398-9
 6. http://www.cs.cmu.edu/~durand/03-711/2017/Lectures/Sequence-Alignment-2017.pdf
 7. https://bioboot.github.io/bimm143_W20/class-material/nw/
 8. https://www.ncbi.nlm.nih.gov/CBBresearch/Przytycka/download/lectures/PCB_Lect02_Pairwise_allign.pdf
+9. https://ics.uci.edu/~xhx/courses/CS284A-F08/lectures/alignment.pdf
+10. https://link.springer.com/chapter/10.1007/978-3-319-90684-3_2
+11. Optimal sequence alignment using affine gap costs. https://link.springer.com/content/pdf/10.1007/BF02462326.pdf
+12. Optimal alignments in linear space. Eugene W. Myers, Webb Miller.  https://doi.org/10.1093/bioinformatics/4.1.11
+13. Sequence alignment using FastLSA. https://webdocs.cs.ualberta.ca/~duane/publications/pdf/2000metmbs.pdf
+14. MASA: A Multiplatform Architecture for Sequence Aligners
+        with Block Pruning. https://doi.org/10.1145/2858656
+15. https://community.gep.wustl.edu/repository/course_materials_WU/annotation/Introduction_Dynamic_Programming.pdf
+16. Optimal gap-affine alignment in O(s) space. https://doi.org/10.1093/bioinformatics/btad074
+17. Exact global alignment using A* with chaining seed heuristic and match pruning.
+    https://doi.org/10.1093/bioinformatics/btae032
+18. Transforming match bonus into cost. https://curiouscoding.nl/posts/alignment-scores-transform/
+19. Improving the time and space complexity of the WFA algorithm and generalizing its scoring.
+        https://doi.org/10.1101/2022.01.12.476087
+20. A* PA2: up to 20 times faster exact global alignment.
+        https://doi.org/10.1101/2024.03.24.586481
+21. Notes on Dynamic-Programming Sequence Alignment.
+        https://globin.bx.psu.edu/courses/fall2001/DP.pdf
+22. Lecture 6: Affine gap penalty function.
+        https://www.cs.hunter.cuny.edu/~saad/courses/compbio/lectures/lecture6.pdf
 """
 
 import sys
@@ -190,6 +210,71 @@ def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
              
     return scoring_mat
 
+
+def get_max_similarity_score(scoring_mat:dict[dict]) -> int|float:
+    """Get the max similarity score
+    
+    from a scoring matrix.  
+    Reference: https://curiouscoding.nl/posts/alignment-scores-transform/
+    """
+    # prep for loop
+    cur_max = - math.inf
+    for seq_1_letter, seq_2_scores in scoring_mat.items():
+        # seq_1_letter is a key for scoring_mat.
+        # seq_2_scores is the inner dict for the outer
+        # key of seq_1_letter.
+        new_possible_max = max(seq_2_scores.values())
+        cur_max = max(cur_max, new_possible_max)
+
+    return cur_max
+
+
+def transform_scoring_mat_to_cost_mat(
+    scoring_mat:dict[dict], 
+    max_score:int|float,
+    delta_d:int|float=None,
+    delta_i:int|float=None
+) -> dict[dict]:
+    """Transform to a proper distance matrix.
+    
+    Args: 
+        scoring_mat: Nested dict representation of 
+            a similarity matrix
+        max_score: Max in scoring_mat
+        delta_d: amount to increase the cost of a
+            horizontal step in the dynamic programming
+            matrix. `delta_d + delta_i >= max_score`.
+            Default: None.
+        delta_i: amount to increase the cost of a
+            vertical step in the dynamic programming
+            matrix. 
+            `delta_d + delta_i >= max_score`.
+            Default: None.
+
+    Returns:
+        Nested dict representation of a distance matrix
+            whose entries correspond to string edit costs
+            for matches and mismatches.
+
+    Reference: https://curiouscoding.nl/posts/alignment-scores-transform/
+    """
+    b = max_score
+    if delta_d is None:
+        delta_d = math.floor(b/2)
+    if delta_i is None:
+        delta_i = math.ceil(b/2)
+    
+    for seq_1_letter, seq_2_scores in scoring_mat.items():
+        # seq_1_letter is a key for scoring_mat.
+        # seq_2_scores is the inner dict for the outer
+        # key of seq_1_letter.
+        for seq_2_letter, score in seq_2_scores.items():
+            seq_2_scores[seq_2_letter] = score - delta_d - delta_i
+   
+    cost_mat = scoring_mat
+    return cost_mat
+
+
 def read_seq_from_fasta(fasta_path:Path):
     """Read in a FASTA file. 
 
@@ -324,15 +409,15 @@ def align(
         D_mat=D_mat,
         best_paths_mat=best_paths_mat
     )
-    print("after warmup_align")
-    print("partial_A_mat")
-    print(partial_A_mat)
-    print("partial_B_mat")
-    print(partial_B_mat)
-    print("partial_C_mat")
-    print(partial_C_mat)
-    print("best_paths_mat")
-    print(best_paths_mat)
+    # print("after warmup_align")
+    # print("partial_A_mat")
+    # print(partial_A_mat)
+    # print("partial_B_mat")
+    # print(partial_B_mat)
+    # print("partial_C_mat")
+    # print(partial_C_mat)
+    # print("best_paths_mat")
+    # print(best_paths_mat)
 
     partial_A_mat, partial_B_mat, partial_C_mat, D_mat, best_paths_mat, score = do_core_align(
         seq_1=seq_1,
@@ -350,15 +435,17 @@ def align(
     )
     
 
-    # print("in align LINE 350")
+    print("in align LINE 350")
     print("D_mat")
     print(D_mat)
-    # print("partial_B_mat")
-    # print(partial_B_mat)
-    # print("partial_C_mat")
-    # print(partial_C_mat)
-    # print("best_paths_mat before traceback")
-    # print(best_paths_mat)
+    print("partial_A_mat")
+    print(partial_A_mat)
+    print("partial_B_mat")
+    print(partial_B_mat)
+    print("partial_C_mat")
+    print(partial_C_mat)
+    print("best_paths_mat before traceback")
+    print(best_paths_mat)
 
     seq_1_aligned_out, middle_part_out, seq_2_aligned_out = traceback(
         best_paths_mat=best_paths_mat,
@@ -730,11 +817,38 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
 
 def draw_random_seq(alphabet:list, min_len:int, max_len:int):
     # https://numpy.org/doc/stable/reference/random/index.html
+    random.seed()
+    # Randomly decide on how long the sequence should be.
+    seq_len = random.randint(a=min_len, b=max_len)
+    # Draw the desired number of letters from the alphabet.
+    random_seq_list = random.choices(population=alphabet, k=seq_len)
+    # Return the sequence as a string.
+    return "".join(random_seq_list)
+
+def draw_two_random_seqs(
+    alphabet:list, 
+    seq_1_min_len:int, 
+    seq_1_max_len:int,
+    seq_2_min_len:int, 
+    seq_2_max_len:int,
+):
+    seq_1 = draw_random_seq(
+        alphabet=alphabet,
+        min_len=seq_1_min_len,
+        max_len=seq_1_max_len
+    )
+
+    # Initially, make seq_2 a duplicate.
+    seq_2 = list(seq_1)
+
+    # Then, add some randomness.
     rng = np.random.default_rng()
-    alphabet_len = len(alphabet)
-    seq_len = rng.integers(low=min_len, high=max_len, endpoint=True, size=1)
-    alphabet_indices = rng.integers(low=0, high=alphabet_len, endpoint=False, size=seq_len)
-    return "".join([alphabet[x] for x in alphabet_indices])
+    for i in range(len(seq_2)):
+        ...
+
+    ...
+
+
 
 
 def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list]:
