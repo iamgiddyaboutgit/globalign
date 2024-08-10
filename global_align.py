@@ -816,7 +816,6 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
     )
 
 def draw_random_seq(alphabet:list, min_len:int, max_len:int):
-    # https://numpy.org/doc/stable/reference/random/index.html
     random.seed()
     # Randomly decide on how long the sequence should be.
     seq_len = random.randint(a=min_len, b=max_len)
@@ -827,27 +826,111 @@ def draw_random_seq(alphabet:list, min_len:int, max_len:int):
 
 def draw_two_random_seqs(
     alphabet:list, 
-    seq_1_min_len:int, 
-    seq_1_max_len:int,
-    seq_2_min_len:int, 
-    seq_2_max_len:int,
-):
+    min_len_seq_1:int, 
+    max_len_seq_1:int,
+    min_len_seq_2:int, 
+    max_len_seq_2:int,
+    divergence:float
+) -> list[str]:
+    """
+    Args:
+        divergence: a number between 0 and 1, inclusive.
+            Higher values for divergence will tend
+            to make the two sequences more different
+            from each other.
+    """
+    random.seed()
     seq_1 = draw_random_seq(
         alphabet=alphabet,
-        min_len=seq_1_min_len,
-        max_len=seq_1_max_len
+        min_len=min_len_seq_1,
+        max_len=max_len_seq_1
     )
+   
+    len_seq_1 = len(seq_1)
 
-    # Initially, make seq_2 a duplicate.
-    seq_2 = list(seq_1)
+    # Prepare for loop.
+    # seq_2 will just be a copy of seq_1 at first.
+    seq_2_list = list(seq_1)
 
-    # Then, add some randomness.
-    rng = np.random.default_rng()
-    for i in range(len(seq_2)):
-        ...
+    # Determine the probabilities of each
+    # possible number of net insertions
+    # into seq_2.  Save the results
+    # as a dictionary where the keys
+    # are the num_net_inserts.
+    min_num_net_inserts = max(0, min_len_seq_2 - len_seq_1)
+    max_num_net_inserts = max(0, max_len_seq_2 - len_seq_1)
 
-    ...
+    # num_net_inserts_prob_model = dict.fromkeys(
+    #     possible_num_net_inserts
+    # )
+    num_net_inserts_prob_model = dict()
+    # shorty is the number of possible
+    # lengths of seq_2 that could be obtained
+    # without using a positive net number of 
+    # insertions.
+    shorty = max(
+        0,
+        len_seq_1 - min_len_seq_2 + 1
+    )
+    num_distinct_lens_for_seq_2 = max_len_seq_2 - min_len_seq_2 + 1
+    seq_2_overhang = max_len_seq_2 - len_seq_1
+    num_net_inserts_prob_model[0] = shorty / num_distinct_lens_for_seq_2
+    # Use the complement rule to calculate the remaining
+    # probability mass.
+    # The calculations are done in such a way to ensure
+    # that the len_seq_2 is discretely uniformly distributed 
+    # between min_len_seq_2 and max_len_seq_2.
+    remaining_prob_mass = 1 - num_net_inserts_prob_model[0]
+    for i in range(1, max_num_net_inserts + 1):
+        num_net_inserts_prob_model[i] = remaining_prob_mass / seq_2_overhang
+    
+    # Now, use num_net_inserts_prob_model
+    # to randomly generate a random number
+    # of net insertions to make in seq_2.
+    num_net_inserts = random.choices(
+        population=list(num_net_inserts_prob_model.keys()),
+        weights=list(num_net_inserts_prob_model.values()),
+        k=1
+    )[0]
+    
+    num_deletions = math.ceil(divergence * len_seq_1)
 
+    for u in range(2*num_deletions + num_net_inserts):
+        seq_2_index_for_deletion = random.randint(a=0, b=len_seq_1 - 1)
+        seq_2_list.pop(seq_2_index_for_deletion)
+        seq_2_index_for_insertion = random.randint(a=0, b=len_seq_1)
+        random_letter = draw_random_seq(alphabet, min_len=1, max_len=1)
+        seq_2_list.insert(seq_2_index_for_insertion, random_letter)
+
+    seq_2 = "".join(seq_2_list)
+    return [seq_1, seq_2]
+    ########
+    
+    # Based on how long we want seq_2 to be,
+    # what is the desired number of insertions?
+    if seq_2_max_len <= seq_1_len:
+        # No insertions are necessary to create seq_2.
+        insertions_needed = False
+    else:
+        # Insertions are necessary to create seq_2.
+        insertions_needed = True
+        desired_min_num_inserts = max(0, seq_2_min_len - seq_1_len)
+        desired_max_num_inserts = seq_2_max_len - seq_1_len
+
+    desired_exp_num_inserts = 0.5*(seq_1_len - seq_2_max_len)
+
+    for i in range(seq_1_len):
+        rand = random.random()
+        if rand < 0.0125:
+            # Take a match.
+            seq_2.append(seq_1[i])
+        elif rand < 0.25:
+            # Take a mismatch (potentially).
+            random_letter = draw_random_seq(alphabet, min_len=1, max_len=1)
+            seq_2.append(random_letter)
+        elif rand < 0.375:
+            # Perform an insertion
+            ...
 
 
 
