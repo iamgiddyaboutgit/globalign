@@ -974,6 +974,146 @@ def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list
         [fill_val]*(num_cols) for i in range(num_rows)
     ]
 
+def find_best_path(
+    i:int,
+    j:int,
+    best_paths_mat:list[list],
+    partial_dp_mat:list[list],
+    partial_dp_row_id:int,
+    seq_1:str,
+    seq_2:str,
+    gap_open_cost:int|float,
+    gap_extension_cost:int|float,
+    cost_mat:dict[dict],
+    moves_for_gap_open_penalty_from_left:set={0, 3, 4},
+    moves_for_gap_open_penalty_from_up:set={0, 1, 2},
+    tie_mapper:dict[int]={
+        frozenset({1, 3}): 5,
+        frozenset({1, 4}): 6,
+        frozenset({2, 3}): 7,
+        frozenset({2, 4}): 8
+    }
+) -> tuple[int, int|float]:
+    """Find the best path to align two prefixes
+    
+    given the best paths in the alignments
+    of the prefixes that come before them.
+    That is, given the best alignments of
+    the following three prefixes:
+        seq_1[0:i-1] and seq_2[0:j-1]
+        seq_1[0:i] and seq_2[0:j-1]
+        seq_1[0:i-1] and seq_2[0:j]
+    find the best alignment of
+        seq_1[0:i] and seq_2[0:j].
+    
+    Args:
+
+    Returns:
+        The tuple (best_path_type, best_cum_cost),
+        where best_path_type is one of the following:
+            0: match/mismatch
+            1: starting gap in seq_1
+            2: continuing gap in seq_1
+            3: starting gap in seq_2
+            4: continuing gap in seq_2
+            5: tie between 1 and 3
+            6: tie between 1 and 4
+            7: tie between 2 and 3
+            8: tie between 2 and 4
+        and best_cum_cost is the cumulative cost in the 
+        optimal alignment of seq_1[0:i] and 
+        seq_2[0:j]
+    """
+    partial_dp_col_id = j
+
+    diag_best_path_type = best_paths_mat[i-1][j-1]
+    diag_best_cost = partial_dp_mat[i-1][j-1]
+    from_diag_best_cost = diag_best_cost + cost_mat[seq_1[i]][seq_2[j]]
+    from_diag_best_path_type = 0
+
+    left_best_path_type = best_paths_mat[i][j-1]
+    left_best_cost = partial_dp_mat[i][j-1]
+
+    # In calculating the best path to the current
+    # cell, we must worry about ties in 
+    # left_best_path_type and up_best_path_type.
+    if left_best_path_type in moves_for_gap_open_penalty_from_left:
+        # Pay for gap opening.
+        from_left_best_cost = left_best_cost + gap_open_cost + gap_extension_cost
+        from_left_best_path_type = 1
+    else:
+        # Do not pay for gap opening.
+        from_left_best_cost = left_best_cost + gap_extension_cost
+        from_left_best_path_type = 2
+
+    up_best_path_type = best_paths_mat[i-1][j]
+    up_best_cost = partial_dp_mat[i-1][j]
+    if up_best_path_type in moves_for_gap_open_penalty_from_up:
+        # Pay for gap opening.
+        from_up_best_cost = up_best_cost + gap_open_cost + gap_extension_cost
+        from_up_best_path_type = 3    
+    else:
+        # Do not pay for gap opening.
+        from_up_best_cost = up_best_cost + gap_extension_cost
+        from_up_best_path_type = 4
+
+    # possible_cum_cost is for the current cell.
+    possible_cum_cost = (
+        from_diag_best_cost,
+        from_left_best_cost,
+        from_up_best_cost
+    )
+    # Note that at this point, we have:
+    # from_diag_best_path_type == 0
+    # from_left_best_path_type is 1 or 2
+    # from_up_best_path_type is 3 or 4
+    possible_cum_cost_index_mapper = {
+        0: from_diag_best_path_type,
+        1: from_left_best_path_type,
+        2: from_up_best_path_type
+    }
+
+    best_cum_cost = min(possible_cum_cost)
+    unique_possible_cum_costs = set(possible_cum_cost)
+    suboptimal_cum_costs = unique_possible_cum_costs.remove(best_cum_cost)
+    best_cum_cost_index = possible_cum_cost.index(best_cum_cost)
+    
+    is_tied = (suboptimal_cum_costs < 2)
+    
+    if not is_tied:
+        best_path_type = possible_cum_cost_index_mapper[best_cum_cost_index]
+    elif from_left_best_cost == from_up_best_cost:
+        # There's a leading tie between
+        # from_left_best_cost and from_up_best_cost.
+        best_path_type = tie_mapper[frozenset({from_left_best_path_type, from_up_best_path_type})]
+    elif from_up_best_cost > best_cum_cost:
+        # There's a leading tie between
+        # from_left_best_cost and from_diag_best_cost
+        best_path_type = 999
+    
+    # elif from_diag_best_cost == from_left_best_cost:
+    #     best_path_type = from_left_best_path_type
+    # elif from_diag_best_cost == from_up_best_cost:
+    #     best_path_type = from_up_best_path_type
+    # else: 
+    #     # from_diag_best_cost == best_cum_cost
+    #     best_path_type = 0
+    
+
+    for poss_index, poss_cc in enumerate(possible_cum_cost):
+        ...
+        a = 5
+    
+    # Update previous entries in best_paths_mat
+    # in case there were earlier ties that 
+    # are now resolved.
+
+    # Update best_paths_mat.
+
+    return (best_path_type, best_cum_cost)
+    
+    
+
 def update_best_paths_mat(
     best_paths_mat:list[list],
     partial_A_mat:list[list],
