@@ -985,8 +985,8 @@ def find_best_path(
     gap_open_cost:int|float,
     gap_extension_cost:int|float,
     cost_mat:dict[dict],
-    moves_for_gap_open_penalty_from_left:set={0, 3, 4},
-    moves_for_gap_open_penalty_from_up:set={0, 1, 2},
+    moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12},
+    moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10},
     tie_mapper:dict[int]={
         frozenset({1, 3}): 5,
         frozenset({1, 4}): 6,
@@ -1020,6 +1020,10 @@ def find_best_path(
             6: tie between 1 and 4
             7: tie between 2 and 3
             8: tie between 2 and 4
+            9: tie between 0 and 1
+            10: tie between 0 and 2
+            11: tie between 0 and 3
+            12: tie between 0 and 4
         and best_cum_cost is the cumulative cost in the 
         optimal alignment of seq_1[0:i] and 
         seq_2[0:j]
@@ -1029,6 +1033,9 @@ def find_best_path(
     diag_best_path_type = best_paths_mat[i-1][j-1]
     diag_best_cost = partial_dp_mat[i-1][j-1]
     from_diag_best_cost = diag_best_cost + cost_mat[seq_1[i]][seq_2[j]]
+    # from_diag_best_path_type is the path_type that we would
+    # have for the current cell if we accepted a match/mismatch
+    # (and there were no ties).
     from_diag_best_path_type = 0
 
     left_best_path_type = best_paths_mat[i][j-1]
@@ -1040,10 +1047,14 @@ def find_best_path(
     if left_best_path_type in moves_for_gap_open_penalty_from_left:
         # Pay for gap opening.
         from_left_best_cost = left_best_cost + gap_open_cost + gap_extension_cost
+        # 1: starting gap in seq_1
         from_left_best_path_type = 1
     else:
+        # It is not required to open a gap
+        # to get to the current cell.
         # Do not pay for gap opening.
         from_left_best_cost = left_best_cost + gap_extension_cost
+        # 2: continuing gap in seq_1
         from_left_best_path_type = 2
 
     up_best_path_type = best_paths_mat[i-1][j]
