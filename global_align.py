@@ -979,7 +979,8 @@ def find_best_path(
     j:int,
     best_paths_mat:list[list],
     partial_dp_mat:list[list],
-    partial_dp_row_id:int,
+    partial_dp_mat_prev_row_id:int,
+    partial_dp_mat_cur_row_id:int,
     seq_1:str,
     seq_2:str,
     gap_open_cost:int|float,
@@ -1086,18 +1087,24 @@ def find_best_path(
         optimal alignment of seq_1[0:i] and 
         seq_2[0:j]
     """
-    partial_dp_col_id = j
-
-    diag_best_path_type = best_paths_mat[i-1][j-1]
-    diag_best_cost = partial_dp_mat[i-1][j-1]
+    partial_dp_mat_prev_col_id = j - 1
+    partial_dp_mat_cur_col_id = j
+    
+    best_paths_mat_prev_row_id = i - 1
+    best_paths_mat_cur_row_id = i
+    best_paths_mat_prev_col_id = partial_dp_mat_prev_col_id
+    best_paths_mat_cur_col_id = j
+    
+    # diag_best_path_type = best_paths_mat[best_paths_mat_prev_row_id][best_paths_mat_prev_col_id]
+    diag_best_cost = partial_dp_mat[partial_dp_mat_prev_row_id][partial_dp_mat_prev_col_id]
     from_diag_best_cost = diag_best_cost + cost_mat[seq_1[i]][seq_2[j]]
     # from_diag_best_path_type is the path_type that we would
     # have for the current cell if we accepted a match/mismatch
     # (and there were no ties).
-    from_diag_best_path_type = 0
+    # from_diag_best_path_type = 0
 
-    left_best_path_type = best_paths_mat[i][j-1]
-    left_best_cost = partial_dp_mat[i][j-1]
+    left_best_path_type = best_paths_mat[best_paths_mat_cur_row_id][best_paths_mat_prev_col_id]
+    left_best_cost = partial_dp_mat[partial_dp_mat_cur_row_id][partial_dp_mat_prev_col_id]
 
     # In calculating the best path to the current
     # cell, we must worry about ties in 
@@ -1115,8 +1122,8 @@ def find_best_path(
         # 2: continuing gap in seq_1
         from_left_best_path_type = 2
 
-    up_best_path_type = best_paths_mat[i-1][j]
-    up_best_cost = partial_dp_mat[i-1][j]
+    up_best_path_type = best_paths_mat[best_paths_mat_prev_row_id][best_paths_mat_cur_col_id]
+    up_best_cost = partial_dp_mat[partial_dp_mat_prev_row_id][partial_dp_mat_cur_col_id]
     if up_best_path_type in moves_for_gap_open_penalty_from_up:
         # Pay for gap opening.
         from_up_best_cost = up_best_cost + gap_open_cost + gap_extension_cost
@@ -1158,17 +1165,6 @@ def find_best_path(
     )]
 
     best_cum_cost = possible_cum_cost_sorted[-1]
-
-    # Update previous entries in best_paths_mat
-    # in case there were earlier ties that 
-    # are now resolved.
-    # There is no need to update the diagonal cell.
-    # Update left cell.
-    best_paths_mat[i][j - 1] = ...
-    # Update up cell.
-    best_paths_mat[i - 1][j] = ...
-
-    # Update best_paths_mat.
 
     return (best_path_type, best_cum_cost)
     
