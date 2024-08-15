@@ -987,6 +987,20 @@ def find_best_path(
     cost_mat:dict[dict],
     moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12, 14},
     moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10, 13},
+    cum_cost_rank_mapper={
+        # 3-way ties
+        (0, 0, 0): None,
+        # 2-way ties for low
+        (0, 0, 2): None,
+        (0, 2, 0): None,
+        (2, 0, 0): None,
+        # 2-way ties for high
+        (0, 1, 1): None,
+        (1, 0, 1): None,
+        (1, 1, 0): None,
+        # no ties
+        (0, 1, 2): None
+    },
     tie_mapper:dict[int]={
         frozenset({1, 3}): 5,
         frozenset({1, 4}): 6,
@@ -997,7 +1011,11 @@ def find_best_path(
         frozenset({0, 3}): 11,
         frozenset({0, 4}): 12,
         frozenset({1, 2}): 13,
-        frozenset({3, 4}): 14
+        frozenset({3, 4}): 14,
+        frozenset({0, 1, 3}): 15,
+        frozenset({0, 1, 4}): 16,
+        frozenset({0, 2, 3}): 17,
+        frozenset({0, 2, 4}): 18
     }
 ) -> tuple[int, int|float]:
     """Find the best path to align two prefixes
@@ -1032,6 +1050,10 @@ def find_best_path(
             12: tie between 0 and 4
             13: tie between 1 and 2
             14: tie between 3 and 4
+            15: tie between 0, 1, and 3
+            16: tie between 0, 1, and 4
+            17: tie between 0, 2, and 3
+            18: tie between 0, 2, and 4
         and best_cum_cost is the cumulative cost in the 
         optimal alignment of seq_1[0:i] and 
         seq_2[0:j]
@@ -1077,11 +1099,11 @@ def find_best_path(
         from_up_best_path_type = 4
 
     # possible_cum_cost is for the current cell.
-    possible_cum_cost = (
+    possible_cum_cost = [
         from_diag_best_cost,
         from_left_best_cost,
         from_up_best_cost
-    )
+    ]
     # Note that at this point, we have:
     # from_diag_best_path_type == 0
     # from_left_best_path_type is 1 or 2
@@ -1091,6 +1113,16 @@ def find_best_path(
         1: from_left_best_path_type,
         2: from_up_best_path_type
     }
+
+    # https://stackoverflow.com/a/53661474/8423001
+    # Get the ranks of the values in possible_cum_cost.
+    # A minimum value in possible_cum_cost will be assigned
+    # a rank of 0.  Larger values will be assigned higher ranks.
+    # In the case of ties, ranks are repeated.  For example,
+    # for [3, 3, 9], the ranks are (0, 0, 2).
+    possible_cum_cost_ranks = tuple(
+        sorted(possible_cum_cost).index(k) for k in possible_cum_cost
+    )
 
     best_cum_cost = min(possible_cum_cost)
     unique_possible_cum_costs = set(possible_cum_cost)
