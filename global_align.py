@@ -1044,36 +1044,6 @@ def find_best_path(
         ((1, 1, 0), (2, 4)): 10,
         # no ties
         ((0, 1, 2), (2, 4)): 4
-    },
-    cum_cost_rank_mapper={
-        # 3-way ties
-        (0, 0, 0): None,
-        # 2-way ties for low
-        (0, 0, 2): None,
-        (0, 2, 0): None,
-        (2, 0, 0): None,
-        # 2-way ties for high
-        (0, 1, 1): None,
-        (1, 0, 1): None,
-        (1, 1, 0): None,
-        # no ties
-        (0, 1, 2): None
-    },
-    tie_mapper:dict[int]={
-        frozenset({1, 3}): 5,
-        frozenset({1, 4}): 6,
-        frozenset({2, 3}): 7,
-        frozenset({2, 4}): 8,
-        frozenset({0, 1}): 9,
-        frozenset({0, 2}): 10,
-        frozenset({0, 3}): 11,
-        frozenset({0, 4}): 12,
-        frozenset({1, 2}): 13,
-        frozenset({3, 4}): 14,
-        frozenset({0, 1, 3}): 15,
-        frozenset({0, 1, 4}): 16,
-        frozenset({0, 2, 3}): 17,
-        frozenset({0, 2, 4}): 18
     }
 ) -> tuple[int, int|float]:
     """Find the best path to align two prefixes
@@ -1167,7 +1137,6 @@ def find_best_path(
     # from_left_best_path_type is 1 or 2
     # from_up_best_path_type is 3 or 4
    
-    
     # Get the ranks of the values in possible_cum_cost.
     # A minimum value in possible_cum_cost will be assigned
     # a rank of 0.  Larger values will be assigned higher ranks.
@@ -1193,6 +1162,11 @@ def find_best_path(
     # Update previous entries in best_paths_mat
     # in case there were earlier ties that 
     # are now resolved.
+    # There is no need to update the diagonal cell.
+    # Update left cell.
+    best_paths_mat[i][j - 1] = ...
+    # Update up cell.
+    best_paths_mat[i - 1][j] = ...
 
     # Update best_paths_mat.
 
