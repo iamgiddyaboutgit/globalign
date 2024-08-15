@@ -985,13 +985,19 @@ def find_best_path(
     gap_open_cost:int|float,
     gap_extension_cost:int|float,
     cost_mat:dict[dict],
-    moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12},
-    moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10},
+    moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12, 14},
+    moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10, 13},
     tie_mapper:dict[int]={
         frozenset({1, 3}): 5,
         frozenset({1, 4}): 6,
         frozenset({2, 3}): 7,
-        frozenset({2, 4}): 8
+        frozenset({2, 4}): 8,
+        frozenset({0, 1}): 9,
+        frozenset({0, 2}): 10,
+        frozenset({0, 3}): 11,
+        frozenset({0, 4}): 12,
+        frozenset({1, 2}): 13,
+        frozenset({3, 4}): 14
     }
 ) -> tuple[int, int|float]:
     """Find the best path to align two prefixes
@@ -1024,6 +1030,8 @@ def find_best_path(
             10: tie between 0 and 2
             11: tie between 0 and 3
             12: tie between 0 and 4
+            13: tie between 1 and 2
+            14: tie between 3 and 4
         and best_cum_cost is the cumulative cost in the 
         optimal alignment of seq_1[0:i] and 
         seq_2[0:j]
@@ -1086,12 +1094,19 @@ def find_best_path(
 
     best_cum_cost = min(possible_cum_cost)
     unique_possible_cum_costs = set(possible_cum_cost)
-    suboptimal_cum_costs = unique_possible_cum_costs.remove(best_cum_cost)
+    unique_possible_cum_costs.remove(best_cum_cost)
     best_cum_cost_index = possible_cum_cost.index(best_cum_cost)
     
-    is_tied = (suboptimal_cum_costs < 2)
+    # Because best_cum_cost is removed from the set of 
+    # unique_possible_cum_costs (which starts out with
+    # 3 numbers in it), anything remaining in 
+    # unique_possible_cum_costs will be for 
+    # suboptimal cumulative costs.  If there are 
+    # exactly 2 suboptimal cumulative costs,
+    # then there were no ties.
+    is_not_tied = (len(unique_possible_cum_costs) == 2)
     
-    if not is_tied:
+    if is_not_tied:
         best_path_type = possible_cum_cost_index_mapper[best_cum_cost_index]
     elif from_left_best_cost == from_up_best_cost:
         # There's a leading tie between
