@@ -1166,68 +1166,30 @@ def find_best_path(
     # from_diag_best_path_type == 0
     # from_left_best_path_type is 1 or 2
     # from_up_best_path_type is 3 or 4
-    # possible_cum_cost_index_mapper = {
-    #     0: from_diag_best_path_type,
-    #     1: from_left_best_path_type,
-    #     2: from_up_best_path_type
-    # }
-
-    # https://stackoverflow.com/a/53661474/8423001
+   
+    
     # Get the ranks of the values in possible_cum_cost.
     # A minimum value in possible_cum_cost will be assigned
     # a rank of 0.  Larger values will be assigned higher ranks.
     # In the case of ties, ranks are repeated.  For example,
     # for [3, 3, 9], the ranks are (0, 0, 2).
     possible_cum_cost_sorted = sorted(possible_cum_cost)
+    # Rank trick: https://stackoverflow.com/a/53661474/8423001
     possible_cum_cost_ranks = tuple(
         possible_cum_cost_sorted.index(k) for k in possible_cum_cost
     )
 
+    # The from_diag_best_path_type is always 0, 
+    # so it's not really relevant when 
+    # trying to figure out the best_path_type
+    # to the current cell.
     best_path_type = situation_mapper[(
         possible_cum_cost_ranks, 
         (from_left_best_path_type, from_up_best_path_type)
     )]
 
-
     best_cum_cost = possible_cum_cost_sorted[-1]
 
-    # unique_possible_cum_costs = set(possible_cum_cost)
-    # unique_possible_cum_costs.remove(best_cum_cost)
-    # best_cum_cost_index = possible_cum_cost.index(best_cum_cost)
-    
-    # Because best_cum_cost is removed from the set of 
-    # unique_possible_cum_costs (which starts out with
-    # 3 numbers in it), anything remaining in 
-    # unique_possible_cum_costs will be for 
-    # suboptimal cumulative costs.  If there are 
-    # exactly 2 suboptimal cumulative costs,
-    # then there were no ties.
-    is_not_tied = (len(unique_possible_cum_costs) == 2)
-    
-    if is_not_tied:
-        best_path_type = possible_cum_cost_index_mapper[best_cum_cost_index]
-    elif from_left_best_cost == from_up_best_cost:
-        # There's a leading tie between
-        # from_left_best_cost and from_up_best_cost.
-        best_path_type = tie_mapper[frozenset({from_left_best_path_type, from_up_best_path_type})]
-    elif from_up_best_cost > best_cum_cost:
-        # There's a leading tie between
-        # from_left_best_cost and from_diag_best_cost
-        best_path_type = 999
-    
-    # elif from_diag_best_cost == from_left_best_cost:
-    #     best_path_type = from_left_best_path_type
-    # elif from_diag_best_cost == from_up_best_cost:
-    #     best_path_type = from_up_best_path_type
-    # else: 
-    #     # from_diag_best_cost == best_cum_cost
-    #     best_path_type = 0
-    
-
-    for poss_index, poss_cc in enumerate(possible_cum_cost):
-        ...
-        a = 5
-    
     # Update previous entries in best_paths_mat
     # in case there were earlier ties that 
     # are now resolved.
