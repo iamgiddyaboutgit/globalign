@@ -987,6 +987,64 @@ def find_best_path(
     cost_mat:dict[dict],
     moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12, 14},
     moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10, 13},
+    situation_mapper={
+        # from_left_best_path_type == 1
+        # and from_up_best_path_type == 3
+        # 3-way ties
+        ((0, 0, 0), (1, 3)): 15,
+        # 2-way ties for low
+        ((0, 0, 2), (1, 3)): 3,
+        ((0, 2, 0), (1, 3)): 1,
+        ((2, 0, 0), (1, 3)): 0,
+        # 2-way ties for high
+        ((0, 1, 1), (1, 3)): 5,
+        ((1, 0, 1), (1, 3)): 11,
+        ((1, 1, 0), (1, 3)): 9,
+        # no ties
+        ((0, 1, 2), (1, 3)): 3,
+        # from_left_best_path_type == 1
+        # and from_up_best_path_type == 4
+        # 3-way ties
+        ((0, 0, 0), (1, 4)): 16,
+        # 2-way ties for low
+        ((0, 0, 2), (1, 4)): 4,
+        ((0, 2, 0), (1, 4)): 1,
+        ((2, 0, 0), (1, 4)): 0,
+        # 2-way ties for high
+        ((0, 1, 1), (1, 4)): 6,
+        ((1, 0, 1), (1, 4)): 12,
+        ((1, 1, 0), (1, 4)): 9,
+        # no ties
+        ((0, 1, 2), (1, 4)): 4,
+        # from_left_best_path_type == 2
+        # and from_up_best_path_type == 3
+        # 3-way ties
+        ((0, 0, 0), (2, 3)): 17,
+        # 2-way ties for low
+        ((0, 0, 2), (2, 3)): 3,
+        ((0, 2, 0), (2, 3)): 2,
+        ((2, 0, 0), (2, 3)): 0,
+        # 2-way ties for high
+        ((0, 1, 1), (2, 3)): 7,
+        ((1, 0, 1), (2, 3)): 11,
+        ((1, 1, 0), (2, 3)): 10,
+        # no ties
+        ((0, 1, 2), (2, 3)): 3,
+        # from_left_best_path_type == 2
+        # and from_up_best_path_type == 4
+        # 3-way ties
+        ((0, 0, 0), (2, 4)): 18,
+        # 2-way ties for low
+        ((0, 0, 2), (2, 4)): 4,
+        ((0, 2, 0), (2, 4)): 2,
+        ((2, 0, 0), (2, 4)): 0,
+        # 2-way ties for high
+        ((0, 1, 1), (2, 4)): 8,
+        ((1, 0, 1), (2, 4)): 12,
+        ((1, 1, 0), (2, 4)): 10,
+        # no ties
+        ((0, 1, 2), (2, 4)): 4
+    },
     cum_cost_rank_mapper={
         # 3-way ties
         (0, 0, 0): None,
@@ -1108,11 +1166,11 @@ def find_best_path(
     # from_diag_best_path_type == 0
     # from_left_best_path_type is 1 or 2
     # from_up_best_path_type is 3 or 4
-    possible_cum_cost_index_mapper = {
-        0: from_diag_best_path_type,
-        1: from_left_best_path_type,
-        2: from_up_best_path_type
-    }
+    # possible_cum_cost_index_mapper = {
+    #     0: from_diag_best_path_type,
+    #     1: from_left_best_path_type,
+    #     2: from_up_best_path_type
+    # }
 
     # https://stackoverflow.com/a/53661474/8423001
     # Get the ranks of the values in possible_cum_cost.
@@ -1120,14 +1178,22 @@ def find_best_path(
     # a rank of 0.  Larger values will be assigned higher ranks.
     # In the case of ties, ranks are repeated.  For example,
     # for [3, 3, 9], the ranks are (0, 0, 2).
+    possible_cum_cost_sorted = sorted(possible_cum_cost)
     possible_cum_cost_ranks = tuple(
-        sorted(possible_cum_cost).index(k) for k in possible_cum_cost
+        possible_cum_cost_sorted.index(k) for k in possible_cum_cost
     )
 
-    best_cum_cost = min(possible_cum_cost)
-    unique_possible_cum_costs = set(possible_cum_cost)
-    unique_possible_cum_costs.remove(best_cum_cost)
-    best_cum_cost_index = possible_cum_cost.index(best_cum_cost)
+    best_path_type = situation_mapper[(
+        possible_cum_cost_ranks, 
+        (from_left_best_path_type, from_up_best_path_type)
+    )]
+
+
+    best_cum_cost = possible_cum_cost_sorted[-1]
+
+    # unique_possible_cum_costs = set(possible_cum_cost)
+    # unique_possible_cum_costs.remove(best_cum_cost)
+    # best_cum_cost_index = possible_cum_cost.index(best_cum_cost)
     
     # Because best_cum_cost is removed from the set of 
     # unique_possible_cum_costs (which starts out with
