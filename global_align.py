@@ -918,7 +918,7 @@ def draw_two_random_seqs(
             seq_2_index_for_deletion = 0
         elif rand < prob_delete_ends_only_on_delete:
             # Edit at right end.
-            seq_2_index_for_deletion = len_seq_2_list
+            seq_2_index_for_deletion = len_seq_2_list - 1
         else:
             # Edit in middle.
             middle_start = min(1, len_seq_2_list - 1)
@@ -1394,6 +1394,92 @@ def do_core_align(
         score
     )
 
+
+def do_core_align_2(
+    seq_1:str, 
+    seq_2:str, 
+    middle_row_index:int,
+    best_paths_mat:list[list],
+    partial_dp_mat:list[list],
+    gap_open_cost,
+    gap_extension_cost,
+    cost_mat:dict[dict],
+    moves_for_gap_open_penalty_from_left,
+    moves_for_gap_open_penalty_from_up,
+    situation_mapper
+) -> tuple[list[list], int|float, list[list]]:
+    """
+    Find a global alignment of the subsequences
+    
+    `seq_1[1:(middle_row_index + 1)]` and 
+    `seq_2[1:(middle_row_index + 1)]`, assuming that the lengths
+    of both sequences are greater than 1.  
+    Here, `middle_row_index = math.ceil(len(seq_1) / 2)`
+    If the lengths of the sequences are both 1, then no additional 
+    aligning is done.
+
+    Args:
+        gap_open_cost: The cost for a gap just to exist.
+            This cost should be non-negative.
+            It can be incurred multiple times
+            if there are multiple runs of gaps in the
+            alignment.
+
+    Returns:
+        (
+            partial_dp_mat,
+            cur_cell_best_cum_cost,
+            best_paths_mat
+        )
+    """
+    # Prep for loop
+    middle_row_index = math.ceil(len(seq_1) / 2)
+    row_range = range(1, middle_row_index + 1)
+    col_range = range(1, len(seq_2) + 1)
+
+    partial_dp_mat_prev_row_id = 0
+    partial_dp_mat_cur_row_id = 1
+
+    for i in row_range:
+        # Prep for this row iteration.
+        best_paths_mat_cur_row_id = i
+        for j in col_range:
+            # Prep for this column iteration.
+            partial_dp_mat_cur_col_id = j
+            best_paths_mat_cur_col_id = j
+            # Loop body
+            cur_cell_best_path_type, cur_cell_best_cum_cost = find_best_path(
+                i=i,
+                j=j,
+                best_paths_mat=best_paths_mat,
+                partial_dp_mat=partial_dp_mat,
+                partial_dp_mat_prev_row_id=partial_dp_mat_prev_row_id,
+                partial_dp_mat_cur_row_id=partial_dp_mat_cur_row_id,
+                seq_1=seq_1,
+                seq_2=seq_2,
+                gap_open_cost=gap_open_cost,
+                gap_extension_cost=gap_extension_cost,
+                cost_mat=cost_mat,
+                moves_for_gap_open_penalty_from_left=moves_for_gap_open_penalty_from_left,
+                moves_for_gap_open_penalty_from_up=moves_for_gap_open_penalty_from_up,
+                situation_mapper=situation_mapper
+            )
+
+            # Update best_paths_mat.
+            best_paths_mat[best_paths_mat_cur_row_id][best_paths_mat_cur_col_id] = cur_cell_best_path_type
+
+            # Update partial_dp_mat.
+            partial_dp_mat[partial_dp_mat_cur_row_id][partial_dp_mat_cur_col_id] = cur_cell_best_cum_cost
+
+        # Prep for next row iteration.
+        # Do some swapping.
+        partial_dp_mat_prev_row_id, partial_dp_mat_cur_row_id = partial_dp_mat_cur_row_id, partial_dp_mat_prev_row_id
+
+    return (
+        partial_dp_mat,
+        cur_cell_best_cum_cost,
+        best_paths_mat
+    )
 
 def warmup_align(
     seq_1:str, 
