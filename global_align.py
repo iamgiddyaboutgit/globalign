@@ -269,7 +269,19 @@ def transform_scoring_mat_to_cost_mat(
         # seq_2_scores is the inner dict for the outer
         # key of seq_1_letter.
         for seq_2_letter, score in seq_2_scores.items():
-            seq_2_scores[seq_2_letter] = score - delta_d - delta_i
+            # if seq_1_letter == seq_2_letter and seq_1_letter != "-":
+            #     # Update matches
+            #     seq_2_scores[seq_2_letter] = -score
+            # elif seq_1_letter != seq_2_letter and seq_1_letter != "-":
+            #     # Update mis-matches
+            #     seq_2_scores[seq_2_letter] = score + b
+            # elif seq_1_letter != seq_2_letter and seq_1_letter != "-":
+            #     # Update deletions (horizontal steps)
+            #     seq_2_scores[seq_2_letter] = score + delta_d
+            # else:
+            #     # Update insertions (vertical steps)
+            #     seq_2_scores[seq_2_letter] = score + delta_i 
+            seq_2_scores[seq_2_letter] = -(score - delta_d - delta_i)
    
     cost_mat = scoring_mat
     return cost_mat
@@ -1003,6 +1015,11 @@ def find_best_path(
         ((1, 1, 0), (1, 3)): 9,
         # no ties
         ((0, 1, 2), (1, 3)): 3,
+        ((1, 0, 2), (1, 3)): 3,
+        ((1, 2, 0), (1, 3)): 1,
+        ((0, 2, 1), (1, 3)): 1,
+        ((2, 0, 1), (1, 3)): 0,
+        ((2, 1, 0), (1, 3)): 0,
         # from_left_best_path_type == 1
         # and from_up_best_path_type == 4
         # 3-way ties
@@ -1017,6 +1034,11 @@ def find_best_path(
         ((1, 1, 0), (1, 4)): 9,
         # no ties
         ((0, 1, 2), (1, 4)): 4,
+        ((1, 0, 2), (1, 4)): 4,
+        ((1, 2, 0), (1, 4)): 1,
+        ((0, 2, 1), (1, 4)): 1,
+        ((2, 0, 1), (1, 4)): 0,
+        ((2, 1, 0), (1, 4)): 0,
         # from_left_best_path_type == 2
         # and from_up_best_path_type == 3
         # 3-way ties
@@ -1031,6 +1053,11 @@ def find_best_path(
         ((1, 1, 0), (2, 3)): 10,
         # no ties
         ((0, 1, 2), (2, 3)): 3,
+        ((1, 0, 2), (2, 3)): 3,
+        ((1, 2, 0), (2, 3)): 2,
+        ((0, 2, 1), (2, 3)): 2,
+        ((2, 0, 1), (2, 3)): 0,
+        ((2, 1, 0), (2, 3)): 0,
         # from_left_best_path_type == 2
         # and from_up_best_path_type == 4
         # 3-way ties
@@ -1044,7 +1071,12 @@ def find_best_path(
         ((1, 0, 1), (2, 4)): 12,
         ((1, 1, 0), (2, 4)): 10,
         # no ties
-        ((0, 1, 2), (2, 4)): 4
+        ((0, 1, 2), (2, 4)): 4,
+        ((1, 0, 2), (2, 4)): 4,
+        ((1, 2, 0), (2, 4)): 2,
+        ((0, 2, 1), (2, 4)): 2,
+        ((2, 0, 1), (2, 4)): 0,
+        ((2, 1, 0), (2, 4)): 0
     }
 ) -> tuple[int, int|float]:
     """Find the best path to align two prefixes
@@ -1089,6 +1121,11 @@ def find_best_path(
     """
     partial_dp_mat_prev_col_id = j - 1
     partial_dp_mat_cur_col_id = j
+
+    # The indices into our sequences are always 1 behind
+    # the indices into our dynamic programming matrices.
+    seq_1_index = i - 1
+    seq_2_index = j - 1
     
     best_paths_mat_prev_row_id = i - 1
     best_paths_mat_cur_row_id = i
@@ -1097,7 +1134,7 @@ def find_best_path(
     
     # diag_best_path_type = best_paths_mat[best_paths_mat_prev_row_id][best_paths_mat_prev_col_id]
     diag_best_cost = partial_dp_mat[partial_dp_mat_prev_row_id][partial_dp_mat_prev_col_id]
-    from_diag_best_cost = diag_best_cost + cost_mat[seq_1[i]][seq_2[j]]
+    from_diag_best_cost = diag_best_cost + cost_mat[seq_1[seq_1_index]][seq_2[seq_2_index]]
     # from_diag_best_path_type is the path_type that we would
     # have for the current cell if we accepted a match/mismatch
     # (and there were no ties).
@@ -1715,6 +1752,61 @@ def init_partial_dynamic_prog_matrix(
     return mat
 
 
+def init_partial_dynamic_prog_matrix_2(
+    seq_1:str,
+    seq_2:str,
+    cost_mat:dict[dict], 
+    gap_open_cost:int|float,
+    dynamic_prog_num_cols:int
+) -> list[list]:
+    """Initialize a partial dynamic programming
+
+    matrix.  It's partial because it only has 2 rows.
+    It initializes correctly for the 0-index rows and the 0-index 
+    columns.  
+    """
+    mat = make_matrix(
+        num_rows=2,
+        num_cols=dynamic_prog_num_cols,
+        fill_val=0
+    )
+
+    # Take care of initialization with gap costs.
+  
+    # Loop prep
+    # Start in column 1
+    j = 1
+
+    # The indices into our sequences are always 1 behind
+    # the indices into our dynamic programming matrices.
+    seq_2_index = j - 1
+
+    # Pay gap_open_cost for the entry in the 
+    # 0th row and 1st column.
+    cur_gap_score = gap_open_cost + cost_mat["-"][seq_2[seq_2_index]]
+    mat[0][j] = cur_gap_score
+
+    # We do not have to pay the gap_open_cost for 
+    # entries to the right of the 1-index column in the 
+    # 0-index row.
+    for j in range(2, dynamic_prog_num_cols):
+        # Prep for this iteration
+        # The sequence indices are always one behind
+        # the row/column indices.
+        seq_2_index = j - 1
+
+        # body of loop
+        # The cur_gap_score will have already incorporated
+        # a gap existence penalty.
+        cur_gap_score = cur_gap_score + cost_mat["-"][seq_2[seq_2_index]]
+        mat[0][j] = cur_gap_score
+
+    # We also have to pay the gap_open_cost for 
+    # the entry in the 1-index row and 0-index column.
+    mat[1][0] = gap_open_cost + cost_mat[seq_1[0]]["-"]
+    return mat
+
+
 def init_D_mat(
     dynamic_prog_num_rows:int,
     dynamic_prog_num_cols:int,
@@ -1787,11 +1879,13 @@ def init_best_paths_matrix(
         dynamic_prog_num_cols: len(seq_2) + 1
     Returns:
         best_paths_mat as a nested list.
-        There are 3 possible values for each entry in the best_paths_mat
+        There are multiple possible values for each entry in the best_paths_mat
         to indicate one of the following alignment "moves":
-        0 = ↖ (match/mismatch)
-        1 = ← (new gap or continuation of run of gaps in seq_1)
-        2 = ↑ (new gap or continuation of run of gaps in seq_2)
+            0: match/mismatch
+            1: starting gap in seq_1
+            2: continuing gap in seq_1
+            3: starting gap in seq_2
+            4: continuing gap in seq_2
     """
     # Based on the order of arguments to every
     # call to max, we initialize with
@@ -1799,15 +1893,11 @@ def init_best_paths_matrix(
     best_paths_mat = make_matrix(
         num_rows=dynamic_prog_num_rows,
         num_cols=dynamic_prog_num_cols,
-        fill_val=1
+        fill_val=2
     )
 
-    # Based on the order of arguments to every
-    # call to max, we decide to put 
-    # 2's in the beginning of each row
-    # because 2 indicates moving up.
     for i in range(1, dynamic_prog_num_rows):
-        best_paths_mat[i][0] = 2
+        best_paths_mat[i][0] = 4
 
     return best_paths_mat
 
