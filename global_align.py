@@ -827,6 +827,147 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
         seq_2_aligned_out
     )
 
+
+def substitute(
+    seq_1:str, 
+    seq_2:str, 
+    seq_1_index:int, 
+    seq_2_index:int, 
+    seq_1_aligned:list, 
+    seq_2_aligned:list
+):
+    
+    seq_1_aligned.append(seq_1[seq_1_index])
+    seq_2_aligned.append(seq_2[seq_2_index])
+    
+
+
+def traceback_2(
+    best_paths_mat:list[list], 
+    seq_1:str, 
+    seq_2:str,
+    # paths_to_moves_mapper gets the amounts by which 
+    # the row and column indices 
+    # in the edit graph need to change relative to the 
+    # coordinates of the current cell.
+    paths_to_moves_mapper={
+        0: (-1, -1),
+        1: (0, -1),
+        2: (0, -2),
+        3: (-1, 0),
+        4: (-2, 0),
+        5: random.choice(((0, -1), (-1, 0))),
+        6: random.choice(((0, -1), (-2, 0))),
+        7: random.choice(((0, -2), (-1, 0))),
+        8: random.choice(((0, -2), (-2, 0))),
+        9: (-1, -1),
+        10: (-1, -1),
+        11: (-1, -1),
+        12: (-1, -1),
+        13: random.choice(((0, -1), (0, -2))),
+        14: random.choice(((-1, 0), (-2, 0))),
+        15: (-1, -1),
+        16: (-1, -1),
+        17: (-1, -1),
+        18: (-1, -1)
+    }
+) -> tuple[str, str, str]:
+    """Perform traceback through best_paths_mat
+    
+    to find the alignment.
+
+    Args: 
+        best_paths_mat: list of length len(seq_1) + 1
+            where each element is a list of length 
+            len(seq_2) + 1
+    """
+    # Prepare for loop.
+    seq_1_aligned = []
+    seq_2_aligned = []
+    middle_part = []
+
+    m = len(seq_1)
+    n = len(seq_2)
+
+    # http://www.cs.cmu.edu/~durand/03-711/2017/Lectures/Sequence-Alignment-2017.pdf
+    max_num_alignment_moves = m + n
+
+    # Start at the bottom-right.
+    best_paths_mat_row_index = m 
+    best_paths_mat_col_index = n 
+
+    for w in range(max_num_alignment_moves):
+        path_indicator = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
+        best_paths_mat_row_index_delta, best_paths_mat_col_index_delta = paths_to_moves_mapper[path_indicator]
+        best_paths_mat_row_index += best_paths_mat_row_index_delta
+        best_paths_mat_col_index += best_paths_mat_col_index_delta
+        
+        # Because of the initial row and column in
+        # best_paths_mat that doesn't align with
+        # any parts of the two sequences, the indices
+        # are off by one.
+        seq_1_index = best_paths_mat_row_index - 1
+        seq_2_index = best_paths_mat_col_index - 1
+        seq_1_letter = seq_1[seq_1_index]
+        seq_2_letter = seq_2[seq_2_index]
+
+        seq_1_aligned.append(seq_1[seq_1_index])
+
+        # Determine whether the loop should continue.
+        if best_paths_mat_row_index < 1 and best_paths_mat_row_index < 1:
+            # print("seq_1_index")
+            # print(seq_1_index)
+            # print("seq_2_index")
+            # print(seq_2_index)
+            break
+        # if path_indicator == 0:
+        #     # match/mismatch is the best move
+        #     seq_1_letter = seq_1[seq_1_index]
+        #     seq_2_letter = seq_2[seq_2_index]
+        #     if seq_1_letter == seq_2_letter:
+        #         # There was a match.
+        #         middle_part.append("|")
+        #     else:
+        #         # There was not a match.
+        #         middle_part.append("*")
+
+        #     seq_1_aligned.append(seq_1[seq_1_index])
+        #     seq_1_index -= 1
+        #     seq_2_aligned.append(seq_2[seq_2_index])
+        #     seq_2_index -= 1
+        # elif path_indicator == 1:
+        #     # gap in seq_1 is the best move
+        #     middle_part.append(" ")
+        #     seq_1_aligned.append("-")
+        #     seq_2_aligned.append(seq_2[seq_2_index])
+        #     seq_2_index -= 1
+        # else:
+        #     # gap in seq_2 is the best move
+        #     middle_part.append(" ")
+        #     seq_1_aligned.append(seq_1[seq_1_index])
+        #     seq_1_index -= 1
+        #     seq_2_aligned.append("-")
+
+        
+
+    # print("seq_1_index")
+    # print(seq_1_index)
+    # print("seq_2_index")
+    # print(seq_2_index)
+    seq_1_aligned.reverse()
+    middle_part.reverse()
+    seq_2_aligned.reverse()
+
+    seq_1_aligned_out = "".join(seq_1_aligned)
+    middle_part_out = "".join(middle_part)
+    seq_2_aligned_out = "".join(seq_2_aligned)
+
+    return (
+        seq_1_aligned_out,
+        middle_part_out,
+        seq_2_aligned_out
+    )
+
 def draw_random_seq(alphabet:list, min_len:int, max_len:int):
     random.seed()
     # Randomly decide on how long the sequence should be.
