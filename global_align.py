@@ -1142,82 +1142,85 @@ def find_best_path(
     moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12, 14},
     moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10, 13},
     situation_mapper={
+        # from_diag_best_path_type = 0
         # from_left_best_path_type == 1
         # and from_up_best_path_type == 3
         # 3-way ties
-        ((0, 0, 0), (1, 3)): 15,
+        ((0, 0, 0), (0, 1, 3)): 15,
+        ((0, 0, 0), (0, 1, 3)): 15,
         # 2-way ties for low
-        ((0, 0, 2), (1, 3)): 3,
-        ((0, 2, 0), (1, 3)): 1,
-        ((2, 0, 0), (1, 3)): 0,
+        ((0, 0, 2), (0, 1, 3)): 3,
+        ((0, 2, 0), (0, 1, 3)): 1,
+        ((2, 0, 0), (0, 1, 3)): 0,
         # 2-way ties for high
-        ((0, 1, 1), (1, 3)): 5,
-        ((1, 0, 1), (1, 3)): 11,
-        ((1, 1, 0), (1, 3)): 9,
+        ((0, 1, 1), (0, 1, 3)): 5,
+        ((1, 0, 1), (0, 1, 3)): 11,
+        ((1, 1, 0), (0, 1, 3)): 9,
         # no ties
-        ((0, 1, 2), (1, 3)): 3,
-        ((1, 0, 2), (1, 3)): 3,
-        ((1, 2, 0), (1, 3)): 1,
-        ((0, 2, 1), (1, 3)): 1,
-        ((2, 0, 1), (1, 3)): 0,
-        ((2, 1, 0), (1, 3)): 0,
+        ((0, 1, 2), (0, 1, 3)): 3,
+        ((1, 0, 2), (0, 1, 3)): 3,
+        ((1, 2, 0), (0, 1, 3)): 1,
+        ((0, 2, 1), (0, 1, 3)): 1,
+        ((2, 0, 1), (0, 1, 3)): 0,
+        ((2, 1, 0), (0, 1, 3)): 0,
         # from_left_best_path_type == 1
         # and from_up_best_path_type == 4
         # 3-way ties
-        ((0, 0, 0), (1, 4)): 16,
+        ((0, 0, 0), (0, 1, 4)): 16,
         # 2-way ties for low
-        ((0, 0, 2), (1, 4)): 4,
-        ((0, 2, 0), (1, 4)): 1,
-        ((2, 0, 0), (1, 4)): 0,
+        ((0, 0, 2), (0, 1, 4)): 4,
+        ((0, 2, 0), (0, 1, 4)): 1,
+        ((2, 0, 0), (0, 1, 4)): 0,
         # 2-way ties for high
-        ((0, 1, 1), (1, 4)): 6,
-        ((1, 0, 1), (1, 4)): 12,
-        ((1, 1, 0), (1, 4)): 9,
+        ((0, 1, 1), (0, 1, 4)): 6,
+        ((1, 0, 1), (0, 1, 4)): 12,
+        ((1, 1, 0), (0, 1, 4)): 9,
         # no ties
-        ((0, 1, 2), (1, 4)): 4,
-        ((1, 0, 2), (1, 4)): 4,
-        ((1, 2, 0), (1, 4)): 1,
-        ((0, 2, 1), (1, 4)): 1,
-        ((2, 0, 1), (1, 4)): 0,
-        ((2, 1, 0), (1, 4)): 0,
+        ((0, 1, 2), (0, 1, 4)): 4,
+        ((1, 0, 2), (0, 1, 4)): 4,
+        ((1, 2, 0), (0, 1, 4)): 1,
+        ((0, 2, 1), (0, 1, 4)): 1,
+        ((2, 0, 1), (0, 1, 4)): 0,
+        ((2, 1, 0), (0, 1, 4)): 0,
         # from_left_best_path_type == 2
         # and from_up_best_path_type == 3
         # 3-way ties
-        ((0, 0, 0), (2, 3)): 17,
+        ((0, 0, 0), (0, 2, 3)): 17,
         # 2-way ties for low
-        ((0, 0, 2), (2, 3)): 3,
-        ((0, 2, 0), (2, 3)): 2,
-        ((2, 0, 0), (2, 3)): 0,
+        ((0, 0, 2), (0, 2, 3)): 3,
+        ((0, 2, 0), (0, 2, 3)): 2,
+        ((2, 0, 0), (0, 2, 3)): 0,
         # 2-way ties for high
-        ((0, 1, 1), (2, 3)): 7,
-        ((1, 0, 1), (2, 3)): 11,
-        ((1, 1, 0), (2, 3)): 10,
+        ((0, 1, 1), (0, 2, 3)): 7,
+        ((1, 0, 1), (0, 2, 3)): 11,
+        ((1, 1, 0), (0, 2, 3)): 10,
         # no ties
-        ((0, 1, 2), (2, 3)): 3,
-        ((1, 0, 2), (2, 3)): 3,
-        ((1, 2, 0), (2, 3)): 2,
-        ((0, 2, 1), (2, 3)): 2,
-        ((2, 0, 1), (2, 3)): 0,
-        ((2, 1, 0), (2, 3)): 0,
+        ((0, 1, 2), (0, 2, 3)): 3,
+        ((1, 0, 2), (0, 2, 3)): 3,
+        ((1, 2, 0), (0, 2, 3)): 2,
+        ((0, 2, 1), (0, 2, 3)): 2,
+        ((2, 0, 1), (0, 2, 3)): 0,
+        ((2, 1, 0), (0, 2, 3)): 0,
+        # from_diag_best_path_type = 19
         # from_left_best_path_type == 2
         # and from_up_best_path_type == 4
         # 3-way ties
-        ((0, 0, 0), (2, 4)): 18,
+        ((0, 0, 0), (19, 2, 4)): 27,
         # 2-way ties for low
-        ((0, 0, 2), (2, 4)): 4,
-        ((0, 2, 0), (2, 4)): 2,
-        ((2, 0, 0), (2, 4)): 0,
+        ((0, 0, 2), (19, 2, 4)): 4,
+        ((0, 2, 0), (19, 2, 4)): 2,
+        ((2, 0, 0), (19, 2, 4)): 19,
         # 2-way ties for high
-        ((0, 1, 1), (2, 4)): 8,
-        ((1, 0, 1), (2, 4)): 12,
-        ((1, 1, 0), (2, 4)): 10,
+        ((0, 1, 1), (19, 2, 4)): 8,
+        ((1, 0, 1), (19, 2, 4)): 22,
+        ((1, 1, 0), (19, 2, 4)): 21,
         # no ties
-        ((0, 1, 2), (2, 4)): 4,
-        ((1, 0, 2), (2, 4)): 4,
-        ((1, 2, 0), (2, 4)): 2,
-        ((0, 2, 1), (2, 4)): 2,
-        ((2, 0, 1), (2, 4)): 0,
-        ((2, 1, 0), (2, 4)): 0
+        ((0, 1, 2), (19, 2, 4)): 4,
+        ((1, 0, 2), (19, 2, 4)): 4,
+        ((1, 2, 0), (19, 2, 4)): 2,
+        ((0, 2, 1), (19, 2, 4)): 2,
+        ((2, 0, 1), (19, 2, 4)): 19,
+        ((2, 1, 0), (19, 2, 4)): 19
     }
 ) -> tuple[int, int|float]:
     """Find the best path to align two prefixes
@@ -1237,7 +1240,7 @@ def find_best_path(
     Returns:
         The tuple (best_path_type, best_cum_cost),
         where best_path_type is one of the following:
-            0: match/mismatch
+            0: match
             1: starting gap in seq_1
             2: continuing gap in seq_1
             3: starting gap in seq_2
@@ -1256,6 +1259,15 @@ def find_best_path(
             16: tie between 0, 1, and 4
             17: tie between 0, 2, and 3
             18: tie between 0, 2, and 4
+            19: mismatch
+            20: tie between 19 and 1
+            21: tie between 19 and 2
+            22: tie between 19 and 3
+            23: tie between 19 and 4
+            24: tie between 19, 1, and 3
+            25: tie between 19, 1, and 4
+            26: tie between 19, 2, and 3
+            27: tie between 19, 2, and 4
         and best_cum_cost is the cumulative cost in the 
         optimal alignment of seq_1[0:i] and 
         seq_2[0:j]
@@ -1273,13 +1285,16 @@ def find_best_path(
     best_paths_mat_prev_col_id = partial_dp_mat_prev_col_id
     best_paths_mat_cur_col_id = j
     
-    # diag_best_path_type = best_paths_mat[best_paths_mat_prev_row_id][best_paths_mat_prev_col_id]
+    diag_best_path_type = best_paths_mat[best_paths_mat_prev_row_id][best_paths_mat_prev_col_id]
     diag_best_cost = partial_dp_mat[partial_dp_mat_prev_row_id][partial_dp_mat_prev_col_id]
     from_diag_best_cost = diag_best_cost + cost_mat[seq_1[seq_1_index]][seq_2[seq_2_index]]
     # from_diag_best_path_type is the path_type that we would
     # have for the current cell if we accepted a match/mismatch
     # (and there were no ties).
-    # from_diag_best_path_type = 0
+    if seq_1[seq_1_index] == seq_2[seq_2_index]:
+        from_diag_best_path_type = 0
+    else:
+        from_diag_best_path_type = 19
 
     left_best_path_type = best_paths_mat[best_paths_mat_cur_row_id][best_paths_mat_prev_col_id]
     left_best_cost = partial_dp_mat[partial_dp_mat_cur_row_id][partial_dp_mat_prev_col_id]
@@ -1318,7 +1333,7 @@ def find_best_path(
         from_up_best_cost
     ]
     # Note that at this point, we have:
-    # from_diag_best_path_type == 0
+    # from_diag_best_path_type is 0 or 19
     # from_left_best_path_type is 1 or 2
     # from_up_best_path_type is 3 or 4
    
@@ -1333,15 +1348,16 @@ def find_best_path(
         possible_cum_cost_sorted.index(k) for k in possible_cum_cost
     )
 
-    # The from_diag_best_path_type is always 0, 
-    # so it's not really relevant when 
-    # trying to figure out the best_path_type
-    # to the current cell.
+    # Map the ranks and what would be the 3 best paths
+    # to possibly put in the current cell into
+    # a path type to put in the current cell.
     best_path_type = situation_mapper[(
         possible_cum_cost_ranks, 
-        (from_left_best_path_type, from_up_best_path_type)
+        (from_diag_best_path_type, from_left_best_path_type, from_up_best_path_type)
     )]
 
+    # It's sorted in ascending order,
+    # so a maximum value is at the end.
     best_cum_cost = possible_cum_cost_sorted[-1]
 
     return (best_path_type, best_cum_cost)
