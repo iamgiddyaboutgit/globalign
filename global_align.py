@@ -1787,7 +1787,6 @@ def do_core_align(
 def do_core_align_2(
     seq_1:str, 
     seq_2:str, 
-    middle_row_index:int,
     best_paths_mat:list[list],
     partial_dp_mat:list[list],
     gap_open_cost,
@@ -1800,10 +1799,9 @@ def do_core_align_2(
     """
     Find a global alignment of the subsequences
     
-    `seq_1[1:(middle_row_index + 1)]` and 
-    `seq_2[1:(middle_row_index + 1)]`, assuming that the lengths
+    `seq_1[1:]` and 
+    `seq_2[1:]`, assuming that the lengths
     of both sequences are greater than 1.  
-    Here, `middle_row_index = math.ceil(len(seq_1) / 2)`
     If the lengths of the sequences are both 1, then no additional 
     aligning is done.
 
@@ -1822,8 +1820,7 @@ def do_core_align_2(
         )
     """
     # Prep for loop
-    middle_row_index = math.ceil(len(seq_1) / 2)
-    row_range = range(1, middle_row_index + 1)
+    row_range = range(1, len(seq_1) + 1)
     col_range = range(1, len(seq_2) + 1)
 
     partial_dp_mat_prev_row_id = 0
