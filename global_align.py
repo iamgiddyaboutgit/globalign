@@ -828,19 +828,119 @@ def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str
     )
 
 
-def substitute(
+def take_match(
     seq_1:str, 
     seq_2:str, 
     seq_1_index:int, 
     seq_2_index:int, 
     seq_1_aligned:list, 
+    middle_part:list,
     seq_2_aligned:list
 ):
-    
     seq_1_aligned.append(seq_1[seq_1_index])
+    middle_part.append("|")
     seq_2_aligned.append(seq_2[seq_2_index])
-    
 
+    return (
+        seq_1_aligned,
+        middle_part,
+        seq_2_aligned
+    )
+    
+def take_mismatch(
+    seq_1:str, 
+    seq_2:str, 
+    seq_1_index:int, 
+    seq_2_index:int, 
+    seq_1_aligned:list, 
+    middle_part:list,
+    seq_2_aligned:list
+):
+    seq_1_aligned.append(seq_1[seq_1_index])
+    middle_part.append("*")
+    seq_2_aligned.append(seq_2[seq_2_index])
+
+    return (
+        seq_1_aligned,
+        middle_part,
+        seq_2_aligned
+    )
+
+def take_gap_in_seq_1( 
+    seq_1:str,
+    seq_2:str, 
+    seq_1_index:int,
+    seq_2_index:int, 
+    seq_1_aligned:list, 
+    middle_part:list,
+    seq_2_aligned:list
+):
+    seq_1_aligned.append("-")
+    middle_part.append(" ")
+    seq_2_aligned.append(seq_2[seq_2_index])
+
+    return (
+        seq_1_aligned,
+        middle_part,
+        seq_2_aligned
+    )
+
+def take_2_gaps_in_seq_1( 
+    seq_1:str,
+    seq_2:str, 
+    seq_1_index:int,
+    seq_2_index:int,
+    seq_1_aligned:list, 
+    middle_part:list,
+    seq_2_aligned:list
+):
+    seq_1_aligned.append("--")
+    middle_part.append("  ")
+    seq_2_aligned.extend((seq_2[seq_2_index], seq_2[seq_2_index - 1]))
+
+    return (
+        seq_1_aligned,
+        middle_part,
+        seq_2_aligned
+    )
+
+def take_gap_in_seq_2( 
+    seq_1:str,
+    seq_2:str, 
+    seq_1_index:int,
+    seq_2_index:int, 
+    seq_1_aligned:list, 
+    middle_part:list,
+    seq_2_aligned:list
+):
+    seq_1_aligned.append(seq_1[seq_1_index])
+    middle_part.append(" ")
+    seq_2_aligned.append("-")
+
+    return (
+        seq_1_aligned,
+        middle_part,
+        seq_2_aligned
+    )
+
+def take_2_gaps_in_seq_2( 
+    seq_1:str,
+    seq_2:str, 
+    seq_1_index:int,
+    seq_2_index:int,
+    seq_1_aligned:list, 
+    middle_part:list,
+    seq_2_aligned:list
+):
+    seq_1_aligned.append((seq_1[seq_1_index], seq_1[seq_1_index - 1]))
+    middle_part.append("  ")
+    seq_2_aligned.extend("--")
+
+    return (
+        seq_1_aligned,
+        middle_part,
+        seq_2_aligned
+    )
 
 def traceback_2(
     best_paths_mat:list[list], 
@@ -851,11 +951,11 @@ def traceback_2(
     # in the edit graph need to change relative to the 
     # coordinates of the current cell.
     paths_to_moves_mapper={
-        0: (-1, -1),
-        1: (0, -1),
-        2: (0, -2),
-        3: (-1, 0),
-        4: (-2, 0),
+        0: (-1, -1, take_match),
+        1: (0, -1, take_gap_in_seq_1),
+        2: (0, -2, take_2_gaps_in_seq_1),
+        3: (-1, 0, take_gap_in_seq_2),
+        4: (-2, 0, take_2_gaps_in_seq_2),
         5: random.choice(((0, -1), (-1, 0))),
         6: random.choice(((0, -1), (-2, 0))),
         7: random.choice(((0, -2), (-1, 0))),
@@ -886,7 +986,7 @@ def traceback_2(
     seq_2_aligned = []
     middle_part = []
 
-    m = len(seq_1)
+    m = len(best_paths_mat)
     n = len(seq_2)
 
     # http://www.cs.cmu.edu/~durand/03-711/2017/Lectures/Sequence-Alignment-2017.pdf
@@ -895,10 +995,33 @@ def traceback_2(
     # Start at the bottom-right.
     best_paths_mat_row_index = m 
     best_paths_mat_col_index = n 
+    # Because of the initial row and column in
+    # best_paths_mat that doesn't align with
+    # any parts of the two sequences, the indices
+    # are off by one.
+    seq_1_index = best_paths_mat_row_index - 1
+    seq_2_index = best_paths_mat_col_index - 1
 
     for w in range(max_num_alignment_moves):
+        print("best_paths_mat_row_index")
+        print(best_paths_mat_row_index)
+        print("best_paths_mat_col_index")
+        print(best_paths_mat_col_index)
         path_indicator = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
-        best_paths_mat_row_index_delta, best_paths_mat_col_index_delta = paths_to_moves_mapper[path_indicator]
+        best_paths_mat_row_index_delta, best_paths_mat_col_index_delta, move = paths_to_moves_mapper[path_indicator]
+        
+        # Use the right move function.
+        seq_1_aligned, middle_part, seq_2_aligned = move(
+            seq_1=seq_1,
+            seq_2=seq_2,
+            seq_1_index=seq_1_index,
+            seq_2_index=seq_2_index,
+            seq_1_aligned=seq_1_aligned,
+            middle_part=middle_part,
+            seq_2_aligned=seq_2_aligned
+        )
+        
+        # Update for next iteration.
         best_paths_mat_row_index += best_paths_mat_row_index_delta
         best_paths_mat_col_index += best_paths_mat_col_index_delta
         
@@ -908,10 +1031,6 @@ def traceback_2(
         # are off by one.
         seq_1_index = best_paths_mat_row_index - 1
         seq_2_index = best_paths_mat_col_index - 1
-        seq_1_letter = seq_1[seq_1_index]
-        seq_2_letter = seq_2[seq_2_index]
-
-        seq_1_aligned.append(seq_1[seq_1_index])
 
         # Determine whether the loop should continue.
         if best_paths_mat_row_index < 1 and best_paths_mat_row_index < 1:
