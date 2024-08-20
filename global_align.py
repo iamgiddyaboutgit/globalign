@@ -286,6 +286,24 @@ def transform_scoring_mat_to_cost_mat(
     cost_mat = scoring_mat
     return cost_mat
 
+def final_cost_to_score(
+    cost:int|float, 
+    m:int,
+    n:int,
+    max_score:int|float,
+    delta_d:int|float=None, 
+    delta_i:int|float=None
+) -> int|float:
+    """https://curiouscoding.nl/posts/alignment-scores-transform/
+
+    https://www.biorxiv.org/content/10.1101/2022.01.12.476087v1.full.pdf
+    """
+    b = max_score
+    if delta_d is None:
+        delta_d = math.floor(b/2)
+    if delta_i is None:
+        delta_i = math.ceil(b/2)
+    return n*delta_d + m*delta_i - cost
 
 def read_seq_from_fasta(fasta_path:Path):
     """Read in a FASTA file. 
