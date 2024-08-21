@@ -269,18 +269,6 @@ def transform_scoring_mat_to_cost_mat(
         # seq_2_scores is the inner dict for the outer
         # key of seq_1_letter.
         for seq_2_letter, score in seq_2_scores.items():
-            # if seq_1_letter == seq_2_letter and seq_1_letter != "-":
-            #     # Update matches
-            #     seq_2_scores[seq_2_letter] = -score
-            # elif seq_1_letter != seq_2_letter and seq_1_letter != "-":
-            #     # Update mis-matches
-            #     seq_2_scores[seq_2_letter] = score + b
-            # elif seq_1_letter != seq_2_letter and seq_1_letter != "-":
-            #     # Update deletions (horizontal steps)
-            #     seq_2_scores[seq_2_letter] = score + delta_d
-            # else:
-            #     # Update insertions (vertical steps)
-            #     seq_2_scores[seq_2_letter] = score + delta_i 
             seq_2_scores[seq_2_letter] = -(score - delta_d - delta_i)
    
     cost_mat = scoring_mat
