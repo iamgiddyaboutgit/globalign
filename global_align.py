@@ -1284,7 +1284,6 @@ def find_best_path(
     seq_1:str,
     seq_2:str,
     gap_open_cost:int|float,
-    gap_extension_cost:int|float,
     cost_mat:dict[dict],
     moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12, 14, 19, 22, 23},
     moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10, 13, 19, 20, 21},
@@ -1526,6 +1525,7 @@ def find_best_path(
     # left_best_path_type and up_best_path_type.
     if left_best_path_type in moves_for_gap_open_penalty_from_left:
         # Pay for gap opening.
+        gap_extension_cost = cost_mat["-"][seq_2[seq_2_index]]
         from_left_best_cost = left_best_cost + gap_open_cost + gap_extension_cost
         # 1: starting gap in seq_1
         from_left_best_path_type = 1
@@ -1533,6 +1533,7 @@ def find_best_path(
         # It is not required to open a gap
         # to get to the current cell.
         # Do not pay for gap opening.
+        gap_extension_cost = cost_mat["-"][seq_2[seq_2_index]]
         from_left_best_cost = left_best_cost + gap_extension_cost
         # 2: continuing gap in seq_1
         from_left_best_path_type = 2
@@ -1541,10 +1542,12 @@ def find_best_path(
     up_best_cost = partial_dp_mat[partial_dp_mat_prev_row_id][partial_dp_mat_cur_col_id]
     if up_best_path_type in moves_for_gap_open_penalty_from_up:
         # Pay for gap opening.
+        gap_extension_cost = cost_mat[seq_1[seq_1_index]]["-"]
         from_up_best_cost = up_best_cost + gap_open_cost + gap_extension_cost
         from_up_best_path_type = 3    
     else:
         # Do not pay for gap opening.
+        gap_extension_cost = cost_mat[seq_1[seq_1_index]]["-"]
         from_up_best_cost = up_best_cost + gap_extension_cost
         from_up_best_path_type = 4
 
@@ -1817,7 +1820,6 @@ def do_core_align_2(
     best_paths_mat:list[list],
     partial_dp_mat:list[list],
     gap_open_cost,
-    gap_extension_cost,
     cost_mat:dict[dict],
     moves_for_gap_open_penalty_from_left,
     moves_for_gap_open_penalty_from_up,
@@ -1871,7 +1873,6 @@ def do_core_align_2(
                 seq_1=seq_1,
                 seq_2=seq_2,
                 gap_open_cost=gap_open_cost,
-                gap_extension_cost=gap_extension_cost,
                 cost_mat=cost_mat,
                 moves_for_gap_open_penalty_from_left=moves_for_gap_open_penalty_from_left,
                 moves_for_gap_open_penalty_from_up=moves_for_gap_open_penalty_from_up,
