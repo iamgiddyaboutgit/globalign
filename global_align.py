@@ -269,7 +269,24 @@ def transform_scoring_mat_to_cost_mat(
         # seq_2_scores is the inner dict for the outer
         # key of seq_1_letter.
         for seq_2_letter, score in seq_2_scores.items():
-            seq_2_scores[seq_2_letter] = -(score - delta_d - delta_i)
+            # The scores are transformed differently
+            # for insertions and deletions, than they
+            # are for matches and mismatches.
+            # if seq_1_letter == seq_2_letter and seq_1_letter != "-":
+            #     # Update matches
+            #     seq_2_scores[seq_2_letter] = -score
+            # # elif seq_1_letter != seq_2_letter and seq_1_letter != "-":
+            # #     # Update mis-matches
+            # #     seq_2_scores[seq_2_letter] = score + b
+            if seq_1_letter == "-" and seq_2_letter != "-":
+                # Update deletions (horizontal steps)
+                seq_2_scores[seq_2_letter] = -score + delta_d
+            elif seq_2_letter == "-" and seq_1_letter != "-":
+                # Update insertions (vertical steps)
+                seq_2_scores[seq_2_letter] = -score + delta_i 
+            else:
+                # Update matches and mismatches.
+                seq_2_scores[seq_2_letter] = -score + delta_d + delta_i
    
     cost_mat = scoring_mat
     return cost_mat
@@ -285,6 +302,10 @@ def final_cost_to_score(
     """https://curiouscoding.nl/posts/alignment-scores-transform/
 
     https://www.biorxiv.org/content/10.1101/2022.01.12.476087v1.full.pdf
+
+    Args:
+        max_score: A maximum score in the original
+            scoring matrix.
     """
     b = max_score
     if delta_d is None:
@@ -292,6 +313,31 @@ def final_cost_to_score(
     if delta_i is None:
         delta_i = math.ceil(b/2)
     return n*delta_d + m*delta_i - cost
+
+def final_score_to_cost(
+    score:int|float, 
+    m:int,
+    n:int,
+    max_score:int|float,
+    delta_d:int|float=None, 
+    delta_i:int|float=None
+) -> int|float:
+    """https://curiouscoding.nl/posts/alignment-scores-transform/
+
+    https://www.biorxiv.org/content/10.1101/2022.01.12.476087v1.full.pdf
+
+    Args:
+        score: The conventional score for the alignment
+            using some conventional scoring scheme.
+        max_score: A maximum score in the original
+            scoring matrix.
+    """
+    b = max_score
+    if delta_d is None:
+        delta_d = math.floor(b/2)
+    if delta_i is None:
+        delta_i = math.ceil(b/2)
+    return -score + n*delta_d + m*delta_i 
 
 def read_seq_from_fasta(fasta_path:Path):
     """Read in a FASTA file. 
