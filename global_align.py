@@ -1888,15 +1888,43 @@ def do_core_align_2(
     """
     # Prep for loop
     row_range = range(2, len(seq_1) + 1)
-    col_range = range(0, len(seq_2) + 1)
+    core_col_range = range(1, len(seq_2) + 1)
 
-    partial_dp_mat_prev_row_id = 0
-    partial_dp_mat_cur_row_id = 1
+    partial_dp_mat_prev_row_id = 1
+    partial_dp_mat_cur_row_id = 0
 
     for i in row_range:
         # Prep for this row iteration.
         best_paths_mat_cur_row_id = i
-        for j in col_range:
+        # The indices into our sequences are always 1 behind
+        # the indices into our dynamic programming matrices.
+        seq_1_index = i - 1
+        # Figure out the cost of extending 
+        # a gap in seq_2 based on where we 
+        # are in seq_1.
+        # Unless the cost_mat is wacky, this
+        # will always be the same number.
+        gap_extension_cost_seq_2 = cost_mat[seq_1[seq_1_index]]["-"]
+
+        ###############################################
+        # Handle the 0-index column first.
+        ###############################################
+        j = 0
+        # Prep for this column iteration.
+        partial_dp_mat_cur_col_id = j
+        best_paths_mat_cur_col_id = j
+        # The best (only) thing to do is to
+        # continue a gap in seq_2.
+        cur_cell_best_path_type = 4
+        cur_cell_best_cum_cost = partial_dp_mat[partial_dp_mat_prev_row_id][partial_dp_mat_cur_col_id] + gap_extension_cost_seq_2
+        # Update best_paths_mat.
+        best_paths_mat[best_paths_mat_cur_row_id][best_paths_mat_cur_col_id] = cur_cell_best_path_type
+        # Update partial_dp_mat.
+        partial_dp_mat[partial_dp_mat_cur_row_id][partial_dp_mat_cur_col_id] = cur_cell_best_cum_cost
+        ###############################################
+        # Handle the other columns.
+        ###############################################
+        for j in core_col_range:
             # Prep for this column iteration.
             partial_dp_mat_cur_col_id = j
             best_paths_mat_cur_col_id = j
