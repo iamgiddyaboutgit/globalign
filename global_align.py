@@ -1887,8 +1887,8 @@ def do_core_align_2(
         )
     """
     # Prep for loop
-    row_range = range(1, len(seq_1) + 1)
-    col_range = range(1, len(seq_2) + 1)
+    row_range = range(2, len(seq_1) + 1)
+    col_range = range(0, len(seq_2) + 1)
 
     partial_dp_mat_prev_row_id = 0
     partial_dp_mat_cur_row_id = 1
