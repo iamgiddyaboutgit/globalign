@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Perform optimal global alignment of two nucleotide \
-or amino acid sequences using the Needleman-Wunsch algorithm.
+or amino acid sequences.
 
 References:
 1. https://web.stanford.edu/class/cs262/archives/presentations/lecture3.pdf
@@ -1041,6 +1041,13 @@ def traceback_2(
         best_paths_mat: list of length len(seq_1) + 1
             where each element is a list of length 
             len(seq_2) + 1
+
+    Returns:
+        (
+            seq_1_aligned_out,
+            middle_part_out,
+            seq_2_aligned_out
+        )
     """
     # Prepare for loop.
     seq_1_aligned = []
@@ -1078,10 +1085,10 @@ def traceback_2(
             seq_2_aligned=seq_2_aligned
         )
 
-        print("seq_1_aligned")
-        print(seq_1_aligned)
-        print("seq_2_aligned")
-        print(seq_2_aligned)
+        # print("seq_1_aligned")
+        # print(seq_1_aligned)
+        # print("seq_2_aligned")
+        # print(seq_2_aligned)
         
         # Update for next iteration.
         best_paths_mat_row_index += best_paths_mat_row_index_delta
@@ -1616,8 +1623,8 @@ def find_best_path(
     )]
 
     # It's sorted in ascending order,
-    # so a maximum value is at the end.
-    best_cum_cost = possible_cum_cost_sorted[-1]
+    # so a minimum value is at the beginning.
+    best_cum_cost = possible_cum_cost_sorted[0]
 
     return (best_path_type, best_cum_cost)
     
@@ -1860,13 +1867,10 @@ def do_core_align_2(
     situation_mapper
 ) -> tuple[list[list], int|float, list[list]]:
     """
-    Find a global alignment of the subsequences
+    Find a global alignment of the sequences
     
-    `seq_1[1:]` and 
-    `seq_2[1:]`, assuming that the lengths
-    of both sequences are greater than 1.  
-    If the lengths of the sequences are both 1, then no additional 
-    aligning is done.
+    `seq_1` and `seq_2`, assuming that the 
+    lengths of both sequences are greater than 1.  
 
     Args:
         gap_open_cost: The cost for a gap just to exist.
