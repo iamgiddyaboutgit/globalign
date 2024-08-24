@@ -784,6 +784,274 @@ def align(
         score
     )
 
+def find_global_alignment(
+    seq_1:str,
+    seq_2:str,
+    cost_mat:list[list],
+    gap_open_cost:int|float
+) -> tuple[str, str, str, int|float]:
+    """
+    Args:
+        gap_open_cost: The cost for a gap just to exist.
+            This cost should be non-negative.
+            It can be incurred multiple times
+            if there are multiple runs of gaps in the
+            alignment. Note that an alignment like
+
+                    AT-CG
+                    ||  |
+                    ATT-G
+
+            incurs the gap_open_cost twice.
+
+    Returns:
+        (
+            seq_1_aligned_out,
+            middle_part_out,
+            seq_2_aligned_out,
+            cost
+        )
+    """
+    middle_row_index = len(seq_1)
+    best_paths_mat = init_best_paths_matrix(
+        dynamic_prog_num_rows=middle_row_index + 1,
+        dynamic_prog_num_cols=len(seq_2) + 1
+    )
+    dynamic_prog_num_cols = len(seq_2) + 1
+    partial_dp_mat = init_partial_dynamic_prog_matrix_2(
+        seq_1=seq_1,
+        seq_2=seq_2,
+        cost_mat=cost_mat,
+        gap_open_cost=gap_open_cost,
+        dynamic_prog_num_cols=dynamic_prog_num_cols
+    )
+    # The options for best_path_type are
+    # coded as:
+    # 0: match
+    # 1: starting gap in seq_1
+    # 2: continuing gap in seq_1
+    # 3: starting gap in seq_2
+    # 4: continuing gap in seq_2
+    # 5: tie between 1 and 3
+    # 6: tie between 1 and 4
+    # 7: tie between 2 and 3
+    # 8: tie between 2 and 4
+    # 9: tie between 0 and 1
+    # 10: tie between 0 and 2
+    # 11: tie between 0 and 3
+    # 12: tie between 0 and 4
+    # 13: tie between 1 and 2
+    # 14: tie between 3 and 4
+    # 15: tie between 0, 1, and 3
+    # 16: tie between 0, 1, and 4
+    # 17: tie between 0, 2, and 3
+    # 18: tie between 0, 2, and 4
+    # 19: mismatch
+    # 20: tie between 19 and 1
+    # 21: tie between 19 and 2
+    # 22: tie between 19 and 3
+    # 23: tie between 19 and 4
+    # 24: tie between 19, 1, and 3
+    # 25: tie between 19, 1, and 4
+    # 26: tie between 19, 2, and 3
+    # 27: tie between 19, 2, and 4
+    moves_for_gap_open_penalty_from_left = {0, 3, 4, 11, 12, 14, 19, 22, 23}
+    moves_for_gap_open_penalty_from_up = {0, 1, 2, 9, 10, 13, 19, 20, 21}
+    
+    situation_mapper={
+        # from_diag_best_path_type = 0
+        # from_left_best_path_type == 1
+        # and from_up_best_path_type == 3
+        # 3-way ties
+        ((0, 0, 0), (0, 1, 3)): 15,
+        # 2-way ties for low
+        ((0, 0, 2), (0, 1, 3)): 9,
+        ((0, 2, 0), (0, 1, 3)): 11,
+        ((2, 0, 0), (0, 1, 3)): 5,
+        # 2-way ties for high
+        ((0, 1, 1), (0, 1, 3)): 0,
+        ((1, 0, 1), (0, 1, 3)): 1,
+        ((1, 1, 0), (0, 1, 3)): 3,
+        # no ties
+        ((0, 1, 2), (0, 1, 3)): 0,
+        ((1, 0, 2), (0, 1, 3)): 1,
+        ((1, 2, 0), (0, 1, 3)): 3,
+        ((0, 2, 1), (0, 1, 3)): 0,
+        ((2, 0, 1), (0, 1, 3)): 1,
+        ((2, 1, 0), (0, 1, 3)): 3,
+        # from_left_best_path_type == 1
+        # and from_up_best_path_type == 4
+        # 3-way ties
+        ((0, 0, 0), (0, 1, 4)): 16,
+        # 2-way ties for low
+        ((0, 0, 2), (0, 1, 4)): 9,
+        ((0, 2, 0), (0, 1, 4)): 12,
+        ((2, 0, 0), (0, 1, 4)): 6,
+        # 2-way ties for high
+        ((0, 1, 1), (0, 1, 4)): 0,
+        ((1, 0, 1), (0, 1, 4)): 1,
+        ((1, 1, 0), (0, 1, 4)): 4,
+        # no ties
+        ((0, 1, 2), (0, 1, 4)): 0,
+        ((1, 0, 2), (0, 1, 4)): 1,
+        ((1, 2, 0), (0, 1, 4)): 4,
+        ((0, 2, 1), (0, 1, 4)): 0,
+        ((2, 0, 1), (0, 1, 4)): 1,
+        ((2, 1, 0), (0, 1, 4)): 4,
+        # from_left_best_path_type == 2
+        # and from_up_best_path_type == 3
+        # 3-way ties
+        ((0, 0, 0), (0, 2, 3)): 17,
+        # 2-way ties for low
+        ((0, 0, 2), (0, 2, 3)): 10,
+        ((0, 2, 0), (0, 2, 3)): 11,
+        ((2, 0, 0), (0, 2, 3)): 7,
+        # 2-way ties for high
+        ((0, 1, 1), (0, 2, 3)): 0,
+        ((1, 0, 1), (0, 2, 3)): 2,
+        ((1, 1, 0), (0, 2, 3)): 3,
+        # no ties
+        ((0, 1, 2), (0, 2, 3)): 0,
+        ((1, 0, 2), (0, 2, 3)): 2,
+        ((1, 2, 0), (0, 2, 3)): 3,
+        ((0, 2, 1), (0, 2, 3)): 0,
+        ((2, 0, 1), (0, 2, 3)): 2,
+        ((2, 1, 0), (0, 2, 3)): 3,
+        # from_left_best_path_type == 2
+        # and from_up_best_path_type == 4
+        # 3-way ties
+        ((0, 0, 0), (0, 2, 4)): 18,
+        # 2-way ties for low
+        ((0, 0, 2), (0, 2, 4)): 10,
+        ((0, 2, 0), (0, 2, 4)): 12,
+        ((2, 0, 0), (0, 2, 4)): 8,
+        # 2-way ties for high
+        ((0, 1, 1), (0, 2, 4)): 0,
+        ((1, 0, 1), (0, 2, 4)): 2,
+        ((1, 1, 0), (0, 2, 4)): 4,
+        # no ties
+        ((0, 1, 2), (0, 2, 4)): 0,
+        ((1, 0, 2), (0, 2, 4)): 2,
+        ((1, 2, 0), (0, 2, 4)): 4,
+        ((0, 2, 1), (0, 2, 4)): 0,
+        ((2, 0, 1), (0, 2, 4)): 2,
+        ((2, 1, 0), (0, 2, 4)): 4,
+        # from_diag_best_path_type = 19
+        # from_left_best_path_type == 1
+        # and from_up_best_path_type == 3
+        # 3-way ties
+        ((0, 0, 0), (19, 1, 3)): 24,
+        # 2-way ties for low
+        ((0, 0, 2), (19, 1, 3)): 20,
+        ((0, 2, 0), (19, 1, 3)): 22,
+        ((2, 0, 0), (19, 1, 3)): 5,
+        # 2-way ties for high
+        ((0, 1, 1), (19, 1, 3)): 19,
+        ((1, 0, 1), (19, 1, 3)): 1,
+        ((1, 1, 0), (19, 1, 3)): 3,
+        # no ties
+        ((0, 1, 2), (19, 1, 3)): 19,
+        ((1, 0, 2), (19, 1, 3)): 1,
+        ((1, 2, 0), (19, 1, 3)): 3,
+        ((0, 2, 1), (19, 1, 3)): 19,
+        ((2, 0, 1), (19, 1, 3)): 1,
+        ((2, 1, 0), (19, 1, 3)): 3,
+        # from_left_best_path_type == 1
+        # and from_up_best_path_type == 4
+        # 3-way ties
+        ((0, 0, 0), (19, 1, 4)): 25,
+        # 2-way ties for low
+        ((0, 0, 2), (19, 1, 4)): 20,
+        ((0, 2, 0), (19, 1, 4)): 23,
+        ((2, 0, 0), (19, 1, 4)): 6,
+        # 2-way ties for high
+        ((0, 1, 1), (19, 1, 4)): 19,
+        ((1, 0, 1), (19, 1, 4)): 1,
+        ((1, 1, 0), (19, 1, 4)): 4,
+        # no ties
+        ((0, 1, 2), (19, 1, 4)): 19,
+        ((1, 0, 2), (19, 1, 4)): 1,
+        ((1, 2, 0), (19, 1, 4)): 4,
+        ((0, 2, 1), (19, 1, 4)): 19,
+        ((2, 0, 1), (19, 1, 4)): 1,
+        ((2, 1, 0), (19, 1, 4)): 4,
+        # from_left_best_path_type == 2
+        # and from_up_best_path_type == 3
+        # 3-way ties
+        ((0, 0, 0), (19, 2, 3)): 26,
+        # 2-way ties for low
+        ((0, 0, 2), (19, 2, 3)): 21,
+        ((0, 2, 0), (19, 2, 3)): 22,
+        ((2, 0, 0), (19, 2, 3)): 7,
+        # 2-way ties for high
+        ((0, 1, 1), (19, 2, 3)): 19,
+        ((1, 0, 1), (19, 2, 3)): 2,
+        ((1, 1, 0), (19, 2, 3)): 3,
+        # no ties
+        ((0, 1, 2), (19, 2, 3)): 19,
+        ((1, 0, 2), (19, 2, 3)): 2,
+        ((1, 2, 0), (19, 2, 3)): 3,
+        ((0, 2, 1), (19, 2, 3)): 19,
+        ((2, 0, 1), (19, 2, 3)): 2,
+        ((2, 1, 0), (19, 2, 3)): 3,
+        # from_left_best_path_type == 2
+        # and from_up_best_path_type == 4
+        # 3-way ties
+        ((0, 0, 0), (19, 2, 4)): 27,
+        # 2-way ties for low
+        ((0, 0, 2), (19, 2, 4)): 21,
+        ((0, 2, 0), (19, 2, 4)): 23,
+        ((2, 0, 0), (19, 2, 4)): 8,
+        # 2-way ties for high
+        ((0, 1, 1), (19, 2, 4)): 19,
+        ((1, 0, 1), (19, 2, 4)): 2,
+        ((1, 1, 0), (19, 2, 4)): 4,
+        # no ties
+        ((0, 1, 2), (19, 2, 4)): 19,
+        ((1, 0, 2), (19, 2, 4)): 2,
+        ((1, 2, 0), (19, 2, 4)): 4,
+        ((0, 2, 1), (19, 2, 4)): 19,
+        ((2, 0, 1), (19, 2, 4)): 2,
+        ((2, 1, 0), (19, 2, 4)): 4
+    }
+    
+    partial_dp_mat, cur_cell_best_cum_cost, best_paths_mat = warmup_align_2(
+        seq_1=seq_1,
+        seq_2=seq_2,
+        best_paths_mat=best_paths_mat,
+        partial_dp_mat=partial_dp_mat,
+        gap_open_cost=gap_open_cost,
+        cost_mat=cost_mat,
+        moves_for_gap_open_penalty_from_left=moves_for_gap_open_penalty_from_left,
+        moves_for_gap_open_penalty_from_up=moves_for_gap_open_penalty_from_up,
+        situation_mapper=situation_mapper
+    )
+
+    partial_dp_mat, cur_cell_best_cum_cost, best_paths_mat = do_core_align_2(
+        seq_1=seq_1,
+        seq_2=seq_2,
+        best_paths_mat=best_paths_mat,
+        partial_dp_mat=partial_dp_mat,
+        gap_open_cost=gap_open_cost,
+        cost_mat=cost_mat,
+        moves_for_gap_open_penalty_from_left=moves_for_gap_open_penalty_from_left,
+        moves_for_gap_open_penalty_from_up=moves_for_gap_open_penalty_from_up,
+        situation_mapper=situation_mapper
+    )
+
+    seq_1_aligned_out, middle_part_out, seq_2_aligned_out = traceback_2(
+        best_paths_mat=best_paths_mat,
+        seq_1=seq_1,
+        seq_2=seq_2
+    )
+
+    return (
+        seq_1_aligned_out,
+        middle_part_out,
+        seq_2_aligned_out,
+        cur_cell_best_cum_cost
+    )
+
 def traceback(best_paths_mat:list[list], seq_1:str, seq_2:str) -> tuple[str, str, str]:
     """Perform traceback through best_paths_mat
     
@@ -1102,7 +1370,7 @@ def traceback_2(
         seq_2_index = best_paths_mat_col_index - 1
 
         # Determine whether the loop should continue.
-        if best_paths_mat_row_index < 1 and best_paths_mat_row_index < 1:
+        if best_paths_mat_row_index < 1 and best_paths_mat_col_index < 1:
             # print("seq_1_index")
             # print(seq_1_index)
             # print("seq_2_index")
