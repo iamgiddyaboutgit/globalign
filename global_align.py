@@ -2550,8 +2550,8 @@ def init_partial_dynamic_prog_matrix_2(
     """Initialize a partial dynamic programming
 
     matrix.  It's partial because it only has 2 rows.
-    It initializes correctly for the 0-index rows and the 0-index 
-    columns.  
+    It initializes correctly for the 0-index row and the 
+    entry in the 1-index row and 0-index column.
     """
     mat = make_matrix(
         num_rows=2,
