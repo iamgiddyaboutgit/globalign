@@ -1039,6 +1039,10 @@ def find_global_alignment(
         situation_mapper=situation_mapper
     )
 
+    print("best_paths_mat")
+    for i in range(len(best_paths_mat)):
+        print(best_paths_mat[i])
+
     seq_1_aligned_out, middle_part_out, seq_2_aligned_out = traceback_2(
         best_paths_mat=best_paths_mat,
         seq_1=seq_1,
@@ -2221,6 +2225,8 @@ def do_core_align_2(
 
         # Prep for next row iteration.
         # Do some swapping.
+        print(f"partial_dp_mat with cur_row: {partial_dp_mat_cur_row_id}")
+        print(partial_dp_mat[partial_dp_mat_cur_row_id])
         partial_dp_mat_prev_row_id, partial_dp_mat_cur_row_id = partial_dp_mat_cur_row_id, partial_dp_mat_prev_row_id
 
     return (
@@ -2668,23 +2674,24 @@ def init_best_paths_matrix(
     Returns:
         best_paths_mat as a nested list.
         There are multiple possible values for each entry in the best_paths_mat
-        to indicate one of the following alignment "moves":
+        to indicate an alignment "move" such as:
             0: match/mismatch
             1: starting gap in seq_1
             2: continuing gap in seq_1
             3: starting gap in seq_2
             4: continuing gap in seq_2
     """
-    # Based on the order of arguments to every
-    # call to max, we initialize with
-    # 1's because 1 indicates moving left.
     best_paths_mat = make_matrix(
         num_rows=dynamic_prog_num_rows,
         num_cols=dynamic_prog_num_cols,
         fill_val=2
     )
 
-    for i in range(1, dynamic_prog_num_rows):
+    # Update some entries specifically.
+    best_paths_mat[0][1] = 1
+    best_paths_mat[1][0] = 3
+
+    for i in range(2, dynamic_prog_num_rows):
         best_paths_mat[i][0] = 4
 
     return best_paths_mat
