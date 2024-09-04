@@ -1588,36 +1588,30 @@ def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list
     ]
 
 
-def break_ties_core(
-    i:int,
-    j:int,
+def break_ties(
+    # best_paths_mat_row_index:int,
+    # best_paths_mat_col_index:int,
+    path_indicator_prev:int,
+    path_indicator_curr:int,
+    # best_paths_mat_row_index_delta:int,
+    # best_paths_mat_col_index_delta:int,
     best_paths_mat:list[list],
-    best_path_type:int,
-    partial_dp_mat:list[list],
-    partial_dp_mat_prev_row_id:int,
-    partial_dp_mat_cur_row_id:int,
-    seq_1:str,
-    seq_2:str,
-    gap_open_cost:int|float,
-    cost_mat:dict[dict],
+    # seq_1:str,
+    # seq_2:str,
+    # gap_open_cost:int|float,
+    # cost_mat:dict[dict],
     moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12, 14, 19, 22, 23},
     moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10, 13, 19, 20, 21},
     tie_fix_mapper:dict={
-        # Keys are 3-tuples where
-        # the 0th element contains
-        # the best_path_type to the diagonal cell,
-        # the 1st element contains
-        # the best_path_type to the left cell,
-        # and the 2nd element contains
-        # the best_path_type to the up cell.
+        # Keys are 5-tuples with elements of
+        # i,
+        # j,
+        # path_indicator (for best_paths_mat[i][j]),
+        # best_paths_mat_row_index_delta (for coming into best_paths_mat[i][j]),
+        # best_paths_mat_col_index_delta (for coming into best_paths_mat[i][j]).
         #
-        # Values are 3-tuples where
-        # the 0th element contains
-        # restrictions on the diagonal cell,
-        # the 1st element contains
-        # restrictions on the left cell,
-        # and the 2nd element contains
-        # restrictions on the up cell.
+        # Values are integers indicating the best_path_type to 
+        # best_paths_mat[i][j].
         0: (None, None, None),
         1: (None, None, None), 
         # To get to the current cell,
@@ -1636,14 +1630,32 @@ def break_ties_core(
         7: None,
     }
 ):
-    """Break previous ties in the best_paths_mat.
+    """Break ties in the best_paths_mat.
     
-    Use best_path_type to break certain ties
-    appearing in the left and up cells.
-    For example, if best_path_type is 2 (continue a gap in seq_1),
-    and left_best_path_type is 9 (tie between a match and starting
-    a gap in seq_1), then the left cell should be updated
-    to have a 1 (start a gap in seq_1).
+    This function is meant to be called during
+    traceback of the best_paths_mat.
+    As nodes in the edit graph (cells in best_paths_mat)
+    are traced back along a minimum cost path,
+    we know the direction in which each cell is entered,
+    the position of each cell in best_paths_mat, path_indicator_prev, 
+    and path_indicator_curr.
+    Thus, (in some cases) we can infer what the best_path_type to the 
+    current node should have been. So, in some
+    cases, we can break ties.
+
+    For example, if we trace back into a cell from the right
+    that has a tie between taking a match and
+    starting a gap in seq_1, (and the cell on the right
+    says to continue a gap in seq_1), then the cell
+    that we traced back into should not be a tie,
+    but rather it should say to start a gap in seq_1.
+
+    Args:
+        best_paths_mat_row_index: for the current cell
+        best_paths_mat_col_index: for the current cell
+        best_paths_mat_row_index_delta: This is the delta
+            that was needed to move into the current cell of
+            best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index].
     """
 
     ...
