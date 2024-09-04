@@ -1587,6 +1587,68 @@ def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list
         [fill_val]*(num_cols) for i in range(num_rows)
     ]
 
+
+def break_ties_core(
+    i:int,
+    j:int,
+    best_paths_mat:list[list],
+    best_path_type:int,
+    partial_dp_mat:list[list],
+    partial_dp_mat_prev_row_id:int,
+    partial_dp_mat_cur_row_id:int,
+    seq_1:str,
+    seq_2:str,
+    gap_open_cost:int|float,
+    cost_mat:dict[dict],
+    moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12, 14, 19, 22, 23},
+    moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10, 13, 19, 20, 21},
+    tie_fix_mapper:dict={
+        # Keys are 3-tuples where
+        # the 0th element contains
+        # the best_path_type to the diagonal cell,
+        # the 1st element contains
+        # the best_path_type to the left cell,
+        # and the 2nd element contains
+        # the best_path_type to the up cell.
+        #
+        # Values are 3-tuples where
+        # the 0th element contains
+        # restrictions on the diagonal cell,
+        # the 1st element contains
+        # restrictions on the left cell,
+        # and the 2nd element contains
+        # restrictions on the up cell.
+        0: (None, None, None),
+        1: (None, None, None), 
+        # To get to the current cell,
+        # the best thing to do is to
+        # continue a gap in seq_1.
+        # Thus, the best path in the cell
+        # to the left should be to start
+        # a gap in seq_1.  No restrictions
+        # are placeable on the diagonal
+        # or up cells.
+        2: (None, (1, 2), None),
+        3: None,
+        4: 3,
+        5: None,
+        6: None,
+        7: None,
+    }
+):
+    """Break previous ties in the best_paths_mat.
+    
+    Use best_path_type to break certain ties
+    appearing in the left and up cells.
+    For example, if best_path_type is 2 (continue a gap in seq_1),
+    and left_best_path_type is 9 (tie between a match and starting
+    a gap in seq_1), then the left cell should be updated
+    to have a 1 (start a gap in seq_1).
+    """
+
+    ...
+
+
 def find_best_path(
     i:int,
     j:int,
@@ -1770,6 +1832,11 @@ def find_best_path(
         seq_1[0:i] and seq_2[0:j].
     
     Args:
+        situation_mapper: dict. Keys are tuples
+            of the form (possible_cum_cost_ranks, 
+            (from_diag_best_path_type, 
+            from_left_best_path_type, 
+            from_up_best_path_type)).
 
     Returns:
         The tuple (best_path_type, best_cum_cost),
