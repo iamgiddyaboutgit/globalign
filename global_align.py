@@ -1342,9 +1342,23 @@ def traceback_2(
     seq_1_index = best_paths_mat_row_index - 1
     seq_2_index = best_paths_mat_col_index - 1
 
+    # When we start at the bottom right of the 
+    # best_paths_mat, there is no previous cell.
+    # So, we just put path_indicator_prev = 0 
+    # to initialize for the loop.
+    path_indicator_prev = 0
+
     for w in range(max_num_alignment_moves):
-        path_indicator = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
-        best_paths_mat_row_index_delta, best_paths_mat_col_index_delta, move = paths_to_moves_mapper[path_indicator]
+        path_indicator_before_tie_break = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
+        # Sometimes the path_indicator may be for a tie
+        # that we need to break.  
+        path_indicator_after_tie_break = best_paths_mat = break_ties(
+            best_paths_mat_row_index=best_paths_mat_row_index,
+            best_paths_mat_col_index=best_paths_mat_col_index,
+            path_indicator_prev=path_indicator_prev,
+            path_indicator_curr=path_indicator_before_tie_break
+        )
+        best_paths_mat_row_index_delta, best_paths_mat_col_index_delta, move = paths_to_moves_mapper[path_indicator_after_tie_break]
         
         # Use the right move function.
         seq_1_aligned, middle_part, seq_2_aligned = move(
@@ -1366,13 +1380,6 @@ def traceback_2(
         best_paths_mat_row_index += best_paths_mat_row_index_delta
         best_paths_mat_col_index += best_paths_mat_col_index_delta
         
-        # Because of the initial row and column in
-        # best_paths_mat that doesn't align with
-        # any parts of the two sequences, the indices
-        # are off by one.
-        seq_1_index = best_paths_mat_row_index - 1
-        seq_2_index = best_paths_mat_col_index - 1
-
         # Determine whether the loop should continue.
         if best_paths_mat_row_index < 1 and best_paths_mat_col_index < 1:
             # print("seq_1_index")
@@ -1380,6 +1387,18 @@ def traceback_2(
             # print("seq_2_index")
             # print(seq_2_index)
             break
+
+        # Continue updating for next iteration.
+        # Because of the initial row and column in
+        # best_paths_mat which do not align with
+        # any parts of the two sequences, the indices
+        # are off by one.
+        seq_1_index = best_paths_mat_row_index - 1
+        seq_2_index = best_paths_mat_col_index - 1
+
+        path_indicator_prev = path_indicator_after_tie_break
+
+        
         # if path_indicator == 0:
         #     # match/mismatch is the best move
         #     seq_1_letter = seq_1[seq_1_index]
@@ -1589,8 +1608,8 @@ def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list
 
 
 def break_ties(
-    # best_paths_mat_row_index:int,
-    # best_paths_mat_col_index:int,
+    best_paths_mat_row_index:int,
+    best_paths_mat_col_index:int,
     path_indicator_prev:int,
     path_indicator_curr:int,
     # best_paths_mat_row_index_delta:int,
@@ -1603,33 +1622,101 @@ def break_ties(
     moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12, 14, 19, 22, 23},
     moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10, 13, 19, 20, 21},
     tie_fix_mapper:dict={
-        # Keys are 5-tuples with elements of
-        # i,
-        # j,
-        # path_indicator (for best_paths_mat[i][j]),
-        # best_paths_mat_row_index_delta (for coming into best_paths_mat[i][j]),
-        # best_paths_mat_col_index_delta (for coming into best_paths_mat[i][j]).
+        # Keys are 2-tuples with elements of
+        # path_indicator_prev,
+        # path_indicator_curr.
         #
-        # Values are integers indicating the best_path_type to 
-        # best_paths_mat[i][j].
-        0: (None, None, None),
-        1: (None, None, None), 
-        # To get to the current cell,
-        # the best thing to do is to
-        # continue a gap in seq_1.
-        # Thus, the best path in the cell
-        # to the left should be to start
-        # a gap in seq_1.  No restrictions
-        # are placeable on the diagonal
-        # or up cells.
-        2: (None, (1, 2), None),
-        3: None,
-        4: 3,
-        5: None,
-        6: None,
-        7: None,
+        # Values are integers (or None) indicating the best_path_type to 
+        # the current cell in best_paths_mat.
+        # If the value is None, then this indicates
+        # that there is no way of getting such a combination
+        # of path_indicator_prev and path_indicator_curr.
+        (0, 0): 0,
+        (0, 1): 1,
+        (0, 2): 2,
+        (0, 3): 3,
+        (0, 4): 4,
+        (0, 5): 5,
+        (0, 6): 6,
+        (0, 7): 7,
+        (0, 8): 8,
+        (0, 9): 9,
+        (0, 10): 10,
+        (0, 11): 11,
+        (0, 12): 12,
+        (0, 13): 13,
+        (0, 14): 14,
+        (0, 15): 15,
+        (0, 16): 16,
+        (0, 17): 17,
+        (0, 18): 18,
+        (0, 19): 19,
+        (0, 20): 20,
+        (0, 21): 21,
+        (0, 22): 22,
+        (0, 23): 23,
+        (0, 24): 24,
+        (0, 25): 25,
+        (0, 26): 26,
+        (0, 27): 27,
+        (1, 0): 0,
+        (1, 1): 1,
+        (1, 2): 2,
+        (1, 3): 3,
+        (1, 4): 4,
+        (1, 5): 3,
+        (1, 6): 4,
+        (1, 7): 3,
+        (1, 8): 4,
+        (1, 9): 0,
+        (1, 10): 0,
+        (1, 11): 11,
+        (1, 12): 12,
+        (1, 13): None,
+        (1, 14): 14,
+        (1, 15): 11,
+        (1, 16): 12,
+        (1, 17): 11,
+        (1, 18): 12,
+        (1, 19): 19,
+        (1, 20): 19,
+        (1, 21): 19,
+        (1, 22): 22,
+        (1, 23): 23,
+        (1, 24): 22,
+        (1, 25): 23,
+        (1, 26): 22,
+        (1, 27): 23,
+        (2, 0): None,
+        (2, 1): 1,
+        (2, 2): 2,
+        (2, 3): None,
+        (2, 4): None,
+        (2, 5): 1,
+        (2, 6): 1,
+        (2, 7): 2,
+        (2, 8): 2,
+        (2, 9): 1,
+        (2, 10): 2,
+        (2, 11): None,
+        (2, 12): None,
+        (2, 13): 13,
+        (2, 14): None,
+        (2, 15): 1,
+        (2, 16): 1,
+        (2, 17): 2,
+        (2, 18): 2,
+        (2, 19): None,
+        (2, 20): 1,
+        (2, 21): 2,
+        (2, 22): None,
+        (2, 23): None,
+        (2, 24): 1,
+        (2, 25): 1,
+        (2, 26): 2,
+        (2, 27): 2,
     }
-):
+) -> tuple[int, list[list]]:
     """Break ties in the best_paths_mat.
     
     This function is meant to be called during
@@ -1651,15 +1738,17 @@ def break_ties(
     but rather it should say to start a gap in seq_1.
 
     Args:
-        best_paths_mat_row_index: for the current cell
-        best_paths_mat_col_index: for the current cell
-        best_paths_mat_row_index_delta: This is the delta
-            that was needed to move into the current cell of
-            best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index].
+        path_indicator_prev: for the previous cell in the 
+            traceback from end to start
+        path_indicator_curr: for the current cell in the
+            traceback from end to start
+
+    Returns:
+        (path_indicator_curr_new, best_paths_mat)
     """
-
-    ...
-
+    path_indicator_curr_new = tie_fix_mapper[(path_indicator_prev, path_indicator_curr)]
+    best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index] = path_indicator_curr_new
+    return (path_indicator_curr_new, best_paths_mat)
 
 def find_best_path(
     i:int,
