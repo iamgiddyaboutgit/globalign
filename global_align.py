@@ -1315,9 +1315,10 @@ def traceback_2(
         path_indicator_before_tie_break = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
         # Sometimes the path_indicator may be for a tie
         # that we need to break.  
-        path_indicator_after_tie_break = best_paths_mat = break_ties(
+        path_indicator_after_tie_break, best_paths_mat = break_ties(
             best_paths_mat_row_index=best_paths_mat_row_index,
             best_paths_mat_col_index=best_paths_mat_col_index,
+            best_paths_mat=best_paths_mat,
             path_indicator_prev=path_indicator_prev,
             path_indicator_curr=path_indicator_before_tie_break
         )
