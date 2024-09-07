@@ -1209,25 +1209,6 @@ def take_gap_in_seq_1(
         seq_2_aligned
     )
 
-def take_2_gaps_in_seq_1( 
-    seq_1:str,
-    seq_2:str, 
-    seq_1_index:int,
-    seq_2_index:int,
-    seq_1_aligned:list, 
-    middle_part:list,
-    seq_2_aligned:list
-):
-    seq_1_aligned.append("--")
-    middle_part.append("  ")
-    seq_2_aligned.extend((seq_2[seq_2_index], seq_2[seq_2_index - 1]))
-
-    return (
-        seq_1_aligned,
-        middle_part,
-        seq_2_aligned
-    )
-
 def take_gap_in_seq_2( 
     seq_1:str,
     seq_2:str, 
@@ -1247,24 +1228,6 @@ def take_gap_in_seq_2(
         seq_2_aligned
     )
 
-def take_2_gaps_in_seq_2( 
-    seq_1:str,
-    seq_2:str, 
-    seq_1_index:int,
-    seq_2_index:int,
-    seq_1_aligned:list, 
-    middle_part:list,
-    seq_2_aligned:list
-):
-    seq_1_aligned.extend((seq_1[seq_1_index], seq_1[seq_1_index - 1]))
-    middle_part.append("  ")
-    seq_2_aligned.append("--")
-
-    return (
-        seq_1_aligned,
-        middle_part,
-        seq_2_aligned
-    )
 
 def traceback_2(
     best_paths_mat:list[list], 
@@ -1277,19 +1240,19 @@ def traceback_2(
     paths_to_moves_mapper={
         0: (-1, -1, take_match),
         1: (0, -1, take_gap_in_seq_1),
-        2: (0, -2, take_2_gaps_in_seq_1),
+        2: (0, -1, take_gap_in_seq_1),
         3: (-1, 0, take_gap_in_seq_2),
-        4: (-2, 0, take_2_gaps_in_seq_2),
+        4: (-1, 0, take_gap_in_seq_2),
         5: random.choice(((0, -1, take_gap_in_seq_1), (-1, 0, take_gap_in_seq_2))),
-        6: random.choice(((0, -1, take_gap_in_seq_1), (-2, 0, take_2_gaps_in_seq_2))),
-        7: random.choice(((0, -2, take_2_gaps_in_seq_1), (-1, 0, take_gap_in_seq_2))),
-        8: random.choice(((0, -2, take_2_gaps_in_seq_1), (-2, 0, take_2_gaps_in_seq_1))),
+        6: random.choice(((0, -1, take_gap_in_seq_1), (-1, 0, take_gap_in_seq_2))),
+        7: random.choice(((0, -1, take_gap_in_seq_1), (-1, 0, take_gap_in_seq_2))),
+        8: random.choice(((0, -1, take_gap_in_seq_1), (-1, 0, take_gap_in_seq_2))),
         9: (-1, -1, take_match),
         10: (-1, -1, take_match),
         11: (-1, -1, take_match),
         12: (-1, -1, take_match),
-        13: random.choice(((0, -1, take_gap_in_seq_1), (0, -2, take_2_gaps_in_seq_1))),
-        14: random.choice(((-1, 0, take_gap_in_seq_2), (-2, 0, take_2_gaps_in_seq_2))),
+        13: random.choice(((0, -1, take_gap_in_seq_1), (0, -1, take_gap_in_seq_1))),
+        14: random.choice(((-1, 0, take_gap_in_seq_2), (-1, 0, take_gap_in_seq_2))),
         15: (-1, -1, take_match),
         16: (-1, -1, take_match),
         17: (-1, -1, take_match),
