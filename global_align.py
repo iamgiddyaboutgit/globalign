@@ -1313,22 +1313,22 @@ def traceback_2(
 
     # When we start at the bottom right of the 
     # best_paths_mat, there is no previous cell.
-    # So, we just put path_indicator_prev = 0 
+    # So, we just put path_indicator_prev_used = 0 
     # to initialize for the loop.
-    path_indicator_prev = 0
+    path_indicator_prev_used = 0
 
     for w in range(max_num_alignment_moves):
         path_indicator_before_tie_break = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
         # Sometimes the path_indicator may be for a tie
         # that we need to break.  
-        path_indicator_after_tie_break, best_paths_mat = break_ties(
+        path_indicator_after_tie_break, best_paths_mat = reduce_tie_possibilities(
             best_paths_mat_row_index=best_paths_mat_row_index,
             best_paths_mat_col_index=best_paths_mat_col_index,
             best_paths_mat=best_paths_mat,
-            path_indicator_prev=path_indicator_prev,
+            path_indicator_prev_used=path_indicator_prev_used,
             path_indicator_curr=path_indicator_before_tie_break
         )
-        path_type_used, best_paths_mat_row_index_delta, best_paths_mat_col_index_delta, move \
+        curr_path_type_to_use, best_paths_mat_row_index_delta, best_paths_mat_col_index_delta, move \
             = paths_to_moves_mapper[path_indicator_after_tie_break]
         
         # Use the right move function.
@@ -1367,7 +1367,7 @@ def traceback_2(
         seq_1_index = best_paths_mat_row_index - 1
         seq_2_index = best_paths_mat_col_index - 1
 
-        path_indicator_prev = path_indicator_after_tie_break
+        path_indicator_prev_used = curr_path_type_to_use
 
         
         # if path_indicator == 0:
@@ -1581,17 +1581,18 @@ def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list
 def reduce_tie_possibilities(
     best_paths_mat_row_index:int,
     best_paths_mat_col_index:int,
-    path_indicator_prev:int,
-    path_indicator_curr:int,
-    best_paths_mat_row_index_delta:int,
-    best_paths_mat_col_index_delta:int,
     best_paths_mat:list[list],
+    path_indicator_prev_used:int,
+    path_indicator_curr:int,
+    # best_paths_mat_row_index_delta:int,
+    # best_paths_mat_col_index_delta:int,
+    
     # seq_1:str,
     # seq_2:str,
     # gap_open_cost:int|float,
     # cost_mat:dict[dict],
-    moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12, 14, 19, 22, 23},
-    moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10, 13, 19, 20, 21},
+    # moves_for_gap_open_penalty_from_left:set={0, 3, 4, 11, 12, 14, 19, 22, 23},
+    # moves_for_gap_open_penalty_from_up:set={0, 1, 2, 9, 10, 13, 19, 20, 21},
     tie_fix_mapper:dict={
         # Keys are 
         # path_indicator_prev_used,
@@ -1779,7 +1780,7 @@ def reduce_tie_possibilities(
     As nodes in the edit graph (cells in best_paths_mat)
     are traced back along a minimum cost path,
     we know the direction in which each cell is entered,
-    the position of each cell in best_paths_mat, path_indicator_prev, 
+    the position of each cell in best_paths_mat, path_indicator_prev_used, 
     and path_indicator_curr.
     Thus, (in some cases) we can infer what the best_path_type to the 
     current node should have been. So, in some
@@ -1793,7 +1794,8 @@ def reduce_tie_possibilities(
     but rather it should say to start a gap in seq_1.
 
     Args:
-        path_indicator_prev: for the previous cell in the 
+        path_indicator_prev_used: the integer path code
+            that was chosen for the previous cell in the 
             traceback from end to start
         path_indicator_curr: for the current cell in the
             traceback from end to start
@@ -1801,7 +1803,7 @@ def reduce_tie_possibilities(
     Returns:
         (path_indicator_curr_new, best_paths_mat)
     """
-    path_indicator_curr_new = tie_fix_mapper[(path_indicator_prev, path_indicator_curr)]
+    path_indicator_curr_new = tie_fix_mapper[(path_indicator_prev_used, path_indicator_curr)]
     best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index] = path_indicator_curr_new
     return (path_indicator_curr_new, best_paths_mat)
 
