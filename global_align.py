@@ -1328,7 +1328,7 @@ def traceback_2(
             path_indicator_prev=path_indicator_prev,
             path_indicator_curr=path_indicator_before_tie_break
         )
-        best_paths_mat_row_index_delta, best_paths_mat_col_index_delta, move \
+        path_type_used, best_paths_mat_row_index_delta, best_paths_mat_col_index_delta, move \
             = paths_to_moves_mapper[path_indicator_after_tie_break]
         
         # Use the right move function.
@@ -1578,7 +1578,7 @@ def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list
     ]
 
 
-def break_ties(
+def reduce_tie_possibilities(
     best_paths_mat_row_index:int,
     best_paths_mat_col_index:int,
     path_indicator_prev:int,
