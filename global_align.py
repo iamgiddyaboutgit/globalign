@@ -499,17 +499,17 @@ def align(
     )
     
 
-    print("in align LINE 350")
-    print("D_mat")
-    print(D_mat)
-    print("partial_A_mat")
-    print(partial_A_mat)
-    print("partial_B_mat")
-    print(partial_B_mat)
-    print("partial_C_mat")
-    print(partial_C_mat)
-    print("best_paths_mat before traceback")
-    print(best_paths_mat)
+    # print("in align LINE 350")
+    # print("D_mat")
+    # print(D_mat)
+    # print("partial_A_mat")
+    # print(partial_A_mat)
+    # print("partial_B_mat")
+    # print(partial_B_mat)
+    # print("partial_C_mat")
+    # print(partial_C_mat)
+    # print("best_paths_mat before traceback")
+    # print(best_paths_mat)
 
     seq_1_aligned_out, middle_part_out, seq_2_aligned_out = traceback(
         best_paths_mat=best_paths_mat,
@@ -1039,9 +1039,9 @@ def find_global_alignment(
         situation_mapper=situation_mapper
     )
 
-    print("best_paths_mat")
-    for i in range(len(best_paths_mat)):
-        print(best_paths_mat[i])
+    # print("best_paths_mat")
+    # for i in range(len(best_paths_mat)):
+    #     print(best_paths_mat[i])
 
     seq_1_aligned_out, middle_part_out, seq_2_aligned_out = traceback_2(
         best_paths_mat=best_paths_mat,
@@ -1264,14 +1264,14 @@ def traceback_2(
         17: random.choice(((0, -1, -1, take_match), (2, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
         18: random.choice(((0, -1, -1, take_match), (2, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
         19: (19, -1, -1, take_mismatch),
-        20: (19, -1, -1, take_mismatch),
-        21: (19, -1, -1, take_mismatch),
-        22: (19, -1, -1, take_mismatch),
-        23: (19, -1, -1, take_mismatch),
-        24: (19, -1, -1, take_mismatch),
-        25: (19, -1, -1, take_mismatch),
-        26: (19, -1, -1, take_mismatch),
-        27: (19, -1, -1, take_mismatch),
+        20: random.choice(((19, -1, -1, take_mismatch), (1, 0, -1, take_gap_in_seq_1))),
+        21: random.choice(((19, -1, -1, take_mismatch), (2, 0, -1, take_gap_in_seq_1))),
+        22: random.choice(((19, -1, -1, take_mismatch), (3, -1, 0, take_gap_in_seq_2))),
+        23: random.choice(((19, -1, -1, take_mismatch), (4, -1, 0, take_gap_in_seq_2))),
+        24: random.choice(((19, -1, -1, take_mismatch), (1, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
+        25: random.choice(((19, -1, -1, take_mismatch), (1, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
+        26: random.choice(((19, -1, -1, take_mismatch), (2, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
+        27: random.choice(((19, -1, -1, take_mismatch), (2, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2)))
     }
 ) -> tuple[str, str, str]:
     """Perform traceback through best_paths_mat
@@ -2366,8 +2366,8 @@ def do_core_align_2(
     """
     Find a global alignment of the sequences
     
-    `seq_1` and `seq_2`, assuming that the 
-    lengths of both sequences are greater than 1.  
+    `seq_1` and `seq_2`, assuming that warmup_align_2
+    has already been run.  
 
     Args:
         gap_open_cost: The cost for a gap just to exist.
@@ -2389,6 +2389,10 @@ def do_core_align_2(
 
     partial_dp_mat_prev_row_id = 1
     partial_dp_mat_cur_row_id = 0
+
+    # The below line is not needed for the loop,
+    # but it is needed in case the loop doesn't run.
+    cur_cell_best_cum_cost = partial_dp_mat[-1][-1]
 
     for i in row_range:
         # Prep for this row iteration.
@@ -2450,8 +2454,8 @@ def do_core_align_2(
 
         # Prep for next row iteration.
         # Do some swapping.
-        print(f"partial_dp_mat with cur_row: {partial_dp_mat_cur_row_id}")
-        print(partial_dp_mat[partial_dp_mat_cur_row_id])
+        # print(f"partial_dp_mat with cur_row: {partial_dp_mat_cur_row_id}")
+        # print(partial_dp_mat[partial_dp_mat_cur_row_id])
         partial_dp_mat_prev_row_id, partial_dp_mat_cur_row_id = partial_dp_mat_cur_row_id, partial_dp_mat_prev_row_id
 
     return (
@@ -2915,6 +2919,7 @@ def init_best_paths_matrix(
     # Update some entries specifically.
     best_paths_mat[0][1] = 1
     best_paths_mat[1][0] = 3
+    best_paths_mat[0][0] = 0
 
     for i in range(2, dynamic_prog_num_rows):
         best_paths_mat[i][0] = 4
