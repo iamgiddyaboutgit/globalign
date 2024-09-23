@@ -1422,45 +1422,29 @@ def traceback_3(
     best_paths_mat:list[list][list], 
     seq_1:str, 
     seq_2:str,
-    # paths_to_moves_mapper gets the amounts by which 
-    # the row and column indices 
-    # in the edit graph need to change relative to the 
-    # coordinates of the current cell.
-    # keys: path_types
+    # Let best_paths_mat[h][i][j] be an arbitrary
+    # entry in best_paths_mat. Let delta_i
+    # be the amount by which to change i in the traceback.
+    # Let delta_j be the amount by which to change j 
+    # in the traceback.
+    #
+    # paths_to_moves_mapper has
+    # keys: (h, path_types)
     # values: 4-tuples with elements of
-    # path_type_used (in the case of a tie, the path_type actually used),
-    # best_paths_mat_row_index_delta,
-    # best_paths_mat_col_index_delta,
+    # h (new level),
+    # delta_i,
+    # delta_j,
     # move function
     paths_to_moves_mapper={
-        0: (0, -1, -1, take_match),
-        1: (1, 0, -1, take_gap_in_seq_1),
-        2: (2, 0, -1, take_gap_in_seq_1),
-        3: (3, -1, 0, take_gap_in_seq_2),
-        4: (4, -1, 0, take_gap_in_seq_2),
-        5: random.choice(((1, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
-        6: random.choice(((1, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
-        7: random.choice(((2, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
-        8: random.choice(((2, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
-        9: random.choice(((0, -1, -1, take_match), (1, 0, -1, take_gap_in_seq_1))),
-        10: random.choice(((0, -1, -1, take_match), (2, 0, -1, take_gap_in_seq_1))),
-        11: random.choice(((0, -1, -1, take_match), (3, -1, 0, take_gap_in_seq_2))),
-        12: random.choice(((0, -1, -1, take_match), (4, -1, 0, take_gap_in_seq_2))),
-        13: random.choice(((1, 0, -1, take_gap_in_seq_1), (2, 0, -1, take_gap_in_seq_1))),
-        14: random.choice(((3, -1, 0, take_gap_in_seq_2), (4, -1, 0, take_gap_in_seq_2))),
-        15: random.choice(((0, -1, -1, take_match), (1, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
-        16: random.choice(((0, -1, -1, take_match), (1, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
-        17: random.choice(((0, -1, -1, take_match), (2, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
-        18: random.choice(((0, -1, -1, take_match), (2, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
-        19: (19, -1, -1, take_mismatch),
-        20: random.choice(((19, -1, -1, take_mismatch), (1, 0, -1, take_gap_in_seq_1))),
-        21: random.choice(((19, -1, -1, take_mismatch), (2, 0, -1, take_gap_in_seq_1))),
-        22: random.choice(((19, -1, -1, take_mismatch), (3, -1, 0, take_gap_in_seq_2))),
-        23: random.choice(((19, -1, -1, take_mismatch), (4, -1, 0, take_gap_in_seq_2))),
-        24: random.choice(((19, -1, -1, take_mismatch), (1, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
-        25: random.choice(((19, -1, -1, take_mismatch), (1, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
-        26: random.choice(((19, -1, -1, take_mismatch), (2, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
-        27: random.choice(((19, -1, -1, take_mismatch), (2, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2)))
+        (0, 1): (1, 0, -1, ),
+        (0, 4): (0, 0, -1, ),
+        (0, 8): (2, 0, -1, ),
+        (0, 12): (2, 0, -1, ),
+        
+        (1, 0): (1, -1, 0, ),
+        (1, 5): (0, -1, 0, ),
+        (1, 9): (2, -1, 0, ),
+        (1, 13): (2, -1, 0, ),
     }
 ) -> tuple[str, str, str]:
     """Perform traceback through best_paths_mat
