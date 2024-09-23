@@ -1419,9 +1419,7 @@ def traceback_2(
     )
 
 def traceback_3(
-    best_paths_mat_d:list[list], 
-    best_paths_mat_i:list[list], 
-    best_paths_mat_m:list[list], 
+    best_paths_mat:list[list][list], 
     seq_1:str, 
     seq_2:str,
     # paths_to_moves_mapper gets the amounts by which 
@@ -1470,21 +1468,22 @@ def traceback_3(
     to find the alignment.
 
     Args: 
-        best_paths_mat_d: list of length len(seq_1) + 1
+        best_paths_mat: list of length 3 where each element
+            is a list of length len(seq_1) + 1
             where each element is a list of length 
-            len(seq_2) + 1. The best_paths_mat_d[i][j] entry
+            len(seq_2) + 1. 
+            
+            The best_paths_mat[0][i][j] entry
             is the best_path_type for aligning the prefixes
             seq_1[0:i] and seq_2[0:j] such that the alignment
             ends with a gap in seq_1.
-        best_paths_mat_i: list of length len(seq_1) + 1
-            where each element is a list of length 
-            len(seq_2) + 1. The best_paths_mat_d[i][j] entry
+
+            The best_paths_mat[1][i][j] entry
             is the best_path_type for aligning the prefixes
             seq_1[0:i] and seq_2[0:j] such that the alignment
             ends with a gap in seq_2.
-        best_paths_mat_m: list of length len(seq_1) + 1
-            where each element is a list of length 
-            len(seq_2) + 1. The best_paths_mat_d[i][j] entry
+
+            The best_paths_mat[2][i][j] entry
             is the best_path_type for aligning the prefixes
             seq_1[0:i] and seq_2[0:j] such that the alignment
             ends with a match or mismatch.
