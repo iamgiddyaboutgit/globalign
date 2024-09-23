@@ -1418,6 +1418,212 @@ def traceback_2(
         seq_2_aligned_out
     )
 
+def traceback_3(
+    best_paths_mat_d:list[list], 
+    best_paths_mat_i:list[list], 
+    best_paths_mat_m:list[list], 
+    seq_1:str, 
+    seq_2:str,
+    # paths_to_moves_mapper gets the amounts by which 
+    # the row and column indices 
+    # in the edit graph need to change relative to the 
+    # coordinates of the current cell.
+    # keys: path_types
+    # values: 4-tuples with elements of
+    # path_type_used (in the case of a tie, the path_type actually used),
+    # best_paths_mat_row_index_delta,
+    # best_paths_mat_col_index_delta,
+    # move function
+    paths_to_moves_mapper={
+        0: (0, -1, -1, take_match),
+        1: (1, 0, -1, take_gap_in_seq_1),
+        2: (2, 0, -1, take_gap_in_seq_1),
+        3: (3, -1, 0, take_gap_in_seq_2),
+        4: (4, -1, 0, take_gap_in_seq_2),
+        5: random.choice(((1, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
+        6: random.choice(((1, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
+        7: random.choice(((2, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
+        8: random.choice(((2, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
+        9: random.choice(((0, -1, -1, take_match), (1, 0, -1, take_gap_in_seq_1))),
+        10: random.choice(((0, -1, -1, take_match), (2, 0, -1, take_gap_in_seq_1))),
+        11: random.choice(((0, -1, -1, take_match), (3, -1, 0, take_gap_in_seq_2))),
+        12: random.choice(((0, -1, -1, take_match), (4, -1, 0, take_gap_in_seq_2))),
+        13: random.choice(((1, 0, -1, take_gap_in_seq_1), (2, 0, -1, take_gap_in_seq_1))),
+        14: random.choice(((3, -1, 0, take_gap_in_seq_2), (4, -1, 0, take_gap_in_seq_2))),
+        15: random.choice(((0, -1, -1, take_match), (1, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
+        16: random.choice(((0, -1, -1, take_match), (1, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
+        17: random.choice(((0, -1, -1, take_match), (2, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
+        18: random.choice(((0, -1, -1, take_match), (2, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
+        19: (19, -1, -1, take_mismatch),
+        20: random.choice(((19, -1, -1, take_mismatch), (1, 0, -1, take_gap_in_seq_1))),
+        21: random.choice(((19, -1, -1, take_mismatch), (2, 0, -1, take_gap_in_seq_1))),
+        22: random.choice(((19, -1, -1, take_mismatch), (3, -1, 0, take_gap_in_seq_2))),
+        23: random.choice(((19, -1, -1, take_mismatch), (4, -1, 0, take_gap_in_seq_2))),
+        24: random.choice(((19, -1, -1, take_mismatch), (1, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
+        25: random.choice(((19, -1, -1, take_mismatch), (1, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2))),
+        26: random.choice(((19, -1, -1, take_mismatch), (2, 0, -1, take_gap_in_seq_1), (3, -1, 0, take_gap_in_seq_2))),
+        27: random.choice(((19, -1, -1, take_mismatch), (2, 0, -1, take_gap_in_seq_1), (4, -1, 0, take_gap_in_seq_2)))
+    }
+) -> tuple[str, str, str]:
+    """Perform traceback through best_paths_mat
+    
+    to find the alignment.
+
+    Args: 
+        best_paths_mat_d: list of length len(seq_1) + 1
+            where each element is a list of length 
+            len(seq_2) + 1. The best_paths_mat_d[i][j] entry
+            is the best_path_type for aligning the prefixes
+            seq_1[0:i] and seq_2[0:j] such that the alignment
+            ends with a gap in seq_1.
+        best_paths_mat_i: list of length len(seq_1) + 1
+            where each element is a list of length 
+            len(seq_2) + 1. The best_paths_mat_d[i][j] entry
+            is the best_path_type for aligning the prefixes
+            seq_1[0:i] and seq_2[0:j] such that the alignment
+            ends with a gap in seq_2.
+        best_paths_mat_m: list of length len(seq_1) + 1
+            where each element is a list of length 
+            len(seq_2) + 1. The best_paths_mat_d[i][j] entry
+            is the best_path_type for aligning the prefixes
+            seq_1[0:i] and seq_2[0:j] such that the alignment
+            ends with a match or mismatch.
+
+    Returns:
+        (
+            seq_1_aligned_out,
+            middle_part_out,
+            seq_2_aligned_out
+        )
+    """
+    # Prepare for loop.
+    seq_1_aligned = []
+    seq_2_aligned = []
+    middle_part = []
+
+    m = len(seq_1)
+    n = len(seq_2)
+
+    # http://www.cs.cmu.edu/~durand/03-711/2017/Lectures/Sequence-Alignment-2017.pdf
+    max_num_alignment_moves = m + n
+
+    # Start at the bottom-right.
+    best_paths_mat_row_index = m 
+    best_paths_mat_col_index = n 
+    # Because of the initial row and column in
+    # best_paths_mat that doesn't align with
+    # any parts of the two sequences, the indices
+    # are off by one.
+    seq_1_index = best_paths_mat_row_index - 1
+    seq_2_index = best_paths_mat_col_index - 1
+
+    # When we start at the bottom right of the 
+    # best_paths_mat, there is no previous cell.
+    # So, we just put path_indicator_prev_used = 0 
+    # to initialize for the loop.
+    path_indicator_prev_used = 0
+
+    for w in range(max_num_alignment_moves):
+        path_indicator_before_tie_break = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
+        # Sometimes the path_indicator may be for a tie
+        # that we need to break.  
+        path_indicator_after_tie_break, best_paths_mat = reduce_tie_possibilities(
+            best_paths_mat_row_index=best_paths_mat_row_index,
+            best_paths_mat_col_index=best_paths_mat_col_index,
+            best_paths_mat=best_paths_mat,
+            path_indicator_prev_used=path_indicator_prev_used,
+            path_indicator_curr=path_indicator_before_tie_break
+        )
+        curr_path_type_to_use, best_paths_mat_row_index_delta, best_paths_mat_col_index_delta, move \
+            = paths_to_moves_mapper[path_indicator_after_tie_break]
+        
+        # Use the right move function.
+        seq_1_aligned, middle_part, seq_2_aligned = move(
+            seq_1=seq_1,
+            seq_2=seq_2,
+            seq_1_index=seq_1_index,
+            seq_2_index=seq_2_index,
+            seq_1_aligned=seq_1_aligned,
+            middle_part=middle_part,
+            seq_2_aligned=seq_2_aligned
+        )
+
+        # print("seq_1_aligned")
+        # print(seq_1_aligned)
+        # print("seq_2_aligned")
+        # print(seq_2_aligned)
+        
+        # Update for next iteration.
+        best_paths_mat_row_index += best_paths_mat_row_index_delta
+        best_paths_mat_col_index += best_paths_mat_col_index_delta
+        
+        # Determine whether the loop should continue.
+        if best_paths_mat_row_index < 1 and best_paths_mat_col_index < 1:
+            # print("seq_1_index")
+            # print(seq_1_index)
+            # print("seq_2_index")
+            # print(seq_2_index)
+            break
+
+        # Continue updating for next iteration.
+        # Because of the initial row and column in
+        # best_paths_mat which do not align with
+        # any parts of the two sequences, the indices
+        # are off by one.
+        seq_1_index = best_paths_mat_row_index - 1
+        seq_2_index = best_paths_mat_col_index - 1
+
+        path_indicator_prev_used = curr_path_type_to_use
+
+        
+        # if path_indicator == 0:
+        #     # match/mismatch is the best move
+        #     seq_1_letter = seq_1[seq_1_index]
+        #     seq_2_letter = seq_2[seq_2_index]
+        #     if seq_1_letter == seq_2_letter:
+        #         # There was a match.
+        #         middle_part.append("|")
+        #     else:
+        #         # There was not a match.
+        #         middle_part.append("*")
+
+        #     seq_1_aligned.append(seq_1[seq_1_index])
+        #     seq_1_index -= 1
+        #     seq_2_aligned.append(seq_2[seq_2_index])
+        #     seq_2_index -= 1
+        # elif path_indicator == 1:
+        #     # gap in seq_1 is the best move
+        #     middle_part.append(" ")
+        #     seq_1_aligned.append("-")
+        #     seq_2_aligned.append(seq_2[seq_2_index])
+        #     seq_2_index -= 1
+        # else:
+        #     # gap in seq_2 is the best move
+        #     middle_part.append(" ")
+        #     seq_1_aligned.append(seq_1[seq_1_index])
+        #     seq_1_index -= 1
+        #     seq_2_aligned.append("-")
+
+        
+
+    # print("seq_1_index")
+    # print(seq_1_index)
+    # print("seq_2_index")
+    # print(seq_2_index)
+    seq_1_aligned.reverse()
+    middle_part.reverse()
+    seq_2_aligned.reverse()
+
+    seq_1_aligned_out = "".join(seq_1_aligned)
+    middle_part_out = "".join(middle_part)
+    seq_2_aligned_out = "".join(seq_2_aligned)
+
+    return (
+        seq_1_aligned_out,
+        middle_part_out,
+        seq_2_aligned_out
+    )
+
 def draw_random_seq(alphabet:list, min_len:int, max_len:int):
     random.seed()
     # Randomly decide on how long the sequence should be.
