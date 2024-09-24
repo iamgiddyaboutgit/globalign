@@ -1419,7 +1419,8 @@ def traceback_2(
     )
 
 def traceback_3(
-    best_paths_mat:list[list][list], 
+    best_paths_mat:list[list[list]], 
+    h_start:int,
     seq_1:str, 
     seq_2:str,
     # Let best_paths_mat[h][i][j] be an arbitrary
@@ -1429,22 +1430,31 @@ def traceback_3(
     # in the traceback.
     #
     # paths_to_moves_mapper has
-    # keys: (h, path_types)
+    # keys: (h, path_type)
     # values: 4-tuples with elements of
     # h (new level),
     # delta_i,
     # delta_j,
     # move function
     paths_to_moves_mapper={
-        (0, 1): (1, 0, -1, ),
-        (0, 4): (0, 0, -1, ),
-        (0, 8): (2, 0, -1, ),
-        (0, 12): (2, 0, -1, ),
+        (0, 1): (1, 0, -1, take_gap_in_seq_2),
+        (0, 4): (0, 0, -1, take_gap_in_seq_1),
+        (0, 8): (2, 0, -1, take_gap_in_seq_1),
+        (0, 12): (2, 0, -1, take_gap_in_seq_1),
         
-        (1, 0): (1, -1, 0, ),
-        (1, 5): (0, -1, 0, ),
-        (1, 9): (2, -1, 0, ),
-        (1, 13): (2, -1, 0, ),
+        (1, 0): (1, -1, 0, take_gap_in_seq_2),
+        (1, 5): (0, -1, 0, take_gap_in_seq_2),
+        (1, 9): (2, -1, 0, take_gap_in_seq_2),
+        (1, 13): (2, -1, 0, take_gap_in_seq_2),
+
+        (2, 2): (1, -1, -1, take_match),
+        (2, 3): (1, -1, -1, take_mismatch),
+        (2, 6): (0, -1, -1, take_match),
+        (2, 7): (0, -1, -1, take_mismatch),
+        (2, 10): (2, -1, -1, take_match),
+        (2, 11): (2, -1, -1, take_mismatch),
+        (2, 14): (2, -1, -1, take_match),
+        (2, 15): (2, -1, -1, take_mismatch)
     }
 ) -> tuple[str, str, str]:
     """Perform traceback through best_paths_mat
@@ -1490,35 +1500,22 @@ def traceback_3(
     # http://www.cs.cmu.edu/~durand/03-711/2017/Lectures/Sequence-Alignment-2017.pdf
     max_num_alignment_moves = m + n
 
-    # Start at the bottom-right.
-    best_paths_mat_row_index = m 
-    best_paths_mat_col_index = n 
+    # Start at the last cell in best_paths_mat.
+    i = m 
+    j = n 
     # Because of the initial row and column in
-    # best_paths_mat that doesn't align with
+    # best_paths_mat at any given level doesn't align with
     # any parts of the two sequences, the indices
     # are off by one.
-    seq_1_index = best_paths_mat_row_index - 1
-    seq_2_index = best_paths_mat_col_index - 1
+    seq_1_index = i - 1
+    seq_2_index = j - 1
 
-    # When we start at the bottom right of the 
-    # best_paths_mat, there is no previous cell.
-    # So, we just put path_indicator_prev_used = 0 
-    # to initialize for the loop.
-    path_indicator_prev_used = 0
-
+    h = h_start
+    
     for w in range(max_num_alignment_moves):
-        path_indicator_before_tie_break = best_paths_mat[best_paths_mat_row_index][best_paths_mat_col_index]
-        # Sometimes the path_indicator may be for a tie
-        # that we need to break.  
-        path_indicator_after_tie_break, best_paths_mat = reduce_tie_possibilities(
-            best_paths_mat_row_index=best_paths_mat_row_index,
-            best_paths_mat_col_index=best_paths_mat_col_index,
-            best_paths_mat=best_paths_mat,
-            path_indicator_prev_used=path_indicator_prev_used,
-            path_indicator_curr=path_indicator_before_tie_break
-        )
-        curr_path_type_to_use, best_paths_mat_row_index_delta, best_paths_mat_col_index_delta, move \
-            = paths_to_moves_mapper[path_indicator_after_tie_break]
+        # Traceback to the next path_type to use.
+        path_type = best_paths_mat[h][i][j]
+        h, delta_i, delta_j, move = paths_to_moves_mapper[(h, path_type)]
         
         # Use the right move function.
         seq_1_aligned, middle_part, seq_2_aligned = move(
@@ -1537,11 +1534,11 @@ def traceback_3(
         # print(seq_2_aligned)
         
         # Update for next iteration.
-        best_paths_mat_row_index += best_paths_mat_row_index_delta
-        best_paths_mat_col_index += best_paths_mat_col_index_delta
+        i += delta_i
+        j += delta_j
         
         # Determine whether the loop should continue.
-        if best_paths_mat_row_index < 1 and best_paths_mat_col_index < 1:
+        if i < 1 and j < 1:
             # print("seq_1_index")
             # print(seq_1_index)
             # print("seq_2_index")
@@ -1553,46 +1550,10 @@ def traceback_3(
         # best_paths_mat which do not align with
         # any parts of the two sequences, the indices
         # are off by one.
-        seq_1_index = best_paths_mat_row_index - 1
-        seq_2_index = best_paths_mat_col_index - 1
+        seq_1_index = i - 1
+        seq_2_index = j - 1
 
-        path_indicator_prev_used = curr_path_type_to_use
-
-        
-        # if path_indicator == 0:
-        #     # match/mismatch is the best move
-        #     seq_1_letter = seq_1[seq_1_index]
-        #     seq_2_letter = seq_2[seq_2_index]
-        #     if seq_1_letter == seq_2_letter:
-        #         # There was a match.
-        #         middle_part.append("|")
-        #     else:
-        #         # There was not a match.
-        #         middle_part.append("*")
-
-        #     seq_1_aligned.append(seq_1[seq_1_index])
-        #     seq_1_index -= 1
-        #     seq_2_aligned.append(seq_2[seq_2_index])
-        #     seq_2_index -= 1
-        # elif path_indicator == 1:
-        #     # gap in seq_1 is the best move
-        #     middle_part.append(" ")
-        #     seq_1_aligned.append("-")
-        #     seq_2_aligned.append(seq_2[seq_2_index])
-        #     seq_2_index -= 1
-        # else:
-        #     # gap in seq_2 is the best move
-        #     middle_part.append(" ")
-        #     seq_1_aligned.append(seq_1[seq_1_index])
-        #     seq_1_index -= 1
-        #     seq_2_aligned.append("-")
-
-        
-
-    # print("seq_1_index")
-    # print(seq_1_index)
-    # print("seq_2_index")
-    # print(seq_2_index)
+    
     seq_1_aligned.reverse()
     middle_part.reverse()
     seq_2_aligned.reverse()
