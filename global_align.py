@@ -1527,11 +1527,6 @@ def traceback_3(
             middle_part=middle_part,
             seq_2_aligned=seq_2_aligned
         )
-
-        # print("seq_1_aligned")
-        # print(seq_1_aligned)
-        # print("seq_2_aligned")
-        # print(seq_2_aligned)
         
         # Update for next iteration.
         i += delta_i
@@ -1539,10 +1534,6 @@ def traceback_3(
         
         # Determine whether the loop should continue.
         if i < 1 and j < 1:
-            # print("seq_1_index")
-            # print(seq_1_index)
-            # print("seq_2_index")
-            # print(seq_2_index)
             break
 
         # Continue updating for next iteration.
@@ -2868,65 +2859,118 @@ def warmup_align(
 
 #     return partial_A_mat
 
-def init_partial_dynamic_prog_matrix(
-    gap_existence_cost:int, 
-    seq_1:str,
-    seq_2:str,
-    scoring_mat:dict[dict], 
-    dynamic_prog_num_cols:int
-) -> list[list]:
-    """Initialze matrices for the NW algorithm. 
+# def init_partial_dynamic_prog_matrix(
+#     gap_existence_cost:int, 
+#     seq_1:str,
+#     seq_2:str,
+#     scoring_mat:dict[dict], 
+#     dynamic_prog_num_cols:int
+# ) -> list[list]:
+#     """Initialze matrices for the NW algorithm. 
     
-    It initializes correctly for the 0-index rows and the 0-index 
-    columns.  However, it leaves complete initialization of 
-    partial_A_mat, partial_B_mat, and partial_C_mat to other 
-    functions.
-    """
-    mat = make_matrix(
-        num_rows=2,
-        num_cols=dynamic_prog_num_cols,
-        fill_val=0
-    )
-    # Take care of initialization with gap scores.
+#     It initializes correctly for the 0-index rows and the 0-index 
+#     columns.  However, it leaves complete initialization of 
+#     partial_A_mat, partial_B_mat, and partial_C_mat to other 
+#     functions.
+#     """
+#     mat = make_matrix(
+#         num_rows=2,
+#         num_cols=dynamic_prog_num_cols,
+#         fill_val=0
+#     )
+#     # Take care of initialization with gap scores.
   
-    # Loop prep
-    # Start in column 1
-    j = 1
+#     # Loop prep
+#     # Start in column 1
+#     j = 1
 
-    # The indices into our sequences are always 1 behind
-    # the indices into our dynamic programming matrices.
-    seq_2_index = j - 1
+#     # The indices into our sequences are always 1 behind
+#     # the indices into our dynamic programming matrices.
+#     seq_2_index = j - 1
 
-    # Pay a gap existence penalty for the entry in the 
-    # 0th row and 1st column of each partial dynamic programming
-    # matrix.
-    cur_gap_score = -gap_existence_cost + scoring_mat["-"][seq_2[seq_2_index]]
-    mat[0][j] = cur_gap_score
+#     # Pay a gap existence penalty for the entry in the 
+#     # 0th row and 1st column of each partial dynamic programming
+#     # matrix.
+#     cur_gap_score = -gap_existence_cost + scoring_mat["-"][seq_2[seq_2_index]]
+#     mat[0][j] = cur_gap_score
 
-    # We do not have to pay the gap existence penalty for 
-    # entries to the right of the 1-index column in the 
-    # 0-index row.
-    for j in range(2, dynamic_prog_num_cols):
-        # Prep for this iteration
-        # The sequence indices are always one behind
-        # the row/column indices.
-        seq_2_index = j - 1
+#     # We do not have to pay the gap existence penalty for 
+#     # entries to the right of the 1-index column in the 
+#     # 0-index row.
+#     for j in range(2, dynamic_prog_num_cols):
+#         # Prep for this iteration
+#         # The sequence indices are always one behind
+#         # the row/column indices.
+#         seq_2_index = j - 1
 
-        # body of loop
-        # The cur_gap_score will have already incorporated
-        # a gap existence penalty.
-        cur_gap_score = cur_gap_score + scoring_mat["-"][seq_2[seq_2_index]]
-        mat[0][j] = cur_gap_score
+#         # body of loop
+#         # The cur_gap_score will have already incorporated
+#         # a gap existence penalty.
+#         cur_gap_score = cur_gap_score + scoring_mat["-"][seq_2[seq_2_index]]
+#         mat[0][j] = cur_gap_score
 
-    # We also have to pay the gap existence penalty for 
-    # the entry in the 1-index row and 0-index column
-    # for partial_A_mat, partial_B_mat, and partial_C_mat.
-    mat[1][0] = -gap_existence_cost + scoring_mat[seq_1[0]]["-"]
-    return mat
+#     # We also have to pay the gap existence penalty for 
+#     # the entry in the 1-index row and 0-index column
+#     # for partial_A_mat, partial_B_mat, and partial_C_mat.
+#     mat[1][0] = -gap_existence_cost + scoring_mat[seq_1[0]]["-"]
+#     return mat
 
 
-def init_partial_dynamic_prog_matrix_2(
-    seq_1:str,
+# def init_partial_dynamic_prog_matrix_2(
+#     seq_1:str,
+#     seq_2:str,
+#     cost_mat:dict[dict], 
+#     gap_open_cost:int|float,
+#     dynamic_prog_num_cols:int
+# ) -> list[list]:
+#     """Initialize a partial dynamic programming
+
+#     matrix.  It's partial because it only has 2 rows.
+#     It initializes correctly for the 0-index row and the 
+#     entry in the 1-index row and 0-index column.
+#     """
+#     mat = make_matrix(
+#         num_rows=2,
+#         num_cols=dynamic_prog_num_cols,
+#         fill_val=0
+#     )
+
+#     # Take care of initialization with gap costs.
+  
+#     # Loop prep
+#     # Start in column 1
+#     j = 1
+
+#     # The indices into our sequences are always 1 behind
+#     # the indices into our dynamic programming matrices.
+#     seq_2_index = j - 1
+
+#     # Pay gap_open_cost for the entry in the 
+#     # 0th row and 1st column.
+#     cur_gap_score = gap_open_cost + cost_mat["-"][seq_2[seq_2_index]]
+#     mat[0][j] = cur_gap_score
+
+#     # We do not have to pay the gap_open_cost for 
+#     # entries to the right of the 1-index column in the 
+#     # 0-index row.
+#     for j in range(2, dynamic_prog_num_cols):
+#         # Prep for this iteration
+#         # The sequence indices are always one behind
+#         # the row/column indices.
+#         seq_2_index = j - 1
+
+#         # body of loop
+#         # The cur_gap_score will have already incorporated
+#         # a gap existence penalty.
+#         cur_gap_score = cur_gap_score + cost_mat["-"][seq_2[seq_2_index]]
+#         mat[0][j] = cur_gap_score
+
+#     # We also have to pay the gap_open_cost for 
+#     # the entry in the 1-index row and 0-index column.
+#     mat[1][0] = gap_open_cost + cost_mat[seq_1[0]]["-"]
+#     return mat
+
+def init_partial_dp_mat_1(
     seq_2:str,
     cost_mat:dict[dict], 
     gap_open_cost:int|float,
@@ -2938,11 +2982,12 @@ def init_partial_dynamic_prog_matrix_2(
     It initializes correctly for the 0-index row and the 
     entry in the 1-index row and 0-index column.
     """
-    mat = make_matrix(
+    dp_mat_1 = make_matrix(
         num_rows=2,
         num_cols=dynamic_prog_num_cols,
-        fill_val=0
+        fill_val=-1
     )
+
 
     # Take care of initialization with gap costs.
   
@@ -2956,8 +3001,8 @@ def init_partial_dynamic_prog_matrix_2(
 
     # Pay gap_open_cost for the entry in the 
     # 0th row and 1st column.
-    cur_gap_score = gap_open_cost + cost_mat["-"][seq_2[seq_2_index]]
-    mat[0][j] = cur_gap_score
+    cur_gap_cost = gap_open_cost + cost_mat["-"][seq_2[seq_2_index]]
+    dp_mat_1[0][j] = cur_gap_cost
 
     # We do not have to pay the gap_open_cost for 
     # entries to the right of the 1-index column in the 
@@ -2969,73 +3014,136 @@ def init_partial_dynamic_prog_matrix_2(
         seq_2_index = j - 1
 
         # body of loop
-        # The cur_gap_score will have already incorporated
+        # The cur_gap_cost will have already incorporated
         # a gap existence penalty.
-        cur_gap_score = cur_gap_score + cost_mat["-"][seq_2[seq_2_index]]
-        mat[0][j] = cur_gap_score
+        cur_gap_cost = cur_gap_cost + cost_mat["-"][seq_2[seq_2_index]]
+        dp_mat_1[0][j] = cur_gap_cost
 
-    # We also have to pay the gap_open_cost for 
-    # the entry in the 1-index row and 0-index column.
-    mat[1][0] = gap_open_cost + cost_mat[seq_1[0]]["-"]
-    return mat
+    dp_mat_1[1][0] = math.inf
+    dp_mat_1[0][0] = 0
+    return dp_mat_1
 
-
-def init_D_mat(
-    dynamic_prog_num_rows:int,
-    dynamic_prog_num_cols:int,
-    partial_A_mat:list[list],
-    partial_B_mat:list[list],
-    partial_C_mat:list[list]    
+def init_partial_dp_mat_2(
+    seq_1:str,
+    cost_mat:dict[dict], 
+    gap_open_cost:int|float,
+    dynamic_prog_num_cols:int
 ) -> list[list]:
-    """Initialize a matrix where the entry in row i and column j
-    
-    indicates the best final score for the alignment of the 
-    subsequences seq_1[0:(i - 1)] and seq_2[0:(j - 1)].
-    The matrix representations of partial_A_mat, partial_B_mat,
-    and partial_C_mat should all have the same dimensions.
-    The length of each of partial_A_mat, partial_B_mat,
-    and partial_C_mat should be 2.
-    
-    Args:
-        dynamic_prog_num_rows: len(seq_1) + 1
-        dynamic_prog_num_cols: len(seq_2) + 1
-    Returns:
-        D_mat as a nested list where each entry in the list
-            is a list representing a row of D_mat.
+    """Initialize a partial dynamic programming
+
+    matrix.  It's partial because it only has 2 rows.
+    It initializes correctly for the 0-index row and the 
+    entry in the 1-index row and 0-index column.
     """
-    D_mat = make_matrix(
-        num_rows=dynamic_prog_num_rows,
+    dp_mat_2 = make_matrix(
+        num_rows=2,
         num_cols=dynamic_prog_num_cols,
-        fill_val=0
+        fill_val=-1
     )
 
-    # D_mat[i][j] is always max(
-    #     partial_A_mat[i][j],
-    #     partial_B_mat[i][j],
-    #     partial_C_mat[i][j],
-    # )
-    # but because the other matrices only
-    # have 2 rows, and because the other matrices
-    # are assumed to only be initialized properly
-    # for the 0-index rows and 0-index columns,
-    # we only fill in some of the entries 
-    # of D_mat.
-    i = 0
-    for j in range(dynamic_prog_num_cols):
-        D_mat[i][j] = max(
-            partial_A_mat[i][j],
-            partial_B_mat[i][j],
-            partial_C_mat[i][j],
-        )
-    i = 1
-    j = 0
-    D_mat[i][j] = max(
-            partial_A_mat[i][j],
-            partial_B_mat[i][j],
-            partial_C_mat[i][j],
-        )
 
-    return D_mat
+    # Take care of initialization with gap costs.
+  
+    # Loop prep
+    # Start in column 1
+    j = 1
+ 
+    # Pay gap_open_cost for the entry in the 
+    # 0th row and 1st column.
+    # cur_gap_cost = gap_open_cost + cost_mat["-"][seq_2[seq_2_index]]
+   
+
+    # We do not have to pay the gap_open_cost for 
+    # entries to the right of the 1-index column in the 
+    # 0-index row.
+    for j in range(1, dynamic_prog_num_cols):
+        # Prep for this iteration
+        # The sequence indices are always one behind
+        # the row/column indices.
+
+        # body of loop
+        dp_mat_2[0][j] = math.inf
+
+    dp_mat_2[1][0] = gap_open_cost + cost_mat[seq_1[0]]["-"]
+    dp_mat_2[0][0] = 0
+
+    return dp_mat_2
+
+def init_partial_dp_mat_3(
+    dynamic_prog_num_cols:int
+) -> list[list]:
+    """Initialize a partial dynamic programming
+
+    matrix.  It's partial because it only has 2 rows.
+    It initializes correctly for the 0-index row and the 
+    entry in the 1-index row and 0-index column.
+    """
+    dp_mat_3 = make_matrix(
+        num_rows=2,
+        num_cols=dynamic_prog_num_cols,
+        fill_val=math.inf
+    )
+
+    dp_mat_3[0][0] = 0
+
+    return dp_mat_3
+
+# def init_D_mat(
+#     dynamic_prog_num_rows:int,
+#     dynamic_prog_num_cols:int,
+#     partial_A_mat:list[list],
+#     partial_B_mat:list[list],
+#     partial_C_mat:list[list]    
+# ) -> list[list]:
+#     """Initialize a matrix where the entry in row i and column j
+    
+#     indicates the best final score for the alignment of the 
+#     subsequences seq_1[0:(i - 1)] and seq_2[0:(j - 1)].
+#     The matrix representations of partial_A_mat, partial_B_mat,
+#     and partial_C_mat should all have the same dimensions.
+#     The length of each of partial_A_mat, partial_B_mat,
+#     and partial_C_mat should be 2.
+    
+#     Args:
+#         dynamic_prog_num_rows: len(seq_1) + 1
+#         dynamic_prog_num_cols: len(seq_2) + 1
+#     Returns:
+#         D_mat as a nested list where each entry in the list
+#             is a list representing a row of D_mat.
+#     """
+#     D_mat = make_matrix(
+#         num_rows=dynamic_prog_num_rows,
+#         num_cols=dynamic_prog_num_cols,
+#         fill_val=0
+#     )
+
+#     # D_mat[i][j] is always max(
+#     #     partial_A_mat[i][j],
+#     #     partial_B_mat[i][j],
+#     #     partial_C_mat[i][j],
+#     # )
+#     # but because the other matrices only
+#     # have 2 rows, and because the other matrices
+#     # are assumed to only be initialized properly
+#     # for the 0-index rows and 0-index columns,
+#     # we only fill in some of the entries 
+#     # of D_mat.
+#     i = 0
+#     for j in range(dynamic_prog_num_cols):
+#         D_mat[i][j] = max(
+#             partial_A_mat[i][j],
+#             partial_B_mat[i][j],
+#             partial_C_mat[i][j],
+#         )
+#     i = 1
+#     j = 0
+#     D_mat[i][j] = max(
+#             partial_A_mat[i][j],
+#             partial_B_mat[i][j],
+#             partial_C_mat[i][j],
+#         )
+
+#     return D_mat
 
 
 def init_best_paths_matrix(
