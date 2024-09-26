@@ -812,7 +812,7 @@ def find_global_alignment(
             cost
         )
     """
-    middle_row_index = len(seq_1)
+    # middle_row_index = len(seq_1)
     best_paths_mat = init_best_paths_matrix(
         dynamic_prog_num_rows=middle_row_index + 1,
         dynamic_prog_num_cols=len(seq_2) + 1
@@ -1718,6 +1718,9 @@ def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list
         [fill_val]*(num_cols) for i in range(num_rows)
     ]
 
+def make_3d_array(dim_1:int, dim_2:int, dim_3:int, fill_val:int|float|str) -> list[list[list]]:
+    """ See: https://www.freecodecamp.org/news/list-within-a-list-in-python-initialize-a-nested-list/"""
+    return [[[fill_val]*(dim_3) for i in range(dim_2)] for i in range(dim_1)]
 
 def reduce_tie_possibilities(
     best_paths_mat_row_index:int,
@@ -3150,37 +3153,88 @@ def init_best_paths_matrix(
     dynamic_prog_num_rows,
     dynamic_prog_num_cols    
 ) -> list[list]:
-    """Initialize a matrix where the entry in row i and column j
-    
-    indicates the best final 'move' to align the subsequences 
-    seq_1[0:(i - 1)] and seq_2[0:(j - 1)].
+    """Initialize a matrix that holds the best_path_type
+
+    for paths in the alignment graph that end in a certain
+    way. It initializes correctly for best_paths_mat[0][0][:],
+    best_paths_mat[0][:][0:2], best_paths_mat[1][0:2][:],
+    best_paths_mat[1][:][0], best_paths_mat[2][0][:], and
+    best_paths_mat[2][:][0].
 
     Args:
         dynamic_prog_num_rows: len(seq_1) + 1
         dynamic_prog_num_cols: len(seq_2) + 1
     Returns:
-        best_paths_mat as a nested list.
-        There are multiple possible values for each entry in the best_paths_mat
-        to indicate an alignment "move" such as:
-            0: match/mismatch
-            1: starting gap in seq_1
-            2: continuing gap in seq_1
-            3: starting gap in seq_2
-            4: continuing gap in seq_2
+        best_paths_mat: list of length 3 where each element
+            is a list of length len(seq_1) + 1
+            where each element is a list of length 
+            len(seq_2) + 1. 
+            
+            The best_paths_mat[0][i][j] entry
+            is the best_path_type for aligning the prefixes
+            seq_1[0:i] and seq_2[0:j] such that the alignment
+            ends with a gap in seq_1.
+
+            The best_paths_mat[1][i][j] entry
+            is the best_path_type for aligning the prefixes
+            seq_1[0:i] and seq_2[0:j] such that the alignment
+            ends with a gap in seq_2.
+
+            The best_paths_mat[2][i][j] entry
+            is the best_path_type for aligning the prefixes
+            seq_1[0:i] and seq_2[0:j] such that the alignment
+            ends with a match or mismatch.
+
+            There are multiple possible values for each entry in the best_paths_mat
+            to indicate an alignment "move" such as:
+                0: continuing gap in seq_2
+                1: previous gap in seq_2 to starting a gap in seq_1
+                2: previous gap in seq_2 to match
+                3: previous gap in seq_2 to mismatch
+
+                4: continuing gap in seq_1
+                5: previous gap in seq_1 to starting a gap in seq_2
+                6: previous gap in seq_1 to match
+                7: previous gap in seq_1 to mismatch
+
+                8: previous match to starting a gap in seq_1
+                9: previous match to starting a gap in seq_2
+                10: previous match to match
+                11: previous match to mismatch
+
+                12: previous mismatch to starting a gap in seq_1
+                13: previous mismatch to starting a gap in seq_2
+                14: previous mismatch to match
+                15: previous mismatch to mismatch
     """
-    best_paths_mat = make_matrix(
-        num_rows=dynamic_prog_num_rows,
-        num_cols=dynamic_prog_num_cols,
-        fill_val=2
+    best_paths_mat = make_3d_array(
+        dim_1=3,
+        dim_2=dynamic_prog_num_rows,
+        dim_3=dynamic_prog_num_cols,
+        fill_val=-1
     )
 
     # Update some entries specifically.
-    best_paths_mat[0][1] = 1
-    best_paths_mat[1][0] = 3
-    best_paths_mat[0][0] = 0
+    best_paths_mat[0][0][0] = 10
+    best_paths_mat[0][0][1] = 8
 
-    for i in range(2, dynamic_prog_num_rows):
-        best_paths_mat[i][0] = 4
+    best_paths_mat[1][0][0] = 10
+    best_paths_mat[1][1][1] = 5
+
+    best_paths_mat[2][0][0] = 10
+    best_paths_mat[2][0][1] = None
+    
+    for j in range(2, dynamic_prog_num_cols):
+        best_paths_mat[0][0][j] = 4
+        best_paths_mat[1][1][j] = 5
+        best_paths_mat[2][0][j] = None
+
+    for i in range(1, dynamic_prog_num_rows):
+        best_paths_mat[0][i][0] = None
+        best_paths_mat[0][i][1] = 1
+
+        best_paths_mat[1][i][0] = 9
+        best_paths_mat[2][i][0] = None
 
     return best_paths_mat
 
