@@ -42,6 +42,7 @@ import argparse
 from pathlib import Path
 import math
 import random
+from copy import deepcopy
 
 import numpy as np
 
@@ -229,13 +230,15 @@ def get_max_similarity_score(scoring_mat:dict[dict]) -> int|float:
     return cur_max
 
 
-def transform_scoring_mat_to_cost_mat(
+def get_cost_mat(
     scoring_mat:dict[dict], 
     max_score:int|float,
     delta_d:int|float=None,
     delta_i:int|float=None
 ) -> dict[dict]:
-    """Transform to a proper distance matrix.
+    """Get a valid cost matrix from a scoring matrix.
+
+    The cost matrix will be a valid distance matrix.
     
     Args: 
         scoring_mat: Nested dict representation of 
@@ -258,26 +261,22 @@ def transform_scoring_mat_to_cost_mat(
 
     Reference: https://curiouscoding.nl/posts/alignment-scores-transform/
     """
+    # Make sure we don't mutate the scoring_mat
+    cost_mat = deepcopy(scoring_mat)
     b = max_score
     if delta_d is None:
         delta_d = math.floor(b/2)
     if delta_i is None:
         delta_i = math.ceil(b/2)
     
-    for seq_1_letter, seq_2_scores in scoring_mat.items():
-        # seq_1_letter is a key for scoring_mat.
+    for seq_1_letter, seq_2_scores in cost_mat.items():
+        # seq_1_letter is a key for cost_mat.
         # seq_2_scores is the inner dict for the outer
         # key of seq_1_letter.
         for seq_2_letter, score in seq_2_scores.items():
             # The scores are transformed differently
             # for insertions and deletions, than they
             # are for matches and mismatches.
-            # if seq_1_letter == seq_2_letter and seq_1_letter != "-":
-            #     # Update matches
-            #     seq_2_scores[seq_2_letter] = -score
-            # # elif seq_1_letter != seq_2_letter and seq_1_letter != "-":
-            # #     # Update mis-matches
-            # #     seq_2_scores[seq_2_letter] = score + b
             if seq_1_letter == "-" and seq_2_letter != "-":
                 # Update deletions (horizontal steps)
                 seq_2_scores[seq_2_letter] = -score + delta_d
@@ -288,7 +287,6 @@ def transform_scoring_mat_to_cost_mat(
                 # Update matches and mismatches.
                 seq_2_scores[seq_2_letter] = -score + delta_d + delta_i
    
-    cost_mat = scoring_mat
     return cost_mat
 
 def final_cost_to_score(
