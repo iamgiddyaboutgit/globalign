@@ -390,7 +390,6 @@ def read_seq_from_fasta(fasta_path:Path):
         yield (desc, seq)
 
 
-def align(
     seq_1:str, 
     seq_2:str, 
     scoring_mat:dict[dict], 
