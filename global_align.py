@@ -143,13 +143,22 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
         not_ok_letters = [letter for letter in seq_2 if letter not in scoring_mat_letters]
         raise RuntimeError(f"There were letters in seq_2 not present in scoring_mat, i.e. {not_ok_letters}")
     
+    # Get the cost_mat.
+    max_score = get_max_similarity_score(scoring_mat=scoring_mat)
+
+    cost_mat = get_cost_mat(
+        scoring_mat=scoring_mat,
+        max_score=max_score
+    )
+
     # Perform the alignment, insert gaps, and compute the score.
-    alignment = align(
+    alignment = find_global_alignment(
         seq_1=seq_1,
         seq_2=seq_2,
-        scoring_mat=scoring_mat,
-        gap_existence_cost=gap_existence_cost
+        cost_mat=cost_mat,
+        gap_open_cost=gap_existence_cost
     )
+
     print_alignment(
         *alignment,
         desc_1=desc_1,
@@ -391,11 +400,21 @@ def read_seq_from_fasta(fasta_path:Path):
 def find_global_alignment(
     seq_1:str,
     seq_2:str,
-    cost_mat:list[list],
+    cost_mat:dict[dict],
     gap_open_cost:int|float
 ) -> tuple[str, str, str, int|float]:
     """
     Args:
+        cost_mat: keys are symbols representing nucleotides
+            or amino acid residues. A symbol of '-' is used
+            for a gap. The inner dict contains the same 
+            keys as the outer dict and contains values
+            that are numbers representing edit costs.
+            For example, cost_mat["-"]["A"] is the cost
+            for inserting a gap in seq_1 while accepting
+            an "A" from seq_2 and cost_mat["T"]["C"]
+            is the cost of a mismatch of a "T" in seq_1
+            and a "C" in seq_2.
         gap_open_cost: The cost for a gap just to exist.
             This cost should be non-negative.
             It can be incurred multiple times
@@ -416,99 +435,33 @@ def find_global_alignment(
             cost
         )
     """
-    dynamic_prog_num_cols = len(seq_2) + 1
+    # Imagine a 3-d parking garage like in Mario.
+    # Movement through this "parking garage"
+    # is movement through the alignment graph.
+    # The parking garage has 3 levels and we
+    # can teleport vertically between levels.
+    # On a bird's eye view, we are trying to get
+    # from the top left to the bottom right.
+    # Progressions that end with you on levels 0, 1, and 2 
+    # (from a bird's eye view) are for matches/mismatches,
+    # gaps in seq_1, and gaps in seq_2, respectively.
+    # For a given bird's eye view position,
+    # there are 3 ways that you could have gotten there:
+    # from a match/mismatch, from a gap in seq_1,
+    # or from a gap in seq_2.
+    # This becomes important in the traceback.
 
-    best_paths_mat = init_best_paths_matrix(
-        dynamic_prog_num_rows=len(seq_1) + 1,
-        dynamic_prog_num_cols=len(seq_2) + 1
-    )
-
-    partial_dp_mat_1 = init_partial_dp_mat_1(
-        seq_2=seq_2,
-        cost_mat=cost_mat,
-        gap_open_cost=gap_open_cost,
-        dynamic_prog_num_cols=dynamic_prog_num_cols
-    )
-
-    partial_dp_mat_2 = init_partial_dp_mat_2(
-        seq_1=seq_1,
-        cost_mat=cost_mat,
-        gap_open_cost=gap_open_cost,
-        dynamic_prog_num_cols=dynamic_prog_num_cols
-    )
-
-    partial_dp_mat_3 = init_partial_dp_mat_3(
-        dynamic_prog_num_cols=dynamic_prog_num_cols
-    )
+    # Create the dynamic programming array (dp_array).
     
-    
-    # The options for best_path_type are
-    # coded as:
-    # 0: continuing gap in seq_2
-    # 1: previous gap in seq_2 to starting a gap in seq_1
-    # 2: previous gap in seq_2 to match
-    # 3: previous gap in seq_2 to mismatch
+    # Initialize the dp_array.
 
-    # 4: continuing gap in seq_1
-    # 5: previous gap in seq_1 to starting a gap in seq_2
-    # 6: previous gap in seq_1 to match
-    # 7: previous gap in seq_1 to mismatch
+    # Loop through the dp_array and write the
+    # best costs to get to each position.
 
-    # 8: previous match to starting a gap in seq_1
-    # 9: previous match to starting a gap in seq_2
-    # 10: previous match to match
-    # 11: previous match to mismatch
+    # Traceback the dp_array to determine
+    # the sequence of moves in reverse
+    # order needed to produce an optimal alignment.
 
-    # 12: previous mismatch to starting a gap in seq_1
-    # 13: previous mismatch to starting a gap in seq_2
-    # 14: previous mismatch to match
-    # 15: previous mismatch to mismatch
-    
-    # situation_mapper_1 
-    #
-    # Keys are 2-tuples with elements:
-    # 3-tuple of ranking(partial_dp_mat_1[i][j - 1] + gap_extension_cost,
-    # partial_dp_mat_2[i - 1][j] + gap_open_cost + gap_extension_cost,
-    # partial_dp_mat_3[i - 1][j - 1] + gap_extension_cost),
-    # best_paths_mat[0][i][j - 1]
-    #
-    # Values are path_types for best_paths_mat[i][j]
-    # for best paths that end with a gap in seq_1.
-    
-    
-    partial_dp_mat, cur_cell_best_cum_cost, best_paths_mat = warmup_align_2(
-        seq_1=seq_1,
-        seq_2=seq_2,
-        best_paths_mat=best_paths_mat,
-        partial_dp_mat=partial_dp_mat,
-        gap_open_cost=gap_open_cost,
-        cost_mat=cost_mat,
-        moves_for_gap_open_penalty_from_left=moves_for_gap_open_penalty_from_left,
-        moves_for_gap_open_penalty_from_up=moves_for_gap_open_penalty_from_up,
-        situation_mapper=situation_mapper
-    )
-
-    partial_dp_mat, cur_cell_best_cum_cost, best_paths_mat = do_core_align_2(
-        seq_1=seq_1,
-        seq_2=seq_2,
-        best_paths_mat=best_paths_mat,
-        partial_dp_mat=partial_dp_mat,
-        gap_open_cost=gap_open_cost,
-        cost_mat=cost_mat,
-        moves_for_gap_open_penalty_from_left=moves_for_gap_open_penalty_from_left,
-        moves_for_gap_open_penalty_from_up=moves_for_gap_open_penalty_from_up,
-        situation_mapper=situation_mapper
-    )
-
-    # print("best_paths_mat")
-    # for i in range(len(best_paths_mat)):
-    #     print(best_paths_mat[i])
-
-    seq_1_aligned_out, middle_part_out, seq_2_aligned_out = traceback_2(
-        best_paths_mat=best_paths_mat,
-        seq_1=seq_1,
-        seq_2=seq_2
-    )
 
     return (
         seq_1_aligned_out,
@@ -758,6 +711,67 @@ def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list
         [fill_val]*(num_cols) for i in range(num_rows)
     ]
 
+
+def make_dp_array(
+    seq_1:str, 
+    seq_2:str,
+    cost_mat:dict[dict],
+    gap_open_cost:int|float
+    ) -> list[list[list]]:
+    # Create the array.
+    seq_1_len = len(seq_1)
+    seq_2_len = len(seq_2)
+    dim_1 = seq_1_len + 1
+    dim_2 = seq_2_len + 1
+    dp_array = make_3d_array(
+        dim_1=dim_1,
+        dim_2=dim_2,
+        dim_3=3,
+        fill_val=0
+    )
+    # Initialize its values.
+    # Initialize the 0-level for paths
+    # that end in a match/mismatch.
+    level = 0
+    for i in range(1, dim_1):
+        # Initialize i-th row in 0-th column.
+        dp_array[i][0][level] = math.inf
+    
+    for j in range(1, dim_2):
+        # Init j-th column in 0-th row.
+        dp_array[0][j][level] = math.inf
+    
+    # Initialize the 1-level for paths
+    # that end in a gap in seq_1.
+    level = 1
+
+    for i in range(1, dim_1):
+        # Initialize i-th row in 0-th column.
+        dp_array[i][0][level] = math.inf
+
+    seq_2_index = 0
+    dp_array[0][1][level] = gap_open_cost + cost_mat["-"][seq_2[seq_2_index]]
+    for j in range(2, dim_2):
+        # Init j-th column in 0-th row.
+        seq_2_index += 1
+        dp_array[0][j][level] = dp_array[0][j - 1][level] + cost_mat["-"][seq_2[seq_2_index]]
+
+    # Initialize the 2-level for paths
+    # that end in a gap in seq_2.
+    level = 2
+    
+    seq_1_index = 0
+    dp_array[1][0][level] = gap_open_cost + cost_mat[seq_1[seq_1_index]]["-"]
+    for i in range(2, dim_1):
+        # Initialize i-th row in 0-th column.
+        seq_1_index += 1
+        dp_array[i][0][level] = dp_array[i - 1][0][level] + cost_mat[seq_1[seq_1_index]]["-"]
+
+    for j in range(1, dim_2):
+        # Init j-th column in 0-th row.
+        dp_array[0][j][level] = math.inf
+
+    return dp_array
 
 def make_3d_array(dim_1:int, dim_2:int, dim_3:int, fill_val:int|float|str) -> list[list[list]]:
     """ See: https://www.freecodecamp.org/news/list-within-a-list-in-python-initialize-a-nested-list/"""
