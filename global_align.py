@@ -534,25 +534,16 @@ def dp_array_forward(
 def dp_array_backward(
     dp_array: list[list[list]],
     seq_1: str,
-    seq_2: str,
-    cost_mat: dict[dict],
-    gap_open_cost: int|float,
-    seq_1_aligned: list=None,
-    seq_2_aligned: list=None,
-    middle_part: list=None
+    seq_2: str
 ):
     """
     Traces backward through the dp_array
 
     to determine which alignment moves are best.
     """
-    # Handle defaults.
-    if seq_1_aligned is None:
-        seq_1_aligned = []
-    if seq_2_aligned is None:
-        seq_2_aligned = []
-    if middle_part is None:
-        middle_part = []    
+    seq_1_aligned = []
+    seq_2_aligned = []
+    middle_part = []    
     
     # Prepare for loop.
     dim_1 = len(seq_1) + 1
@@ -572,19 +563,85 @@ def dp_array_backward(
         # https://stackoverflow.com/a/53661474/8423001
         cost_ranks = [sorted(costs_to_compare).index(x) for x in costs_to_compare]
         is_match = (seq_1[seq_1_index] == seq_2[seq_2_index])
-        min(costs_to_compare)
-        costs_to_compare.
-    # Based on the location of the min in the tuple
-    # of values compared, decide which
-    # alignment move is best and save it.
+        # Figure out the move to make in the alignment graph.
+        move, delta_i, delta_j = cost_ranks_dispatcher(
+            cost_ranks=cost_ranks, 
+            is_match=is_match
+        )
 
+        move_params = dict(
+            seq_1 = seq_1,
+            seq_2 = seq_2, 
+            seq_1_index = seq_1_index,
+            seq_2_index = seq_2_index,
+            seq_1_aligned = seq_1_aligned,
+            middle_part = middle_part,
+            seq_2_aligned = seq_2_aligned
+        )
+
+        # Make the move in the alignment graph.
+        move(**move_params)
+
+        # Prepare indices for going to the next cell.
+        i += delta_i
+        j += delta_j
+
+        if i == 0 and j == 0:
+            break
+        
 
 def cost_ranks_dispatcher(cost_ranks: list|tuple, is_match: bool):
     cost_ranks_with_is_match = (tuple(cost_ranks), is_match)
     # Note that the result of random.choice is "permanent".
-    dipatch_dict = {
-        ((0, 0, 0), True): random.choice((take_match, take_gap_in_seq_1, take_gap_in_seq_2))
+    move_dipatch_dict = {
+        ((0, 0, 0), True): random.choice((take_match, take_gap_in_seq_1, take_gap_in_seq_2)),
+        ((0, 0, 1), True): take_gap_in_seq_2,
+        ((0, 1, 0), True): take_gap_in_seq_1,
+        ((1, 0, 0), True): take_match,
+        ((0, 0, 2), True): random.choice((take_match, take_gap_in_seq_1)),
+        ((0, 2, 0), True): random.choice((take_match, take_gap_in_seq_2)),
+        ((2, 1, 0), True): take_gap_in_seq_2,
+        ((0, 2, 2), True): take_match,
+        ((2, 0, 2), True): take_gap_in_seq_1,
+        ((2, 2, 0), True): take_gap_in_seq_2,
+        ((1, 1, 1), True): random.choice((take_match, take_gap_in_seq_1, take_gap_in_seq_2)),
+        ((1, 1, 2), True): random.choice((take_match, take_gap_in_seq_1)),
+        ((1, 2, 1), True): random.choice((take_match, take_gap_in_seq_2)),
+        ((2, 1, 1), True): random.choice((take_gap_in_seq_1, take_gap_in_seq_2)),
+        ((1, 2, 2), True): take_match,
+        ((2, 1, 2), True): take_gap_in_seq_1,
+        ((2, 2, 1), True): take_gap_in_seq_2,
+        ((2, 2, 2), True): random.choice((take_match, take_gap_in_seq_1, take_gap_in_seq_2)),
+        ((0, 0, 0), True): random.choice((take_mismatch, take_gap_in_seq_1, take_gap_in_seq_2)),
+        ((0, 0, 1), True): take_gap_in_seq_2,
+        ((0, 1, 0), True): take_gap_in_seq_1,
+        ((1, 0, 0), True): take_mismatch,
+        ((0, 0, 2), True): random.choice((take_mismatch, take_gap_in_seq_1)),
+        ((0, 2, 0), True): random.choice((take_mismatch, take_gap_in_seq_2)),
+        ((2, 1, 0), True): take_gap_in_seq_2,
+        ((0, 2, 2), True): take_mismatch,
+        ((2, 0, 2), True): take_gap_in_seq_1,
+        ((2, 2, 0), True): take_gap_in_seq_2,
+        ((1, 1, 1), True): random.choice((take_mismatch, take_gap_in_seq_1, take_gap_in_seq_2)),
+        ((1, 1, 2), True): random.choice((take_mismatch, take_gap_in_seq_1)),
+        ((1, 2, 1), True): random.choice((take_mismatch, take_gap_in_seq_2)),
+        ((2, 1, 1), True): random.choice((take_gap_in_seq_1, take_gap_in_seq_2)),
+        ((1, 2, 2), True): take_mismatch,
+        ((2, 1, 2), True): take_gap_in_seq_1,
+        ((2, 2, 1), True): take_gap_in_seq_2,
+        ((2, 2, 2), True): random.choice((take_mismatch, take_gap_in_seq_1, take_gap_in_seq_2)),
     }
+
+    delta_dispatch_dict = {
+        take_match: (-1, -1),
+        take_mismatch: (-1, -1),
+        take_gap_in_seq_1: (0, -1),
+        take_gap_in_seq_2: (-1, 0)
+    }
+
+    move = move_dipatch_dict[cost_ranks_with_is_match]
+    delta_i, delta_j = delta_dispatch_dict[move]
+    return (move, delta_i, delta_j)
 
 
 def take_match(
@@ -596,6 +653,7 @@ def take_match(
     middle_part:list,
     seq_2_aligned:list
 ):
+    """Modifies the lists in-place."""
     seq_1_aligned.append(seq_1[seq_1_index])
     middle_part.append("|")
     seq_2_aligned.append(seq_2[seq_2_index])
@@ -616,6 +674,7 @@ def take_mismatch(
     middle_part:list,
     seq_2_aligned:list
 ):
+    """Modifies the lists in-place."""
     seq_1_aligned.append(seq_1[seq_1_index])
     middle_part.append("*")
     seq_2_aligned.append(seq_2[seq_2_index])
@@ -636,6 +695,7 @@ def take_gap_in_seq_1(
     middle_part:list,
     seq_2_aligned:list
 ):
+    """Modifies the lists in-place."""
     seq_1_aligned.append("-")
     middle_part.append(" ")
     seq_2_aligned.append(seq_2[seq_2_index])
@@ -656,6 +716,7 @@ def take_gap_in_seq_2(
     middle_part:list,
     seq_2_aligned:list
 ):
+    """Modifies the lists in-place."""
     seq_1_aligned.append(seq_1[seq_1_index])
     middle_part.append(" ")
     seq_2_aligned.append("-")
