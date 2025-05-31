@@ -452,11 +452,23 @@ def find_global_alignment(
     # This becomes important in the traceback.
 
     # Create the dynamic programming array (dp_array).
-    
     # Initialize the dp_array.
+    dp_array = make_dp_array(
+        seq_1=seq_1,
+        seq_2=seq_2,
+        cost_mat=cost_mat,
+        gap_open_cost=gap_open_cost
+    )
 
     # Loop through the dp_array and write the
     # best costs to get to each position.
+    dp_array_forward(
+        dp_array=dp_array,
+        seq_1=seq_1,
+        seq_2=seq_2,
+        cost_mat=cost_mat,
+        gap_open_cost=gap_open_cost
+    )
 
     # Traceback the dp_array to determine
     # the sequence of moves in reverse
@@ -469,6 +481,110 @@ def find_global_alignment(
         seq_2_aligned_out,
         cur_cell_best_cum_cost
     )
+
+
+def dp_array_forward(
+    dp_array:list[list[list]],
+    seq_1:str,
+    seq_2:str,
+    cost_mat:dict[dict],
+    gap_open_cost:int|float
+):
+    """
+    Operates in place on the dp_array.
+    """
+    # Prepare for loop.
+    dim_1 = len(seq_1) + 1
+    dim_2 = len(seq_2) + 1
+    for i in range(1, dim_1):
+        seq_1_index = i - 1
+        for j in range(1, dim_2):
+            seq_2_index = j - 1
+            ######################################
+            level = 0
+            previous_costs = (
+                dp_array[i - 1][j - 1][0],
+                dp_array[i - 1][j - 1][1],
+                dp_array[i - 1][j - 1][2]
+            )
+            new_cost = cost_mat[seq_1[seq_1_index]][seq_2[seq_2_index]]
+            dp_array[i][j][level] = min(previous_costs) + new_cost
+            ######################################
+            level = 1
+            previous_costs = (
+                dp_array[i][j - 1][0] + gap_open_cost,
+                dp_array[i][j - 1][1],
+                dp_array[i][j - 1][2] + gap_open_cost
+            )
+            new_cost = cost_mat["-"][seq_2[seq_2_index]]
+            dp_array[i][j][level] = min(previous_costs) + new_cost
+            ######################################
+            level = 2
+            previous_costs = (
+                dp_array[i - 1][j][0] + gap_open_cost,
+                dp_array[i - 1][j][1] + gap_open_cost,
+                dp_array[i - 1][j][2]
+            )
+            new_cost = cost_mat[seq_1[seq_1_index]]["-"]
+            dp_array[i][j][level] = min(previous_costs) + new_cost
+            ######################################
+
+    return None
+
+def dp_array_backward(
+    dp_array: list[list[list]],
+    seq_1: str,
+    seq_2: str,
+    cost_mat: dict[dict],
+    gap_open_cost: int|float,
+    seq_1_aligned: list=None,
+    seq_2_aligned: list=None,
+    middle_part: list=None
+):
+    """
+    Traces backward through the dp_array
+
+    to determine which alignment moves are best.
+    """
+    # Handle defaults.
+    if seq_1_aligned is None:
+        seq_1_aligned = []
+    if seq_2_aligned is None:
+        seq_2_aligned = []
+    if middle_part is None:
+        middle_part = []    
+    
+    # Prepare for loop.
+    dim_1 = len(seq_1) + 1
+    dim_2 = len(seq_2) + 1
+    max_num_alignment_moves = dim_1 + dim_2 - 1
+    i = dim_1 - 1
+    j = dim_2 - 1
+    for h in range(max_num_alignment_moves):
+        # Find the dp_array values to compare.
+        # This depends on which cell was selected 
+        # as the best last time. 
+        costs_to_compare = dp_array[i][j]
+        seq_1_index = i - 1
+        seq_2_index = j - 1
+        # Find a minimum of the dp_array values compared.
+        # Randomly break ties.
+        # https://stackoverflow.com/a/53661474/8423001
+        cost_ranks = [sorted(costs_to_compare).index(x) for x in costs_to_compare]
+        is_match = (seq_1[seq_1_index] == seq_2[seq_2_index])
+        min(costs_to_compare)
+        costs_to_compare.
+    # Based on the location of the min in the tuple
+    # of values compared, decide which
+    # alignment move is best and save it.
+
+
+def cost_ranks_dispatcher(cost_ranks: list|tuple, is_match: bool):
+    cost_ranks_with_is_match = (tuple(cost_ranks), is_match)
+    # Note that the result of random.choice is "permanent".
+    dipatch_dict = {
+        ((0, 0, 0), True): random.choice((take_match, take_gap_in_seq_1, take_gap_in_seq_2))
+    }
 
 
 def take_match(
