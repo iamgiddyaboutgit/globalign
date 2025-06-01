@@ -488,7 +488,9 @@ def find_global_alignment(
     return dp_array_backward(
         dp_array=dp_array,
         seq_1=seq_1,
-        seq_2=seq_2
+        seq_2=seq_2,
+        cost_mat=cost_mat,
+        gap_open_cost=gap_open_cost
     )
 
 
@@ -543,7 +545,9 @@ def dp_array_forward(
 def dp_array_backward(
     dp_array: list[list[list]],
     seq_1: str,
-    seq_2: str
+    seq_2: str,
+    cost_mat: dict[dict],
+    gap_open_cost:int
 ) -> dict:
     """
     Traces backward through the dp_array
@@ -561,26 +565,99 @@ def dp_array_backward(
     seq_2_aligned = []
     middle_part = []    
     
-    # Prepare for loop.
+    
+    # Handle the bottom-right bird's eye-view
+    # cell of dp_array before the loop.
     dim_1 = len(seq_1) + 1
     dim_2 = len(seq_2) + 1
-    max_num_alignment_moves = dim_1 + dim_2 - 1
+    
     i = dim_1 - 1
     j = dim_2 - 1
-    for h in range(max_num_alignment_moves):
+    seq_1_index = i - 1
+    seq_2_index = j - 1
+    costs_to_compare = dp_array[i][j]
+    # Find a minimum of the dp_array values compared.
+    # Randomly break ties.
+    # https://stackoverflow.com/a/53661474/8423001
+    cost_ranks = [sorted(costs_to_compare).index(x) for x in costs_to_compare]
+    is_match = (seq_1[seq_1_index] == seq_2[seq_2_index])
+    # Figure out the move to make in the alignment graph.
+    move, delta_i, delta_j, level = cost_ranks_dispatcher(
+        cost_ranks=cost_ranks, 
+        is_match=is_match
+    )
+
+    move_params = dict(
+        seq_1 = seq_1,
+        seq_2 = seq_2, 
+        seq_1_index = seq_1_index,
+        seq_2_index = seq_2_index,
+        seq_1_aligned = seq_1_aligned,
+        middle_part = middle_part,
+        seq_2_aligned = seq_2_aligned
+    )
+
+    # Make the move in the alignment graph.
+    move(**move_params)
+
+    # Prepare indices for going to the next cell.
+    i += delta_i
+    j += delta_j
+
+    if i == 0 and j == 0:
+        return {
+            "seq_1_aligned": "".join(seq_1_aligned),
+            "middle_part": "".join(middle_part),
+            "seq_2_aligned": "".join(seq_2_aligned),
+            "cost": cost
+        }
+
+    # Prepare for loop.
+    max_num_additional_alignment_moves = dim_1 + dim_2 - 2
+
+    for h in range(max_num_additional_alignment_moves):
+        seq_1_index = i - 1
+        seq_2_index = j - 1
         # Find the dp_array values to compare.
         # This depends on which cell was selected 
         # as the best last time. 
-        costs_to_compare = dp_array[i][j]
-        seq_1_index = i - 1
-        seq_2_index = j - 1
+        # Decisions of how to move through the alignment
+        # graph are made based on values plus gap stuff
+        # and what level was selected in the last
+        # iteration.  We need to know which level
+        # was selected in the last iteration
+        # to figure out the gap stuff.
+        costs_to_compare_1 = dp_array[i][j]
+        # Based on what the level was in the last iteration,
+        # there are different costs_to_add to costs_to_compare_1.
+        if level == 0:
+            costs_to_add = [
+                cost_mat[seq_1[seq_1_index]][seq_2[seq_2_index]]
+            ]*3
+        elif level == 1:
+            costs_to_add = [
+                gap_open_cost + cost_mat["-"][seq_2[seq_2_index]],
+                cost_mat["-"][seq_2[seq_2_index]],
+                gap_open_cost + cost_mat["-"][seq_2[seq_2_index]]
+            ]
+        else:
+            costs_to_add = [
+                gap_open_cost + cost_mat["-"][seq_2[seq_2_index]],
+                gap_open_cost + cost_mat["-"][seq_2[seq_2_index]],
+                cost_mat["-"][seq_2[seq_2_index]]
+            ]
+        # costs_to_add contains the costs that 
+        # would have to be added to get to the cell
+        # that we know has the best cost.
+        costs_to_compare_2 = [sum(cs) for cs in zip(costs_to_compare_1, costs_to_add)]
+        
         # Find a minimum of the dp_array values compared.
         # Randomly break ties.
         # https://stackoverflow.com/a/53661474/8423001
-        cost_ranks = [sorted(costs_to_compare).index(x) for x in costs_to_compare]
+        cost_ranks = [sorted(costs_to_compare_2).index(x) for x in costs_to_compare_2]
         is_match = (seq_1[seq_1_index] == seq_2[seq_2_index])
         # Figure out the move to make in the alignment graph.
-        move, delta_i, delta_j = cost_ranks_dispatcher(
+        move, delta_i, delta_j, level = cost_ranks_dispatcher(
             cost_ranks=cost_ranks, 
             is_match=is_match
         )
@@ -696,16 +773,18 @@ def cost_ranks_dispatcher(cost_ranks: list|tuple, is_match: bool):
         ((2, 2, 2), False): random.choice((take_mismatch, take_gap_in_seq_1, take_gap_in_seq_2)),
     }
 
+    # The last value in the tuple of values
+    # is the level.
     delta_dispatch_dict = {
-        take_match: (-1, -1),
-        take_mismatch: (-1, -1),
-        take_gap_in_seq_1: (0, -1),
-        take_gap_in_seq_2: (-1, 0)
+        take_match: (-1, -1, 0),
+        take_mismatch: (-1, -1, 0),
+        take_gap_in_seq_1: (0, -1, 1),
+        take_gap_in_seq_2: (-1, 0, 2)
     }
 
     move = move_dipatch_dict[cost_ranks_with_is_match]
-    delta_i, delta_j = delta_dispatch_dict[move]
-    return (move, delta_i, delta_j)
+    delta_i, delta_j, level = delta_dispatch_dict[move]
+    return (move, delta_i, delta_j, level)
 
 
 def take_match(
