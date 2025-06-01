@@ -159,8 +159,18 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
         gap_open_cost=gap_existence_cost
     )
 
+    score = final_cost_to_score(
+        cost=alignment["cost"],
+        m=len(seq_1),
+        n=len(seq_2),
+        max_score=max_score
+    )
+
     print_alignment(
-        *alignment,
+        seq_1_aligned=alignment["seq_1_aligned"],
+        mid=alignment["middle_part"],
+        seq_2_aligned=alignment["seq_2_aligned"],
+        score=score,
         desc_1=desc_1,
         desc_2=desc_2
     )
@@ -311,6 +321,8 @@ def final_cost_to_score(
     https://www.biorxiv.org/content/10.1101/2022.01.12.476087v1.full.pdf
 
     Args:
+        m: length of seq_1
+        n: length of seq_2
         max_score: A maximum score in the original
             scoring matrix.
     """
@@ -402,7 +414,7 @@ def find_global_alignment(
     seq_2:str,
     cost_mat:dict[dict],
     gap_open_cost:int|float
-) -> tuple[str, str, str, int|float]:
+) -> dict:
     """
     Args:
         cost_mat: keys are symbols representing nucleotides
@@ -428,7 +440,7 @@ def find_global_alignment(
             incurs the gap_open_cost twice.
 
     Returns:
-        (
+        dictionary with keys of (
             seq_1_aligned_out,
             middle_part_out,
             seq_2_aligned_out,
@@ -473,13 +485,10 @@ def find_global_alignment(
     # Traceback the dp_array to determine
     # the sequence of moves in reverse
     # order needed to produce an optimal alignment.
-
-
-    return (
-        seq_1_aligned_out,
-        middle_part_out,
-        seq_2_aligned_out,
-        cur_cell_best_cum_cost
+    return dp_array_backward(
+        dp_array=dp_array,
+        seq_1=seq_1,
+        seq_2=seq_2
     )
 
 
@@ -535,11 +544,18 @@ def dp_array_backward(
     dp_array: list[list[list]],
     seq_1: str,
     seq_2: str
-):
+) -> dict:
     """
     Traces backward through the dp_array
 
     to determine which alignment moves are best.
+
+    Returns:
+        dictionary with keys of
+            seq_1_aligned,
+            middle_part,
+            seq_2_aligned,
+            cost
     """
     seq_1_aligned = []
     seq_2_aligned = []
@@ -588,48 +604,96 @@ def dp_array_backward(
 
         if i == 0 and j == 0:
             break
-        
+
+    cost = min(dp_array[dim_1 - 1][dim_2 - 1])
+    seq_1_aligned.reverse()
+    seq_2_aligned.reverse()
+    middle_part.reverse()
+
+    return {
+        "seq_1_aligned": "".join(seq_1_aligned),
+        "middle_part": "".join(middle_part),
+        "seq_2_aligned": "".join(seq_2_aligned),
+        "cost": cost
+    }
 
 def cost_ranks_dispatcher(cost_ranks: list|tuple, is_match: bool):
     cost_ranks_with_is_match = (tuple(cost_ranks), is_match)
     # Note that the result of random.choice is "permanent".
     move_dipatch_dict = {
         ((0, 0, 0), True): random.choice((take_match, take_gap_in_seq_1, take_gap_in_seq_2)),
+        
         ((0, 0, 1), True): take_gap_in_seq_2,
         ((0, 1, 0), True): take_gap_in_seq_1,
         ((1, 0, 0), True): take_match,
+        
         ((0, 0, 2), True): random.choice((take_match, take_gap_in_seq_1)),
         ((0, 2, 0), True): random.choice((take_match, take_gap_in_seq_2)),
-        ((2, 1, 0), True): take_gap_in_seq_2,
+        ((2, 0, 0), True): random.choice((take_gap_in_seq_1, take_gap_in_seq_2)),
+        
+        ((0, 1, 1), True): take_match,
+        ((1, 0, 1), True): take_gap_in_seq_1,
+        ((1, 1, 0), True): take_gap_in_seq_2,
+
         ((0, 2, 2), True): take_match,
         ((2, 0, 2), True): take_gap_in_seq_1,
         ((2, 2, 0), True): take_gap_in_seq_2,
+        
+        ((0, 1, 2), True): take_match,
+        ((1, 0, 2), True): take_gap_in_seq_1,
+        ((1, 2, 0), True): take_gap_in_seq_2,
+        ((0, 2, 1), True): take_match,
+        ((2, 0, 1), True): take_gap_in_seq_1,
+        ((2, 1, 0), True): take_gap_in_seq_2,
+        
         ((1, 1, 1), True): random.choice((take_match, take_gap_in_seq_1, take_gap_in_seq_2)),
+        
         ((1, 1, 2), True): random.choice((take_match, take_gap_in_seq_1)),
         ((1, 2, 1), True): random.choice((take_match, take_gap_in_seq_2)),
         ((2, 1, 1), True): random.choice((take_gap_in_seq_1, take_gap_in_seq_2)),
+        
         ((1, 2, 2), True): take_match,
         ((2, 1, 2), True): take_gap_in_seq_1,
         ((2, 2, 1), True): take_gap_in_seq_2,
+        
         ((2, 2, 2), True): random.choice((take_match, take_gap_in_seq_1, take_gap_in_seq_2)),
-        ((0, 0, 0), True): random.choice((take_mismatch, take_gap_in_seq_1, take_gap_in_seq_2)),
-        ((0, 0, 1), True): take_gap_in_seq_2,
-        ((0, 1, 0), True): take_gap_in_seq_1,
-        ((1, 0, 0), True): take_mismatch,
-        ((0, 0, 2), True): random.choice((take_mismatch, take_gap_in_seq_1)),
-        ((0, 2, 0), True): random.choice((take_mismatch, take_gap_in_seq_2)),
-        ((2, 1, 0), True): take_gap_in_seq_2,
-        ((0, 2, 2), True): take_mismatch,
-        ((2, 0, 2), True): take_gap_in_seq_1,
-        ((2, 2, 0), True): take_gap_in_seq_2,
-        ((1, 1, 1), True): random.choice((take_mismatch, take_gap_in_seq_1, take_gap_in_seq_2)),
-        ((1, 1, 2), True): random.choice((take_mismatch, take_gap_in_seq_1)),
-        ((1, 2, 1), True): random.choice((take_mismatch, take_gap_in_seq_2)),
-        ((2, 1, 1), True): random.choice((take_gap_in_seq_1, take_gap_in_seq_2)),
-        ((1, 2, 2), True): take_mismatch,
-        ((2, 1, 2), True): take_gap_in_seq_1,
-        ((2, 2, 1), True): take_gap_in_seq_2,
-        ((2, 2, 2), True): random.choice((take_mismatch, take_gap_in_seq_1, take_gap_in_seq_2)),
+        
+        ((0, 0, 0), False): random.choice((take_mismatch, take_gap_in_seq_1, take_gap_in_seq_2)),
+        
+        ((0, 0, 1), False): take_gap_in_seq_2,
+        ((0, 1, 0), False): take_gap_in_seq_1,
+        ((1, 0, 0), False): take_mismatch,
+        
+        ((0, 0, 2), False): random.choice((take_mismatch, take_gap_in_seq_1)),
+        ((0, 2, 0), False): random.choice((take_mismatch, take_gap_in_seq_2)),
+        ((2, 0, 0), False): random.choice((take_gap_in_seq_1, take_gap_in_seq_2)),
+        
+        ((0, 1, 1), False): take_mismatch,
+        ((1, 0, 1), False): take_gap_in_seq_1,
+        ((1, 1, 0), False): take_gap_in_seq_2,
+
+        ((0, 2, 2), False): take_mismatch,
+        ((2, 0, 2), False): take_gap_in_seq_1,
+        ((2, 2, 0), False): take_gap_in_seq_2,
+        
+        ((0, 1, 2), False): take_mismatch,
+        ((1, 0, 2), False): take_gap_in_seq_1,
+        ((1, 2, 0), False): take_gap_in_seq_2,
+        ((0, 2, 1), False): take_mismatch,
+        ((2, 0, 1), False): take_gap_in_seq_1,
+        ((2, 1, 0), False): take_gap_in_seq_2,
+        
+        ((1, 1, 1), False): random.choice((take_mismatch, take_gap_in_seq_1, take_gap_in_seq_2)),
+        
+        ((1, 1, 2), False): random.choice((take_mismatch, take_gap_in_seq_1)),
+        ((1, 2, 1), False): random.choice((take_mismatch, take_gap_in_seq_2)),
+        ((2, 1, 1), False): random.choice((take_gap_in_seq_1, take_gap_in_seq_2)),
+        
+        ((1, 2, 2), False): take_mismatch,
+        ((2, 1, 2), False): take_gap_in_seq_1,
+        ((2, 2, 1), False): take_gap_in_seq_2,
+        
+        ((2, 2, 2), False): random.choice((take_mismatch, take_gap_in_seq_1, take_gap_in_seq_2)),
     }
 
     delta_dispatch_dict = {
