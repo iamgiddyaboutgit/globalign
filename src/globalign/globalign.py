@@ -869,12 +869,35 @@ def take_gap_in_seq_2(
     )
 
 
-def draw_random_seq(alphabet:list, min_len:int, max_len:int):
-    random.seed()
+def draw_random_seq(
+    alphabet:list[str], 
+    min_len:int, 
+    max_len:int,
+    seed:int
+) -> str:
+    """
+    Raises:
+        IndexError: If alphabet == [].
+        TypeError: If alphabet is not a list with a len() method.
+        ValueError: If min_len > max_len or if min_len < 0.
+    """
+    random.seed(seed)
     # Randomly decide on how long the sequence should be.
-    seq_len = random.randint(a=min_len, b=max_len)
+    if min_len < 0:
+        print("min_len must be a non-negative integer.")
+        raise ValueError
+    
+    try:
+        seq_len = random.randint(a=min_len, b=max_len)
+    except ValueError:
+        print("min_len and max_len must be non-negative integers with max_len >= min_len.")
+        raise
     # Draw the desired number of letters from the alphabet.
-    random_seq_list = random.choices(population=alphabet, k=seq_len)
+    try:
+        random_seq_list = random.choices(population=alphabet, k=seq_len)
+    except (IndexError, TypeError):
+        print("alphabet must be a non-empty list of strings")
+        raise
     # Return the sequence as a string.
     return "".join(random_seq_list)
 
