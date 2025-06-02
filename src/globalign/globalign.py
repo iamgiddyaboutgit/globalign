@@ -1106,18 +1106,23 @@ def check_symmetric(mat:dict[dict]) -> bool:
         True if mat is symmetric and False otherwise.
     """
     # https://realpython.com/iterate-through-dictionary-python/#traversing-a-dictionary-directly
-    for outer_key in mat.keys():
-        # Assume that the outer and inner
-        # keys are the same.
-        for inner_key in mat.keys():
-            try:
-                has_eq_vals = mat[outer_key][inner_key] == mat[inner_key][outer_key]
-            except KeyError:
-                return False
-            if not has_eq_vals:
-                return False
-    
-    return True
+    # https://softwareengineering.stackexchange.com/questions/187715/validation-of-the-input-parameter-in-caller-code-duplication
+    try:
+        for outer_key in mat.keys():
+            # Assume that the outer and inner
+            # keys are the same.
+            for inner_key in mat.keys():
+                try:
+                    has_eq_vals = (mat[outer_key][inner_key] == mat[inner_key][outer_key])
+                except KeyError:
+                    return False
+                if not has_eq_vals:
+                    return False
+        
+        return True
+    except AttributeError:
+        print("The check_symmetric function expected a nested dictionary.")
+        raise 
 
 
 def check_big_main_diag(mat:dict[dict]) -> bool:
