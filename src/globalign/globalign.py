@@ -44,8 +44,6 @@ import math
 import random
 from copy import deepcopy
 
-import numpy as np
-
 def main():
     usage = "Perform optimal global alignment of two nucleotide \
 or amino acid sequences using the Needleman-Wunsch algorithm."
