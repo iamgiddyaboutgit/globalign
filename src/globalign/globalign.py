@@ -56,51 +56,84 @@ or amino acid sequences."
     parser.add_argument(
         "-i",
         "--input_fasta",
-        required=True,
-        help="File path to a FASTA file containing two sequences to align."
+        required=False,
+        help="File path to a FASTA file containing two sequences to align.  Do not include if seq_1 and seq_2 are provided."
     )
 
     parser.add_argument(
         "-o",
         "--output",
-        help="Output file path to which a FASTA file containing the global alignment will be written."
+        required=False,
+        help="Output file path to which a FASTA file containing the global alignment will be written.  If not provided, then the alignment will be written to stdout."
+    ) 
+
+    parser.add_argument(
+        "--seq_1", 
+        required=False,
+        help="First sequence to align.  Do not include if input_fasta is provided."
+    ) 
+
+    parser.add_argument(
+        "--seq_2", 
+        required=False,
+        help="Second sequence to align.  Do not include if input_fasta is provided."
     ) 
 
     parser.add_argument(
         "-s",
-        "--scoring_mat", 
+        "--scoring_mat_name", 
         required=False,
-        help="Either 'BLOSUM50' or 'BLOSUM62'.  Do not include this option if you would like to use a different scoring scheme."
+        choices=["BLOSUM50", "BLOSUM62"],
+        help="Either 'BLOSUM50' or 'BLOSUM62'.  Do not include this option if you would like to use a different scoring scheme or if you are aligning nucleotide sequences.  If set, then none of the other options with scores or costs should be set."
     ) 
 
     parser.add_argument(
         "--match_score",
         required=False,
         default=1,
-        help="Score for a match.  Should be positive.  Only used if scoring_mat is not specified.  Default: 1."
+        help="Score for a match.  Should be positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: 1."
     ) 
 
     parser.add_argument(
         "--mismatch_score",
         required=False,
         default=-1,
-        help="Score for a mismatch.  Should be negative.  Only used if scoring_mat is not specified.  Default: -1."
+        help="Score for a mismatch.  Should be negative.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -1."
     ) 
 
     parser.add_argument(
-        "-g", 
+        "--mismatch_cost",
+        required=False,
+        default=1,
+        help="Cost for a mismatch.  Should be positive.  If set, then none of the options with scores should be set.  Default: 1."
+    ) 
+
+    parser.add_argument(
         "--gap_open_score",
         required=False,
         default=0,
-        help="Score for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-positive.  Only used if scoring_mat is not specified.  Default: 0."
+        help="Score for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: 0."
     ) 
 
     parser.add_argument(
-        "-e", 
+        "--gap_open_cost",
+        required=False,
+        default=0,
+        help="Cost for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-negative.  If set, then none of the options with scores should be set.  Default: 0."
+    ) 
+
+    parser.add_argument(
         "--gap_extension_score",
         required=False,
         default=-2,
-        help="Score for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be negative.  Only used if scoring_mat is not specified.  Default: -2."
+        help="Score for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be negative.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -2."
+    ) 
+
+    parser.add_argument(
+        "--gap_extension_cost",
+        required=False,
+        default=2,
+        help="Cost for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be positive.  If set, then none of the options with scores should be set.  Default: -2."
     ) 
 
     cmd_line_args = parser.parse_args()
@@ -210,6 +243,32 @@ or amino acid sequences."
     return None
 
     
+def validate_and_transform_args(
+    input_fasta: str|Path,
+    output: str|Path,
+    seq_1: str,
+    seq_2: str,
+    scoring_mat_name: str=None,
+    match_score: str|int=None,
+    mismatch_score: str|int=None,
+    gap_open_score: str|int=None,
+    gap_extension_score: str|int=None
+):
+    """Validates the command line arguments
+
+    or the arguments that are passed when
+    the module is imported and its functionality
+    used that way.
+    """
+    if match_score is None:
+        match_score = 1
+    if mismatch_score is None:
+        mismatch_score = -1
+    if gap_open_score is None:
+        gap_open_score = 0
+    if gap_extension_score is None:
+        gap_extension_score = -2
+
 
 def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
     """Read in scoring matrix."""
