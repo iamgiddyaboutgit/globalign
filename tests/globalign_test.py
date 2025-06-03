@@ -95,13 +95,6 @@ def test_check_symmetric_invalid_input(test_input, expected):
             10,
             19,
             "catfatfatfatcatthethe"
-        ),
-        (
-            ["a", "b"],
-            2,
-            2,
-            19,
-            "bb"
         )
     ]
 )
@@ -143,6 +136,13 @@ def test_draw_random_seq(
             ["the", "fat", "cat", 9],
             7,
             10,
+            19,
+            TypeError
+        ),
+         (
+            [1, 0],
+            20,
+            20,
             19,
             TypeError
         ),

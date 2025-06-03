@@ -46,35 +46,62 @@ from copy import deepcopy
 
 def main():
     usage = "Perform optimal global alignment of two nucleotide \
-or amino acid sequences using the Needleman-Wunsch algorithm."
+or amino acid sequences."
     # Create an object to store arguments passed from the command 
     # line.
-    parser = argparse.ArgumentParser(description=usage)
+    parser = argparse.ArgumentParser(
+        description=usage
+    )
 
     parser.add_argument(
-        "-s", 
+        "-i",
+        "--input_fasta",
         required=True,
-        help="File path to a scoring matrix text file."
+        help="File path to a FASTA file containing two sequences to align."
+    )
+
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="Output file path to which a FASTA file containing the global alignment will be written."
     ) 
 
     parser.add_argument(
-        "-i", 
-        required=True,
-        help="File path to a FASTA file containing two sequences to align."
+        "-s",
+        "--scoring_mat", 
+        required=False,
+        help="Either 'BLOSUM50' or 'BLOSUM62'.  Do not include this option if you would like to use a different scoring scheme."
+    ) 
+
+    parser.add_argument(
+        "--match_score",
+        required=False,
+        default=1,
+        help="Score for a match.  Should be positive.  Only used if scoring_mat is not specified.  Default: 1."
+    ) 
+
+    parser.add_argument(
+        "--mismatch_score",
+        required=False,
+        default=-1,
+        help="Score for a mismatch.  Should be negative.  Only used if scoring_mat is not specified.  Default: -1."
     ) 
 
     parser.add_argument(
         "-g", 
+        "--gap_open_score",
         required=False,
         default=0,
-        help="Cost for opening a run of gaps. Should be non-negative."
+        help="Score for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-positive.  Only used if scoring_mat is not specified.  Default: 0."
     ) 
 
     parser.add_argument(
-        "-o", 
-        required=True,
-        help="Output file path to write a FASTA file containing the global alignment."
-    )
+        "-e", 
+        "--gap_extension_score",
+        required=False,
+        default=-2,
+        help="Score for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be negative.  Only used if scoring_mat is not specified.  Default: -2."
+    ) 
 
     cmd_line_args = parser.parse_args()
 
@@ -181,6 +208,8 @@ or amino acid sequences using the Needleman-Wunsch algorithm."
         alignment=alignment
     )
     return None
+
+    
 
 def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
     """Read in scoring matrix."""
@@ -908,7 +937,9 @@ def draw_two_random_seqs(
     max_len_seq_1:int,
     min_len_seq_2:int, 
     max_len_seq_2:int,
-    divergence:float
+    divergence:float,
+    seed_1:int=None,
+    seed_2:int=None
 ) -> list[str]:
     """
     Args:
@@ -917,11 +948,11 @@ def draw_two_random_seqs(
             to make the two sequences more different
             from each other.
     """
-    random.seed()
     seq_1 = draw_random_seq(
         alphabet=alphabet,
         min_len=min_len_seq_1,
-        max_len=max_len_seq_1
+        max_len=max_len_seq_1,
+        seed=seed_1
     )
 
     len_seq_1 = len(seq_1)
@@ -930,6 +961,8 @@ def draw_two_random_seqs(
     seq_2_list = list(seq_1)
     
     # len_seq_2 is the length after all of the edits.
+    # Change the global random state for making seq_2.
+    random.seed(seed_2)
     len_seq_2 = random.randint(a=min_len_seq_2, b=max_len_seq_2)
     len_delta = len_seq_2 - len_seq_1
     initial_num_insertions = max(0, len_delta)
@@ -955,7 +988,8 @@ def draw_two_random_seqs(
         letters_to_insert = draw_random_seq(
             alphabet=alphabet, 
             min_len=num_insertions, 
-            max_len=num_insertions
+            max_len=num_insertions,
+            seed=seed_2
         )
         prob_insert_ends_only_on_insert = (1 - divergence)**(1/num_insertions)
     
