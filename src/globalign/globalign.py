@@ -242,25 +242,172 @@ or amino acid sequences."
     )
     return None
 
+class ScoringSettings:
+    def __init__(
+        self,
+        scoring_mat_name: str=None,
+        scoring_mat: dict[dict]=None,
+        match_score: str|int=None,
+        mismatch_score: str|int=None,
+        gap_open_score: str|int=None,
+        gap_extension_score: str|int=None,
+    ):
+        self.scoring_mat_name = scoring_mat_name
+        self.scoring_mat = scoring_mat
+        self.match_score = match_score
+        self.mismatch_score = mismatch_score
+        self.gap_open_score = gap_open_score
+        self.gap_extension_score = gap_extension_score
+ 
+class CostingSettings:
+    def __init__(
+        self,
+        cost_mat: dict[dict]=None,
+        cost: int=None,
+        mismatch_cost: str|int=None,
+        gap_open_cost: str|int=None,
+        gap_extension_cost: str|int=None,
+    ):
+        self.cost_mat = cost_mat
+        self.cost = cost
+        self.mismatch_cost = mismatch_cost
+        self.gap_open_cost = gap_open_cost
+        self.gap_extension_cost = gap_extension_cost
+
+
+class Sequence:
+    def __init__(
+        self,
+        seq: str=None,
+        alphabet: list[str]=None,
+        description: str=None,
+        length: int=None
+    ):
+        # https://realpython.com/python-property/
+        if seq is None:
+            UserWarning("The seq was `None`.  The empty string will be used instead.")
+            seq_2 = ""
+            self._seq = seq_2
+        else:
+            self._seq = seq
+
+        if alphabet is not None:
+            UserWarning("The alphabet argument is not used.")
+        if length is not None:
+            UserWarning("The length argument is not used.")
+        
+        if description is None:
+            UserWarning("The description was `None`.  The empty string will be used instead.")
+            description_2 = ""
+            self.description = description_2
+        else:
+            self.description = description
+        
+        self._alphabet = None
+        self._length = 0
+        return None
+
+
+    @property
+    def seq(self):
+        return self._seq
     
+    @property
+    def length(self):
+        seq = self._seq
+        return len(seq)
+
+    @property
+    def alphabet(self):
+        """The unique letters in the sequence."""
+        seq = self.seq
+        alphabet_2 = list(set(seq))
+        alphabet_2.sort()
+        self._alphabet = alphabet_2
+        return self._alphabet
+    
+    @property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, value):
+        try:
+            initial_letter_is_gt = (value[0] == ">")
+        except IndexError:
+            # value doesn't have a 0-th element
+            self._description = ">"
+            return None
+        
+        if initial_letter_is_gt:
+            self._description = value
+        else:
+            description_2 = "".join([">", value])
+            self._description = description_2
+
+    def __str__(self):
+        description = self.description
+        seq = self.seq
+        return "\n".join([description, seq])
+
+       
+
+
 class Globaligner:
     # https://softwareengineering.stackexchange.com/a/160696
+    # https://dev.to/mcsee/code-smell-34-too-many-attributes-584p
     def __init__(
         self,
         input_fasta: str|Path=None,
         output: str|Path=None,
-        seq_1: str=None,
-        seq_2: str=None,
-        scoring_mat_name: str=None,
-        match_score: str|int=None,
-        mismatch_score: str|int=None,
-        mismatch_cost: str|int=None,
-        gap_open_score: str|int=None,
-        gap_open_cost: str|int=None,
-        gap_extension_score: str|int=None,
-        gap_extension_cost: str|int=None
+        seq_1: Sequence=Sequence((None, )*4),
+        seq_2: Sequence=Sequence((None, )*4),
+        scoring_settings: ScoringSettings=ScoringSettings((None, )*6),
+        costing_settings: CostingSettings=CostingSettings((None, )*5),
+        cost_mat: dict[dict]=None,
+        score: int=None,
+        cost: int=None,
+        dp_array: list[list[list]]=None,
+        seq_1_aligned: str=None,
+        middle_part: str=None,
+        seq_2_aligned: str=None,
     ):
-        ...
+        self.input_fasta = input_fasta
+        self.output = output
+        self.desc_1 = desc_1
+        self.seq_1 = seq_1
+        self.seq_1_len = seq_1_len
+        self.desc_2 = desc_2
+        self.seq_2 = seq_2
+        self.seq_2_len = seq_2_len
+        self.scoring_mat_name = scoring_mat_name
+        self.scoring_mat = scoring_mat
+        self.cost_mat = cost_mat
+        self.score = score
+        self.cost = cost
+        self.match_score = match_score
+        self.mismatch_score = mismatch_score
+        self.mismatch_cost = mismatch_cost
+        self.gap_open_score = gap_open_score
+        self.gap_open_cost = gap_open_cost
+        self.gap_extension_score = gap_extension_score
+        self.gap_extension_cost = gap_extension_cost
+        self.dp_array = dp_array
+        self.seq_1_aligned = seq_1_aligned
+        self.middle_part = middle_part
+        self.seq_2_aligned = seq_2_aligned
+
+    @property
+    def input_fasta(self):
+        return self._input_fasta
+    
+    @property
+    def output(self):
+        return self._output
+    
+    @property
+    def desc_1(self):
+        return self._desc_1
 
 
 def validate_and_transform_args(
