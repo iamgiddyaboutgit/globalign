@@ -243,16 +243,39 @@ or amino acid sequences."
     return None
 
     
+class Globaligner:
+    # https://softwareengineering.stackexchange.com/a/160696
+    def __init__(
+        self,
+        input_fasta: str|Path=None,
+        output: str|Path=None,
+        seq_1: str=None,
+        seq_2: str=None,
+        scoring_mat_name: str=None,
+        match_score: str|int=None,
+        mismatch_score: str|int=None,
+        mismatch_cost: str|int=None,
+        gap_open_score: str|int=None,
+        gap_open_cost: str|int=None,
+        gap_extension_score: str|int=None,
+        gap_extension_cost: str|int=None
+    ):
+        ...
+
+
 def validate_and_transform_args(
-    input_fasta: str|Path,
-    output: str|Path,
-    seq_1: str,
-    seq_2: str,
+    input_fasta: str|Path=None,
+    output: str|Path=None,
+    seq_1: str=None,
+    seq_2: str=None,
     scoring_mat_name: str=None,
     match_score: str|int=None,
     mismatch_score: str|int=None,
+    mismatch_cost: str|int=None,
     gap_open_score: str|int=None,
-    gap_extension_score: str|int=None
+    gap_open_cost: str|int=None,
+    gap_extension_score: str|int=None,
+    gap_extension_cost: str|int=None
 ):
     """Validates the command line arguments
 
@@ -260,14 +283,32 @@ def validate_and_transform_args(
     the module is imported and its functionality
     used that way.
     """
+    if input_fasta is not None and (seq_1 is not None or seq_2 is not None):
+        raise RuntimeError("If input_fasta is specified, then seq_1 and seq_2 should not be specified. The converse is also true.")
+    if input_fasta is not None:
+        input_fasta_b = Path(input_fasta)
+        if not input_fasta_b.is_file():
+            raise FileNotFoundError("input_fasta does not point to a valid file.")
+    if output is not None:
+        output_b = Path(output)
+        if not output_b.parent.exists():
+            raise FileNotFoundError("The parent directory of output does not exist.")
     if match_score is None:
-        match_score = 1
+        match_score_b = 1
     if mismatch_score is None:
-        mismatch_score = -1
+        mismatch_score_b = -1
+    if mismatch_cost is None:
+        mismatch_cost_b = 1
     if gap_open_score is None:
-        gap_open_score = 0
+        gap_open_score_b = 0
+    if gap_open_cost is None:
+        gap_open_cost_b = 0
     if gap_extension_score is None:
-        gap_extension_score = -2
+        gap_extension_score_b = -2
+    if gap_extension_cost is None:
+        gap_extension_cost_b = 2
+
+    input_fasta_path = Path(input_fasta)
 
 
 def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
@@ -1267,6 +1308,50 @@ def check_big_main_diag(mat:dict[dict]) -> bool:
             return False
         
     return has_max_in_main_diag 
+
+
+def print_nested_list_aligned(nested_list: list[list[int|float|str]]):
+    """Pretty-prints a nested list.
+    
+    Args:
+        nested_list: Let's call each entry in nested_list 
+            a 'row'.  Each 'row' is a list of the same length.
+    """
+    # Determine how wide each column should be
+    # based on the length of the string representation
+    # of each cell.
+    widths = []
+    # Because we assume that each entry in nested_list
+    # is the same length, we can get the number of columns
+    # from the number of entries in the 0-th row
+    # of nested_list.
+    num_cols = len(nested_list[0])
+
+    # Loop through the "columns" of the nested list.
+    for j in range(num_cols):
+        # If each cell in the j-th "column" of the nested list,
+        # is given a string representation, what is the 
+        # length of the longest representation?
+        width_required = 0
+        for row in nested_list:
+            # Is the length of the string representation of the 
+            # current cell longer than the longest such 
+            # representation found so far for column j?
+            # If it is, then save it and check the next cell
+            # in column j.
+            width_required = max(width_required, len(str(row[j])))
+        widths.append(width_required)
+
+    # Print the numbers with formatting
+    for row in nested_list:
+        row_2 = ""
+        for j, cell in enumerate(row):
+            # The format specification of :>{width}
+            # right-aligns the string within the width.
+            row_2 += f"{cell:>{widths[j] + 1}}"
+        print(row_2)
+    
+    return None
 
 
 def print_alignment(
