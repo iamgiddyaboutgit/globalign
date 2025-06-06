@@ -40,6 +40,7 @@ References:
 import sys
 import argparse
 from pathlib import Path
+from importlib import resources
 import math
 import random
 from copy import deepcopy
@@ -84,7 +85,7 @@ or amino acid sequences."
         "--scoring_mat_name", 
         required=False,
         choices=["BLOSUM50", "BLOSUM62"],
-        help="Either 'BLOSUM50' or 'BLOSUM62'.  Do not include this option if you would like to use a different scoring scheme or if you are aligning nucleotide sequences.  If set, then none of the other options with scores or costs should be set."
+        help="Either 'BLOSUM50' or 'BLOSUM62'.  Do not include this option if you would like to use a different scoring scheme or if you are aligning nucleotide sequences.  If set, then none of the other options with scores or costs should be set, except for the gap_open options."
     ) 
 
     parser.add_argument(
@@ -252,7 +253,22 @@ class ScoringSettings:
         gap_open_score: str|int=None,
         gap_extension_score: str|int=None,
     ):
+        other_score_stuff = (match_score, mismatch_score, gap_extension_score)
+        if None in other_score_stuff:
+            ... 
         self.scoring_mat_name = scoring_mat_name
+
+        # Do fancy stuff with the importlib
+        # library so that files are accessible
+        # on other people's machines.
+        if scoring_mat_name in ("BLOSUM50", "BLOSUM62"):
+            ...
+        data_traversable = resources.files("data")
+        blosum_file_name = "".join([scoring_mat_name, ".mtx"])
+        blo = data_traversable.joinpath("scoring_matrices", blosum_file_name)
+        with resources.as_file(blo) as f:
+            scoring_mat_2 = read_scoring_mat(f)
+        
         self.scoring_mat = scoring_mat
         self.match_score = match_score
         self.mismatch_score = mismatch_score
@@ -349,6 +365,49 @@ class Sequence:
         description = self.description
         seq = self.seq
         return "\n".join([description, seq])
+    
+
+class SequencePair:
+    def __init__(
+        self,
+        seq_1: Sequence=Sequence(),
+        seq_2: Sequence=Sequence(),
+        common_alphabet: list[str]=None
+    ):
+        if common_alphabet is not None:
+            UserWarning("The common_alphabet argument is not used.")
+        
+        self._seq_1 = seq_1
+        self._seq_2 = seq_2
+        self._common_alphabet = common_alphabet
+        return None
+
+    @property
+    def seq_1(self):
+        return self._seq_1
+
+    @property
+    def seq_2(self):
+        return self._seq_2
+
+    @property
+    def common_alphabet(self):
+        """The unique letters in the two sequences."""
+        seq_1 = self.seq_1.seq
+        seq_2 = self.seq_2.seq
+        common_alphabet = list(set(seq_1).union(set(seq_2)))
+        common_alphabet.sort()
+        self._common_alphabet = common_alphabet
+        return self._common_alphabet
+    
+    def __str__(self):
+        seq_1 = self.seq_1.seq
+        seq_2 = self.seq_2.seq
+        desc_1 = self.seq_1.description
+        desc_2 = self.seq_2.description
+        return "".join([desc_1, "\n", seq_1, "\n\n", desc_2, "\n", seq_2])
+    
+   
 
        
 
@@ -360,8 +419,8 @@ class Globaligner:
         self,
         input_fasta: str|Path=None,
         output: str|Path=None,
-        seq_1: Sequence=Sequence((None, )*4),
-        seq_2: Sequence=Sequence((None, )*4),
+        seq_1: Sequence=Sequence(),
+        seq_2: Sequence=Sequence(),
         scoring_settings: ScoringSettings=ScoringSettings((None, )*6),
         costing_settings: CostingSettings=CostingSettings((None, )*5),
         cost_mat: dict[dict]=None,
@@ -459,7 +518,13 @@ def validate_and_transform_args(
 
 
 def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
-    """Read in scoring matrix."""
+    """Read in scoring matrix.
+    
+    Raises:
+        FileNotFoundError if not scoring_mat_path.is_file().
+        RunTimeError if the header row did not have single letters spaced apart.
+        RunTimeError if row headers do not match column headers.
+    """
     if not scoring_mat_path.is_file():
         raise FileNotFoundError("scoring_mat_path does not point to a valid file.")
     
@@ -776,7 +841,7 @@ def dp_array_forward(
     gap_open_cost:int|float
 ):
     """
-    Operates in place on the dp_array.
+    This is an impure function.  It operates in place on the dp_array.
     """
     # Prepare for loop.
     dim_1 = len(seq_1) + 1
