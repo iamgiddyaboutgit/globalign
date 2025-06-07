@@ -832,31 +832,6 @@ def find_global_alignment(
         gap_open_cost=gap_open_cost
     )
 
-def mini_forward_0(
-    prev_costs: tuple[int], 
-    step_cost: int
-):
-    """
-    Args:
-        prev_costs: best costs for traversing the alignment
-            graph from the starting node to
-            the 3 predecessors adjacent to the current node.
-            (The 3 predecessors which are adjacent to the curent 
-            node signify steps in a partial alignment that
-            end in a match/mismatch, gap in seq_1, or gap
-            in seq_2.  The current node represents a step
-            that ends in a match/mismatch.)
-        step_cost: The common cost of moving in the alignment
-            graph to the current node 
-            from any one of the 3 predecessors  
-            adjacent to the current node.
-
-    Returns:
-        Best cost for traversing the alignment
-            graph to the current node.
-    """
-    return min(prev_costs) + step_cost
-
 
 def get_next_best_costs(
     dp_array: list[list[list]],
@@ -866,7 +841,7 @@ def get_next_best_costs(
     seq_2: str,
     cost_mat: dict[dict],
     gap_open_cost: int
-):
+) -> tuple[int]:
     seq_1_index = i - 1
     seq_2_index = j - 1
     
@@ -915,59 +890,23 @@ def dp_array_forward(
     gap_open_cost:int|float
 ):
     """
-    
+    Modifies dp_array in-place.
     """
     # Prepare for loop.
     dim_1 = len(seq_1) + 1
     dim_2 = len(seq_2) + 1
-    return [
-        [
-            get_next_best_costs(
+    
+    for i in range(1, dim_1):
+        for j in range(1, dim_2):
+            dp_array[i][j] = get_next_best_costs(
                 dp_array=dp_array,
                 i=i,
                 j=j,
                 seq_1=seq_1,
                 seq_2=seq_2,
                 cost_mat=cost_mat,
-                gap_open_cost=gap_open_cost)
-            for j in range(1, dim_2)
-        ]
-        for i in range(1, dim_1)
-    ]
-
-
-    for i in range(1, dim_1):
-        seq_1_index = i - 1
-        for j in range(1, dim_2):
-            seq_2_index = j - 1
-            ######################################
-            level = 0
-            previous_costs = (
-                dp_array[i - 1][j - 1][0],
-                dp_array[i - 1][j - 1][1],
-                dp_array[i - 1][j - 1][2]
+                gap_open_cost=gap_open_cost
             )
-            new_cost = cost_mat[seq_1[seq_1_index]][seq_2[seq_2_index]]
-            dp_array[i][j][level] = min(previous_costs) + new_cost
-            ######################################
-            level = 1
-            previous_costs = (
-                dp_array[i][j - 1][0] + gap_open_cost,
-                dp_array[i][j - 1][1],
-                dp_array[i][j - 1][2] + gap_open_cost
-            )
-            new_cost = cost_mat["-"][seq_2[seq_2_index]]
-            dp_array[i][j][level] = min(previous_costs) + new_cost
-            ######################################
-            level = 2
-            previous_costs = (
-                dp_array[i - 1][j][0] + gap_open_cost,
-                dp_array[i - 1][j][1] + gap_open_cost,
-                dp_array[i - 1][j][2]
-            )
-            new_cost = cost_mat[seq_1[seq_1_index]]["-"]
-            dp_array[i][j][level] = min(previous_costs) + new_cost
-            ######################################
 
     return None
 
