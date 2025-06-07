@@ -412,61 +412,61 @@ class SequencePair:
        
 
 
-class Globaligner:
-    # https://softwareengineering.stackexchange.com/a/160696
-    # https://dev.to/mcsee/code-smell-34-too-many-attributes-584p
-    def __init__(
-        self,
-        input_fasta: str|Path=None,
-        output: str|Path=None,
-        seq_1: Sequence=Sequence(),
-        seq_2: Sequence=Sequence(),
-        scoring_settings: ScoringSettings=ScoringSettings((None, )*6),
-        costing_settings: CostingSettings=CostingSettings((None, )*5),
-        cost_mat: dict[dict]=None,
-        score: int=None,
-        cost: int=None,
-        dp_array: list[list[list]]=None,
-        seq_1_aligned: str=None,
-        middle_part: str=None,
-        seq_2_aligned: str=None,
-    ):
-        self.input_fasta = input_fasta
-        self.output = output
-        self.desc_1 = desc_1
-        self.seq_1 = seq_1
-        self.seq_1_len = seq_1_len
-        self.desc_2 = desc_2
-        self.seq_2 = seq_2
-        self.seq_2_len = seq_2_len
-        self.scoring_mat_name = scoring_mat_name
-        self.scoring_mat = scoring_mat
-        self.cost_mat = cost_mat
-        self.score = score
-        self.cost = cost
-        self.match_score = match_score
-        self.mismatch_score = mismatch_score
-        self.mismatch_cost = mismatch_cost
-        self.gap_open_score = gap_open_score
-        self.gap_open_cost = gap_open_cost
-        self.gap_extension_score = gap_extension_score
-        self.gap_extension_cost = gap_extension_cost
-        self.dp_array = dp_array
-        self.seq_1_aligned = seq_1_aligned
-        self.middle_part = middle_part
-        self.seq_2_aligned = seq_2_aligned
+# class Globaligner:
+#     # https://softwareengineering.stackexchange.com/a/160696
+#     # https://dev.to/mcsee/code-smell-34-too-many-attributes-584p
+#     def __init__(
+#         self,
+#         input_fasta: str|Path=None,
+#         output: str|Path=None,
+#         seq_1: Sequence=Sequence(),
+#         seq_2: Sequence=Sequence(),
+#         scoring_settings: ScoringSettings=ScoringSettings((None, )*6),
+#         costing_settings: CostingSettings=CostingSettings((None, )*5),
+#         cost_mat: dict[dict]=None,
+#         score: int=None,
+#         cost: int=None,
+#         dp_array: list[list[list]]=None,
+#         seq_1_aligned: str=None,
+#         middle_part: str=None,
+#         seq_2_aligned: str=None,
+#     ):
+#         self.input_fasta = input_fasta
+#         self.output = output
+#         self.desc_1 = desc_1
+#         self.seq_1 = seq_1
+#         self.seq_1_len = seq_1_len
+#         self.desc_2 = desc_2
+#         self.seq_2 = seq_2
+#         self.seq_2_len = seq_2_len
+#         self.scoring_mat_name = scoring_mat_name
+#         self.scoring_mat = scoring_mat
+#         self.cost_mat = cost_mat
+#         self.score = score
+#         self.cost = cost
+#         self.match_score = match_score
+#         self.mismatch_score = mismatch_score
+#         self.mismatch_cost = mismatch_cost
+#         self.gap_open_score = gap_open_score
+#         self.gap_open_cost = gap_open_cost
+#         self.gap_extension_score = gap_extension_score
+#         self.gap_extension_cost = gap_extension_cost
+#         self.dp_array = dp_array
+#         self.seq_1_aligned = seq_1_aligned
+#         self.middle_part = middle_part
+#         self.seq_2_aligned = seq_2_aligned
 
-    @property
-    def input_fasta(self):
-        return self._input_fasta
+#     @property
+#     def input_fasta(self):
+#         return self._input_fasta
     
-    @property
-    def output(self):
-        return self._output
+#     @property
+#     def output(self):
+#         return self._output
     
-    @property
-    def desc_1(self):
-        return self._desc_1
+#     @property
+#     def desc_1(self):
+#         return self._desc_1
 
 
 def validate_and_transform_args(
@@ -831,6 +831,34 @@ def find_global_alignment(
         cost_mat=cost_mat,
         gap_open_cost=gap_open_cost
     )
+
+def mini_forward_0(
+    prev_costs: tuple[int], 
+    step_cost: int
+):
+    """
+    Args:
+        prev_costs: best costs for traversing the alignment
+            graph from the starting node to
+            the 3 predecessors adjacent to the current node.
+            (The 3 predecessors which are adjacent to the curent 
+            node signify steps in a partial alignment that
+            end in a match/mismatch, gap in seq_1, or gap
+            in seq_2.  The current node represents a step
+            that ends in a match/mismatch.)
+        step_cost: The common cost of moving in the alignment
+            graph to the current node 
+            from any one of the 3 predecessors  
+            adjacent to the current node.
+
+    Returns:
+        Best cost for traversing the alignment
+            graph to the current node.
+    """
+    return min(prev_costs) + step_cost
+
+
+
 
 
 def dp_array_forward(
