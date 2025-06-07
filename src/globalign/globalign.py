@@ -1439,9 +1439,8 @@ def make_dp_array(
     dim_2 = seq_2_len + 1
 
     dp_array = make_matrix(
-        dim_1=dim_1,
-        dim_2=dim_2,
-        dim_3=3,
+        num_rows=dim_1,
+        num_cols=dim_2,
         fill_val=None
     )
     # Initialize dp_array.
@@ -1449,16 +1448,24 @@ def make_dp_array(
     # set some values really high.
     big_num = (max_cost + 1) * max(seq_1_len, seq_2_len)
     dp_array[0][0] = (0, 0, 0)
-    dp_array[0][1] = (
-        big_num,
-        gap_open_cost + cost_mat["-"][seq_2[seq_2_index]],
-        big_num
-    )
-    dp_array[1][0] = (
-        big_num,
-        big_num,
-        gap_open_cost + cost_mat[seq_1[seq_1_index]]["-"]
-    )
+    try:
+        dp_array[0][1] = (
+            big_num,
+            gap_open_cost + cost_mat["-"][seq_2[0]],
+            big_num
+        )
+    except IndexError:
+        return dp_array
+    
+    try:
+        dp_array[1][0] = (
+            big_num,
+            big_num,
+            gap_open_cost + cost_mat[seq_1[0]]["-"]
+        )
+    except IndexError:
+        return dp_array
+
     # Now that the top-left corner is filled in,
     # the rest of the 0-th row and 0-th column entries
     # can be filled in.
