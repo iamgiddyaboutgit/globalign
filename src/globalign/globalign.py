@@ -203,12 +203,15 @@ or amino acid sequences."
         raise RuntimeError(f"There were letters in seq_2 not present in scoring_mat, i.e. {not_ok_letters}")
     
     # Get the cost_mat.
-    max_score = get_max_similarity_score(scoring_mat=scoring_mat)
+    # https://curiouscoding.nl/posts/alignment-scores-transform/
+    max_score = get_max_val(scoring_mat)
 
     cost_mat = get_cost_mat(
         scoring_mat=scoring_mat,
         max_score=max_score
     )
+
+    max_cost = get_max_val(cost_mat)
 
     # Perform the alignment, insert gaps, and compute the score.
     alignment = find_global_alignment(
@@ -570,19 +573,13 @@ def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
     return scoring_mat
 
 
-def get_max_similarity_score(scoring_mat:dict[dict]) -> int|float:
-    """Get the max similarity score
-    
-    from a scoring matrix.  
-    Reference: https://curiouscoding.nl/posts/alignment-scores-transform/
+def get_max_val(m:dict[dict]) -> int|float:
+    """Get the max value inside a nested dictionary.
     """
     # prep for loop
     cur_max = - math.inf
-    for seq_1_letter, seq_2_scores in scoring_mat.items():
-        # seq_1_letter is a key for scoring_mat.
-        # seq_2_scores is the inner dict for the outer
-        # key of seq_1_letter.
-        new_possible_max = max(seq_2_scores.values())
+    for key, inner_dict in m.items():
+        new_possible_max = max(inner_dict.values())
         cur_max = max(cur_max, new_possible_max)
 
     return cur_max
@@ -883,7 +880,7 @@ def get_next_best_costs(
 
 
 def dp_array_forward(
-    dp_array:list[list[list]],
+    dp_array:list[list[None]],
     seq_1:str,
     seq_2:str,
     cost_mat:dict[dict],
@@ -1418,7 +1415,7 @@ def draw_two_random_seqs(
     return [seq_1, seq_2]
 
 
-def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list]:
+def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str|None) -> list[list[int|float|str|None]]:
     """Make a matrix as a nested list.
     
     See: https://www.freecodecamp.org/news/list-within-a-list-in-python-initialize-a-nested-list/
@@ -1429,63 +1426,62 @@ def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str) -> list[list
 
 
 def make_dp_array(
-    seq_1:str, 
-    seq_2:str,
-    cost_mat:dict[dict],
-    gap_open_cost:int|float
-    ) -> list[list[list]]:
+    seq_1: str, 
+    seq_2: str,
+    cost_mat: dict[dict],
+    max_cost: int,
+    gap_open_cost: int|float
+    ) -> list[list]:
     # Create the array.
     seq_1_len = len(seq_1)
     seq_2_len = len(seq_2)
     dim_1 = seq_1_len + 1
     dim_2 = seq_2_len + 1
-    dp_array = make_3d_array(
+
+    dp_array = make_matrix(
         dim_1=dim_1,
         dim_2=dim_2,
         dim_3=3,
-        fill_val=0
+        fill_val=None
     )
-    # Initialize its values.
-    # Initialize the 0-level for paths
-    # that end in a match/mismatch.
-    level = 0
-    for i in range(1, dim_1):
-        # Initialize i-th row in 0-th column.
-        dp_array[i][0][level] = math.inf
+    # Initialize dp_array.
+    # To avoid floating point infinities,
+    # set some values really high.
+    big_num = (max_cost + 1) * max(seq_1_len, seq_2_len)
+    dp_array[0][0] = (0, 0, 0)
+    dp_array[0][1] = (
+        big_num,
+        gap_open_cost + cost_mat["-"][seq_2[seq_2_index]],
+        big_num
+    )
+    dp_array[1][0] = (
+        big_num,
+        big_num,
+        gap_open_cost + cost_mat[seq_1[seq_1_index]]["-"]
+    )
+    # Now that the top-left corner is filled in,
+    # the rest of the 0-th row and 0-th column entries
+    # can be filled in.
     
-    for j in range(1, dim_2):
-        # Init j-th column in 0-th row.
-        dp_array[0][j][level] = math.inf
-    
-    # Initialize the 1-level for paths
-    # that end in a gap in seq_1.
-    level = 1
-
-    for i in range(1, dim_1):
-        # Initialize i-th row in 0-th column.
-        dp_array[i][0][level] = math.inf
-
-    seq_2_index = 0
-    dp_array[0][1][level] = gap_open_cost + cost_mat["-"][seq_2[seq_2_index]]
+    # Fill in the 0-th row.
     for j in range(2, dim_2):
-        # Init j-th column in 0-th row.
-        seq_2_index += 1
-        dp_array[0][j][level] = dp_array[0][j - 1][level] + cost_mat["-"][seq_2[seq_2_index]]
+        seq_2_index = j - 1
 
-    # Initialize the 2-level for paths
-    # that end in a gap in seq_2.
-    level = 2
-    
-    seq_1_index = 0
-    dp_array[1][0][level] = gap_open_cost + cost_mat[seq_1[seq_1_index]]["-"]
+        dp_array[0][j] = (
+            big_num,  # level 0
+            dp_array[0][j - 1][1] + cost_mat["-"][seq_2[seq_2_index]],  # level 1
+            big_num  # level 2
+        )
+
+    # Fill in the 0-th column.
     for i in range(2, dim_1):
-        # Initialize i-th row in 0-th column.
-        seq_1_index += 1
-        dp_array[i][0][level] = dp_array[i - 1][0][level] + cost_mat[seq_1[seq_1_index]]["-"]
+        seq_1_index = i - 1
 
-    for j in range(1, dim_2):
-        # Init j-th column in 0-th row.
-        dp_array[0][j][level] = math.inf
+        dp_array[i][0] = (
+            big_num,  # level 0
+            big_num,  # level 1
+            dp_array[i - 1][0][2] + cost_mat[seq_1[seq_1_index]]["-"]  # level 2
+        )
 
     return dp_array
 
