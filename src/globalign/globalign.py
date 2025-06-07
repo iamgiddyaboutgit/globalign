@@ -858,7 +858,53 @@ def mini_forward_0(
     return min(prev_costs) + step_cost
 
 
+def get_next_best_costs(
+    dp_array: list[list[list]],
+    i: int,
+    j: int,
+    seq_1: str,
+    seq_2: str,
+    cost_mat: dict[dict],
+    gap_open_cost: int
+):
+    seq_1_index = i - 1
+    seq_2_index = j - 1
+    
+    # The following are the previous costs
+    # and step cost if the current node is in level 0.
+    previous_costs_0 = (
+        dp_array[i - 1][j - 1][0],
+        dp_array[i - 1][j - 1][1],
+        dp_array[i - 1][j - 1][2]
+    )
+    step_cost_0 = cost_mat[seq_1[seq_1_index]][seq_2[seq_2_index]]
 
+    ###############################################
+    # The following are the previous costs
+    # plus relevant gap_open_costs 
+    # and step cost if the current node is in level 1.
+    previous_costs_plus_gap_1 = (
+        dp_array[i][j - 1][0] + gap_open_cost,
+        dp_array[i][j - 1][1],
+        dp_array[i][j - 1][2] + gap_open_cost
+    )
+    step_cost_1 = cost_mat["-"][seq_2[seq_2_index]]
+
+    # The following are the previous costs
+    # plus relevant gap_open_costs 
+    # and step cost if the current node is in level 2.
+    previous_costs_plus_gap_2 = (
+        dp_array[i - 1][j][0] + gap_open_cost,
+        dp_array[i - 1][j][1] + gap_open_cost,
+        dp_array[i - 1][j][2]
+    )
+    step_cost_2 = cost_mat[seq_1[seq_1_index]]["-"]
+    #################################################
+    return (
+        min(previous_costs_0) + step_cost_0,
+        min(previous_costs_plus_gap_1) + step_cost_1,
+        min(previous_costs_plus_gap_2) + step_cost_2
+    )
 
 
 def dp_array_forward(
@@ -869,11 +915,27 @@ def dp_array_forward(
     gap_open_cost:int|float
 ):
     """
-    This is an impure function.  It operates in place on the dp_array.
+    
     """
     # Prepare for loop.
     dim_1 = len(seq_1) + 1
     dim_2 = len(seq_2) + 1
+    return [
+        [
+            get_next_best_costs(
+                dp_array=dp_array,
+                i=i,
+                j=j,
+                seq_1=seq_1,
+                seq_2=seq_2,
+                cost_mat=cost_mat,
+                gap_open_cost=gap_open_cost)
+            for j in range(1, dim_2)
+        ]
+        for i in range(1, dim_1)
+    ]
+
+
     for i in range(1, dim_1):
         seq_1_index = i - 1
         for j in range(1, dim_2):
