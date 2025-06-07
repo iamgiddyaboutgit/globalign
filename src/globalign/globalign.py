@@ -43,6 +43,7 @@ from pathlib import Path
 from importlib import resources
 import math
 import random
+from typing import NamedTuple
 from copy import deepcopy
 
 def main():
@@ -907,13 +908,20 @@ def dp_array_forward(
 
     return None
 
+class AlignmentResults(NamedTuple):
+    seq_1_aligned: str
+    middle_part: str
+    seq_2_aligned: str
+    cost: int
+       
+
 def dp_array_backward(
-    dp_array: list[list[list]],
+    dp_array: list[list[tuple[int]]],
     seq_1: str,
     seq_2: str,
     cost_mat: dict[dict],
     gap_open_cost:int
-) -> dict:
+) -> AlignmentResults:
     """
     Traces backward through the dp_array
 
@@ -926,10 +934,10 @@ def dp_array_backward(
             seq_2_aligned,
             cost
     """
-    seq_1_aligned = []
-    seq_2_aligned = []
-    middle_part = []    
     
+    seq_1_aligned = []
+    middle_part = [] 
+    seq_2_aligned = []
     
     # Handle the bottom-right bird's eye-view
     # cell of dp_array before the loop.
@@ -970,12 +978,12 @@ def dp_array_backward(
     j += delta_j
 
     if i == 0 and j == 0:
-        return {
-            "seq_1_aligned": "".join(seq_1_aligned),
-            "middle_part": "".join(middle_part),
-            "seq_2_aligned": "".join(seq_2_aligned),
-            "cost": cost
-        }
+        return AlignmentResults(
+            seq_1_aligned="".join(seq_1_aligned),
+            middle_part="".join(middle_part),
+            seq_2_aligned="".join(seq_2_aligned),
+            cost=cost
+        )
 
     # Prepare for loop.
     max_num_additional_alignment_moves = dim_1 + dim_2 - 2
@@ -1052,12 +1060,12 @@ def dp_array_backward(
     seq_2_aligned.reverse()
     middle_part.reverse()
 
-    return {
-        "seq_1_aligned": "".join(seq_1_aligned),
-        "middle_part": "".join(middle_part),
-        "seq_2_aligned": "".join(seq_2_aligned),
-        "cost": cost
-    }
+    return AlignmentResults(
+        seq_1_aligned="".join(seq_1_aligned),
+        middle_part="".join(middle_part),
+        seq_2_aligned="".join(seq_2_aligned),
+        cost=cost
+    )
 
 def cost_ranks_dispatcher(cost_ranks: list|tuple, is_match: bool):
     cost_ranks_with_is_match = (tuple(cost_ranks), is_match)
