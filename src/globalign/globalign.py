@@ -44,6 +44,7 @@ from importlib import resources
 import math
 import random
 from typing import NamedTuple
+from dataclasses import dataclass
 from copy import deepcopy
 
 def main():
@@ -59,7 +60,7 @@ or amino acid sequences."
         "-i",
         "--input_fasta",
         required=False,
-        help="File path to a FASTA file containing two sequences to align.  Do not include if seq_1 and seq_2 are provided."
+        help="File path to a FASTA file containing two sequences to align.  Do not include if seq_1 and seq_2 are provided.  If the file contains more than 2 sequences, only the first 2 will be used."
     )
 
     parser.add_argument(
@@ -82,11 +83,16 @@ or amino acid sequences."
     ) 
 
     parser.add_argument(
-        "-s",
         "--scoring_mat_name", 
         required=False,
         choices=["BLOSUM50", "BLOSUM62"],
         help="Either 'BLOSUM50' or 'BLOSUM62'.  Do not include this option if you would like to use a different scoring scheme or if you are aligning nucleotide sequences.  If set, then none of the other options with scores or costs should be set, except for the gap_open options."
+    ) 
+
+    parser.add_argument(
+        "--scoring_mat_path", 
+        required=False,
+        help="File path to a scoring matrix file.  If set, then none of the other options with scores or costs should be set, except for the gap_open options."
     ) 
 
     parser.add_argument(
@@ -247,52 +253,46 @@ or amino acid sequences."
     )
     return None
 
-class ScoringSettings:
-    def __init__(
-        self,
-        scoring_mat_name: str=None,
-        scoring_mat: dict[dict]=None,
-        match_score: str|int=None,
-        mismatch_score: str|int=None,
-        gap_open_score: str|int=None,
-        gap_extension_score: str|int=None,
-    ):
-        other_score_stuff = (match_score, mismatch_score, gap_extension_score)
-        if None in other_score_stuff:
-            ... 
-        self.scoring_mat_name = scoring_mat_name
 
-        # Do fancy stuff with the importlib
-        # library so that files are accessible
-        # on other people's machines.
-        if scoring_mat_name in ("BLOSUM50", "BLOSUM62"):
-            ...
-        data_traversable = resources.files("data")
-        blosum_file_name = "".join([scoring_mat_name, ".mtx"])
-        blo = data_traversable.joinpath("scoring_matrices", blosum_file_name)
-        with resources.as_file(blo) as f:
-            scoring_mat_2 = read_scoring_mat(f)
-        
-        self.scoring_mat = scoring_mat
-        self.match_score = match_score
-        self.mismatch_score = mismatch_score
-        self.gap_open_score = gap_open_score
-        self.gap_extension_score = gap_extension_score
- 
+
+
+
+@dataclass
+class ScoringSettings:
+    # https://docs.python.org/3/reference/datamodel.html#slots
+    __slots__ = (
+        "scoring_mat_name",
+        "scoring_mat_path",
+        "scoring_mat",
+        "match_score",
+        "mismatch_score"
+    )
+    scoring_mat_name: str|None
+    scoring_mat_path: str|Path|None
+    scoring_mat: dict[dict]|None
+    match_score: str|int|None
+    mismatch_score: str|int|None
+
+
+@dataclass
 class CostingSettings:
-    def __init__(
-        self,
-        cost_mat: dict[dict]=None,
-        cost: int=None,
-        mismatch_cost: str|int=None,
-        gap_open_cost: str|int=None,
-        gap_extension_cost: str|int=None,
-    ):
-        self.cost_mat = cost_mat
-        self.cost = cost
-        self.mismatch_cost = mismatch_cost
-        self.gap_open_cost = gap_open_cost
-        self.gap_extension_cost = gap_extension_cost
+    # https://docs.python.org/3/reference/datamodel.html#slots
+    __slots__ = (
+        "cost_mat",
+        "mismatch_cost",
+        "gap_open_cost",
+        "gap_extension_cost"
+    )
+    cost_mat: dict[dict]|None
+    mismatch_cost: int|None
+    gap_open_cost: int|None
+    gap_extension_cost: int|None
+
+
+@dataclass
+class AlignmentSettings:
+    scoring_settings: ScoringSettings
+    costing_settings: CostingSettings
 
 
 class Sequence:
@@ -471,7 +471,20 @@ class SequencePair:
 #     @property
 #     def desc_1(self):
 #         return self._desc_1
+def check_seq_lengths(seq_1, seq_2, max_seq_len_prod):
+    """Check that the product of the lengths of the sequences is
+    
+    reasonable, i.e. less than max_seq_len_prod.
 
+    Raises:
+        RuntimeError
+    """
+    m = len(seq_1)
+    n = len(seq_2)
+    seq_len_prod = m*n
+    if not seq_len_prod < max_seq_len_prod:
+        raise RuntimeError(f"Your sequences are too long.  The product of their lengths should be less than {max_seq_len_prod}.  They have lengths of {m} and {n}")
+    return None
 
 def validate_and_transform_args(
     input_fasta: str|Path=None,
@@ -479,6 +492,7 @@ def validate_and_transform_args(
     seq_1: str=None,
     seq_2: str=None,
     scoring_mat_name: str=None,
+    scoring_mat_path: str|Path=None,
     match_score: str|int=None,
     mismatch_score: str|int=None,
     mismatch_cost: str|int=None,
@@ -493,16 +507,52 @@ def validate_and_transform_args(
     the module is imported and its functionality
     used that way.
     """
-    if input_fasta is not None and (seq_1 is not None or seq_2 is not None):
-        raise RuntimeError("If input_fasta is specified, then seq_1 and seq_2 should not be specified. The converse is also true.")
-    if input_fasta is not None:
+    if input_fasta is not None and seq_1 is None and seq_2 is None:
         input_fasta_b = Path(input_fasta)
         if not input_fasta_b.is_file():
             raise FileNotFoundError("input_fasta does not point to a valid file.")
+        
+        # Read in descriptions and sequences from FASTA file.
+        # Verify FASTA file is in the correct format.
+        # Extract sequences.
+        # Verify sequences are formatted correctly.
+        # Handle sequences of 0 length.
+        counter = 0
+        for desc_and_seq in read_seq_from_fasta(fasta_path=input_fasta_b):
+            counter += 1
+            if counter == 1:
+                desc_1, seq_1 = desc_and_seq
+            elif counter == 2:
+                desc_2, seq_2 = desc_and_seq
+            else:
+                break
+
+        # Check that the product of the lengths of the sequences is
+        # less than 20_000_000.     
+        check_seq_lengths(seq_1, seq_2, 20_000_000)
+    elif input_fasta is None and seq_1 is not None and seq_2 is not None:
+        # Check that the product of the lengths of the sequences is
+        # less than 20_000_000.  
+        check_seq_lengths(seq_1, seq_2, 20_000_000)
+    else:
+        raise RuntimeError("The combination of arguments for input_fasta, seq_1, and seq_2 does not make sense.")
+    
     if output is not None:
         output_b = Path(output)
         if not output_b.parent.exists():
             raise FileNotFoundError("The parent directory of output does not exist.")
+    
+    if all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score)]):
+        ...
+    elif scoring_mat_name is not None and all([x is None for x in (scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score)]):
+        # Do fancy stuff with the importlib
+        # library so that files are accessible
+        # on other people's machines.
+        data_traversable = resources.files("data")
+        blosum_file_name = "".join([scoring_mat_name, ".mtx"])
+        blo = data_traversable.joinpath("scoring_matrices", blosum_file_name)
+        with resources.as_file(blo) as f:
+            scoring_mat_2 = read_scoring_mat(f)
     if match_score is None:
         match_score_b = 1
     if mismatch_score is None:
@@ -519,6 +569,22 @@ def validate_and_transform_args(
         gap_extension_cost_b = 2
 
     input_fasta_path = Path(input_fasta)
+
+    return (
+        input_fasta,
+        output,
+        seq_1,
+        seq_2,
+        scoring_mat_name,
+        scoring_mat_path,
+        match_score,
+        mismatch_score,
+        mismatch_cost,
+        gap_open_score,
+        gap_open_cost,
+        gap_extension_score,
+        gap_extension_cost 
+    )
 
 
 def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
@@ -747,10 +813,19 @@ def read_seq_from_fasta(fasta_path:Path):
 
 
 def find_global_alignment(
-    seq_1:str,
-    seq_2:str,
-    cost_mat:dict[dict],
-    gap_open_cost:int|float
+    input_fasta: str|Path=None,
+    output: str|Path=None,
+    seq_1: str=None,
+    seq_2: str=None,
+    scoring_mat_name: str=None,
+    scoring_mat_path: str|Path=None,
+    match_score: str|int=None,
+    mismatch_score: str|int=None,
+    mismatch_cost: str|int=None,
+    gap_open_score: str|int=None,
+    gap_open_cost: str|int=None,
+    gap_extension_score: str|int=None,
+    gap_extension_cost: str|int=None
 ) -> dict:
     """
     Args:
@@ -784,6 +859,21 @@ def find_global_alignment(
             cost
         )
     """
+    good_args = validate_and_transform_args(
+        input_fasta,
+        output,
+        seq_1,
+        seq_2,
+        scoring_mat_name,
+        scoring_mat_path,
+        match_score,
+        mismatch_score,
+        mismatch_cost,
+        gap_open_score,
+        gap_open_cost,
+        gap_extension_score,
+        gap_extension_cost
+    )
     # Imagine a 3-d parking garage like in Mario.
     # Movement through this "parking garage"
     # is movement through the alignment graph.
