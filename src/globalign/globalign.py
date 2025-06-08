@@ -416,61 +416,7 @@ class SequencePair:
        
 
 
-# class Globaligner:
-#     # https://softwareengineering.stackexchange.com/a/160696
-#     # https://dev.to/mcsee/code-smell-34-too-many-attributes-584p
-#     def __init__(
-#         self,
-#         input_fasta: str|Path=None,
-#         output: str|Path=None,
-#         seq_1: Sequence=Sequence(),
-#         seq_2: Sequence=Sequence(),
-#         scoring_settings: ScoringSettings=ScoringSettings((None, )*6),
-#         costing_settings: CostingSettings=CostingSettings((None, )*5),
-#         cost_mat: dict[dict]=None,
-#         score: int=None,
-#         cost: int=None,
-#         dp_array: list[list[list]]=None,
-#         seq_1_aligned: str=None,
-#         middle_part: str=None,
-#         seq_2_aligned: str=None,
-#     ):
-#         self.input_fasta = input_fasta
-#         self.output = output
-#         self.desc_1 = desc_1
-#         self.seq_1 = seq_1
-#         self.seq_1_len = seq_1_len
-#         self.desc_2 = desc_2
-#         self.seq_2 = seq_2
-#         self.seq_2_len = seq_2_len
-#         self.scoring_mat_name = scoring_mat_name
-#         self.scoring_mat = scoring_mat
-#         self.cost_mat = cost_mat
-#         self.score = score
-#         self.cost = cost
-#         self.match_score = match_score
-#         self.mismatch_score = mismatch_score
-#         self.mismatch_cost = mismatch_cost
-#         self.gap_open_score = gap_open_score
-#         self.gap_open_cost = gap_open_cost
-#         self.gap_extension_score = gap_extension_score
-#         self.gap_extension_cost = gap_extension_cost
-#         self.dp_array = dp_array
-#         self.seq_1_aligned = seq_1_aligned
-#         self.middle_part = middle_part
-#         self.seq_2_aligned = seq_2_aligned
 
-#     @property
-#     def input_fasta(self):
-#         return self._input_fasta
-    
-#     @property
-#     def output(self):
-#         return self._output
-    
-#     @property
-#     def desc_1(self):
-#         return self._desc_1
 def check_seq_lengths(seq_1, seq_2, max_seq_len_prod):
     """Check that the product of the lengths of the sequences is
     
