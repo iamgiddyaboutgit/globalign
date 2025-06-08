@@ -105,29 +105,27 @@ or amino acid sequences."
     parser.add_argument(
         "--mismatch_score",
         required=False,
-        default=-1,
+        default=-2,
         help="Score for a mismatch.  Should be negative.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -1."
     ) 
 
     parser.add_argument(
         "--mismatch_cost",
         required=False,
-        default=1,
-        help="Cost for a mismatch.  Should be positive.  If set, then none of the options with scores should be set.  Default: 1."
+        help="Cost for a mismatch.  Should be positive.  If set, then none of the options with scores should be set."
     ) 
 
     parser.add_argument(
         "--gap_open_score",
         required=False,
-        default=0,
-        help="Score for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: 0."
+        default=-5,
+        help="Score for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -5."
     ) 
 
     parser.add_argument(
         "--gap_open_cost",
         required=False,
-        default=0,
-        help="Cost for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-negative.  If set, then none of the options with scores should be set.  Default: 0."
+        help="Cost for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-negative.  If set, then none of the options with scores should be set."
     ) 
 
     parser.add_argument(
@@ -140,8 +138,7 @@ or amino acid sequences."
     parser.add_argument(
         "--gap_extension_cost",
         required=False,
-        default=2,
-        help="Cost for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be positive.  If set, then none of the options with scores should be set.  Default: -2."
+        help="Cost for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be positive.  If set, then none of the options with scores should be set."
     ) 
 
     cmd_line_args = parser.parse_args()
@@ -411,8 +408,10 @@ def validate_and_transform_args(
         tuple with entries of
             seq_1_validated,
             seq_2_validated,
-            scoring_settings,
-            costing_settings,
+            scoring_mat,
+            cost_mat,
+            gap_open_score,
+            gap_open_cost,
             output_validated
     """
     if output is None:
@@ -455,17 +454,13 @@ def validate_and_transform_args(
         raise RuntimeError("The combination of arguments for input_fasta, seq_1, and seq_2 does not make sense.")
     
     if all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
-        scoring_settings = ScoringSettings(
-            scoring_mat_name=None,
-            scoring_mat_path=None,
-            match_score=1,
-            mismatch_score=-2,
-            mismatch_cost=1,
-            gap_open_score=0,
-            gap_open_cost=0,
-            gap_extension_score=-2,
-            gap_extension_cost=2
-        )
+        scoring_mat_name=None,
+        scoring_mat_path=None,
+        match_score=1,
+        mismatch_score=-2,
+        gap_open_score=-5,
+        gap_extension_score=-2,
+        
     elif scoring_mat_name is not None and all([x is None for x in (scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score)]):
         # Do fancy stuff with the importlib
         # library so that files are accessible
@@ -495,8 +490,10 @@ def validate_and_transform_args(
     return (
         seq_1_validated,
         seq_2_validated,
-        scoring_settings,
-        costing_settings,
+        scoring_mat,
+        cost_mat,
+        gap_open_score,
+        gap_open_cost,
         output_validated 
     )
 
@@ -552,6 +549,28 @@ def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
                 scoring_mat[outer_dict_letter][inner_dict_letter_2] = score
              
     return scoring_mat
+
+
+def create_scoring_mat(
+    common_alphabet: list, 
+    match_score: int, 
+    mismatch_score: int, 
+    gap_extension_score: int
+) -> dict[dict]:
+    common_alphabet.append("-")
+    scoring_mat = dict()
+    for common_key_outer in common_alphabet:
+        scoring_mat[common_key_outer] = dict()
+        for common_key_inner in common_alphabet:
+            if common_key_outer == common_key_inner:
+                scoring_mat[common_key_outer][common_key_inner] = match_score
+            elif common_key_outer == "-" or common_key_inner == "-":
+                scoring_mat[common_key_outer][common_key_inner] = gap_extension_score
+            else:
+                scoring_mat[common_key_outer][common_key_inner] = mismatch_score
+
+    return scoring_mat
+
 
 
 def get_max_val(m:dict[dict]) -> int|float:
