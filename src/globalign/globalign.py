@@ -254,47 +254,6 @@ or amino acid sequences."
     return None
 
 
-
-
-
-@dataclass
-class ScoringSettings:
-    # https://docs.python.org/3/reference/datamodel.html#slots
-    __slots__ = (
-        "scoring_mat_name",
-        "scoring_mat_path",
-        "scoring_mat",
-        "match_score",
-        "mismatch_score"
-    )
-    scoring_mat_name: str|None
-    scoring_mat_path: str|Path|None
-    scoring_mat: dict[dict]|None
-    match_score: str|int|None
-    mismatch_score: str|int|None
-
-
-@dataclass
-class CostingSettings:
-    # https://docs.python.org/3/reference/datamodel.html#slots
-    __slots__ = (
-        "cost_mat",
-        "mismatch_cost",
-        "gap_open_cost",
-        "gap_extension_cost"
-    )
-    cost_mat: dict[dict]|None
-    mismatch_cost: int|None
-    gap_open_cost: int|None
-    gap_extension_cost: int|None
-
-
-@dataclass
-class AlignmentSettings:
-    scoring_settings: ScoringSettings
-    costing_settings: CostingSettings
-
-
 class Sequence:
     def __init__(
         self,
@@ -411,11 +370,6 @@ class SequencePair:
         desc_2 = self.seq_2.description
         return "".join([desc_1, "\n", seq_1, "\n\n", desc_2, "\n", seq_2])
     
-   
-
-       
-
-
 
 def check_seq_lengths(seq_1, seq_2, max_seq_len_prod):
     """Check that the product of the lengths of the sequences is
@@ -446,13 +400,30 @@ def validate_and_transform_args(
     gap_open_cost: str|int=None,
     gap_extension_score: str|int=None,
     gap_extension_cost: str|int=None
-):
+) -> tuple:
     """Validates the command line arguments
 
     or the arguments that are passed when
     the module is imported and its functionality
     used that way.
+
+    Returns:
+        tuple with entries of
+            seq_1_validated,
+            seq_2_validated,
+            scoring_settings,
+            costing_settings,
+            output_validated
     """
+    if output is None:
+        output_validated = output
+    else:
+        output_b = Path(output)
+        if output_b.parent.exists():
+            output_validated = output_b
+        else:
+            raise FileNotFoundError("The parent directory of output does not exist.")
+        
     if input_fasta is not None and seq_1 is None and seq_2 is None:
         input_fasta_b = Path(input_fasta)
         if not input_fasta_b.is_file():
@@ -483,13 +454,18 @@ def validate_and_transform_args(
     else:
         raise RuntimeError("The combination of arguments for input_fasta, seq_1, and seq_2 does not make sense.")
     
-    if output is not None:
-        output_b = Path(output)
-        if not output_b.parent.exists():
-            raise FileNotFoundError("The parent directory of output does not exist.")
-    
-    if all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score)]):
-        ...
+    if all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
+        scoring_settings = ScoringSettings(
+            scoring_mat_name=None,
+            scoring_mat_path=None,
+            match_score=1,
+            mismatch_score=-2,
+            mismatch_cost=1,
+            gap_open_score=0,
+            gap_open_cost=0,
+            gap_extension_score=-2,
+            gap_extension_cost=2
+        )
     elif scoring_mat_name is not None and all([x is None for x in (scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score)]):
         # Do fancy stuff with the importlib
         # library so that files are accessible
@@ -517,19 +493,11 @@ def validate_and_transform_args(
     input_fasta_path = Path(input_fasta)
 
     return (
-        input_fasta,
-        output,
-        seq_1,
-        seq_2,
-        scoring_mat_name,
-        scoring_mat_path,
-        match_score,
-        mismatch_score,
-        mismatch_cost,
-        gap_open_score,
-        gap_open_cost,
-        gap_extension_score,
-        gap_extension_cost 
+        seq_1_validated,
+        seq_2_validated,
+        scoring_settings,
+        costing_settings,
+        output_validated 
     )
 
 
