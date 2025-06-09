@@ -5,6 +5,52 @@ import random
 from importlib import resources
 import math
 from copy import deepcopy
+from dataclasses import dataclass
+
+@dataclass
+class SimpleScoringSettings:
+    """Keep things simple to avoid conflicts
+    
+    such as when a custom scoring matrix is used.
+    """
+    match_score: int = 1
+    mismatch_score: int = -2
+    gap_open_score: int = -5
+    gap_extension_score: int = -2
+
+    # https://stackoverflow.com/questions/60179799/python-dataclass-whats-a-pythonic-way-to-validate-initialization-arguments
+    def __post_init__(self):
+        match_score = self.match_score
+        mismatch_score = self.mismatch_score
+        gap_open_score = self.gap_open_score
+        gap_extension_score = self.gap_extension_score
+
+        try:
+            self.match_score = int(match_score)
+        except (TypeError, ValueError) as e:
+            print("match_score must be convertible to an integer.")
+            raise e
+        
+        try:
+            self.mismatch_score = int(mismatch_score)
+        except (TypeError, ValueError) as e:
+            print("mismatch_score must be convertible to an integer.")
+            raise e
+        
+        try:
+            self.gap_open_score = int(gap_open_score)
+        except (TypeError, ValueError) as e:
+            print("gap_open_score must be convertible to an integer.")
+            raise e
+
+        try:
+            self.gap_extension_score = int(gap_extension_score)
+        except (TypeError, ValueError) as e:
+            print("gap_extension_score must be convertible to an integer.")
+            raise e
+
+        return None
+    
 
 def validate_and_transform_args(
     input_fasta: str|Path=None,
@@ -69,25 +115,26 @@ def validate_and_transform_args(
         raise RuntimeError("The combination of arguments for input_fasta, seq_1, and seq_2 does not make sense.")
     
     if all([x is None for x in (scoring_mat_name, scoring_mat_path, mismatch_cost, gap_open_cost, gap_extension_cost)]):
-        # Set defaults for
-        # match_score, mismatch_score, gap_open_score, gap_extension_score
-        match_score_b = 1
-        mismatch_score_b = -2
-        gap_open_score_b = -5
-        gap_extension_score_b = -2
+        # Set defaults as necessary.
+        simple_scoring_settings = SimpleScoringSettings(
+            match_score=match_score,
+            mismatch_score=mismatch_score,
+            gap_open_score=gap_open_score,
+            gap_extension_score=gap_extension_score
+        )
 
         common_alphabet = get_common_alphabet(seq_1, seq_2)
 
         scoring_mat = create_scoring_mat(
             common_alphabet=common_alphabet,
-            match_score=match_score_b,
-            mismatch_score=mismatch_score_b,
-            gap_extension_score=gap_extension_score_b
+            match_score=simple_scoring_settings.match_score,
+            mismatch_score=simple_scoring_settings.mismatch_score,
+            gap_extension_score=simple_scoring_settings.gap_extension_score
         )
 
         costing_mat = get_costing_mat(
             scoring_mat=scoring_mat,
-            max_score=match_score_b
+            max_score=simple_scoring_settings.match_score
         )
         
     elif scoring_mat_name is not None and all([x is None for x in (scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
