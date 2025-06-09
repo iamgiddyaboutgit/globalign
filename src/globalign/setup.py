@@ -2,6 +2,9 @@
 
 from pathlib import Path
 import random
+from importlib import resources
+import math
+from copy import deepcopy
 
 def validate_and_transform_args(
     input_fasta: str|Path=None,
