@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pytest
 
-from src.globalign import globalign as ga
+from globalign import globaligner as ga
 
 @pytest.mark.parametrize(
     argnames=("test_input", "expected"),

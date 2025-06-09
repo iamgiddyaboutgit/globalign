@@ -206,22 +206,22 @@ or amino acid sequences."
         not_ok_letters = [letter for letter in seq_2 if letter not in scoring_mat_letters]
         raise RuntimeError(f"There were letters in seq_2 not present in scoring_mat, i.e. {not_ok_letters}")
     
-    # Get the cost_mat.
+    # Get the costing_mat.
     # https://curiouscoding.nl/posts/alignment-scores-transform/
     max_score = get_max_val(scoring_mat)
 
-    cost_mat = get_cost_mat(
+    costing_mat = get_costing_mat(
         scoring_mat=scoring_mat,
         max_score=max_score
     )
 
-    max_cost = get_max_val(cost_mat)
+    max_cost = get_max_val(costing_mat)
 
     # Perform the alignment, insert gaps, and compute the score.
     alignment = find_global_alignment(
         seq_1=seq_1,
         seq_2=seq_2,
-        cost_mat=cost_mat,
+        costing_mat=costing_mat,
         gap_open_cost=gap_existence_cost
     )
 
@@ -368,6 +368,12 @@ class SequencePair:
         return "".join([desc_1, "\n", seq_1, "\n\n", desc_2, "\n", seq_2])
     
 
+def get_common_alphabet(seq_1, seq_2):
+    common_alphabet = list(set(seq_1).union(set(seq_2)))
+    common_alphabet.sort()
+    return common_alphabet
+
+
 def check_seq_lengths(seq_1, seq_2, max_seq_len_prod):
     """Check that the product of the lengths of the sequences is
     
@@ -409,7 +415,7 @@ def validate_and_transform_args(
             seq_1_validated,
             seq_2_validated,
             scoring_mat,
-            cost_mat,
+            costing_mat,
             gap_open_score,
             gap_open_cost,
             output_validated
@@ -454,14 +460,26 @@ def validate_and_transform_args(
         raise RuntimeError("The combination of arguments for input_fasta, seq_1, and seq_2 does not make sense.")
     
     if all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
-        scoring_mat_name=None,
-        scoring_mat_path=None,
-        match_score=1,
-        mismatch_score=-2,
-        gap_open_score=-5,
-        gap_extension_score=-2,
+        match_score_b = 1
+        mismatch_score_b = -2
+        gap_open_score_b = -5
+        gap_extension_score_b = -2
+
+        common_alphabet = get_common_alphabet(seq_1, seq_2)
+
+        scoring_mat = create_scoring_mat(
+            common_alphabet=common_alphabet,
+            match_score=match_score_b,
+            mismatch_score=mismatch_score_b,
+            gap_extension_score=gap_extension_score_b
+        )
+
+        costing_mat = get_costing_mat(
+            scoring_mat=scoring_mat,
+            max_score=match_score_b
+        )
         
-    elif scoring_mat_name is not None and all([x is None for x in (scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score)]):
+    elif scoring_mat_name is not None and all([x is None for x in (scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
         # Do fancy stuff with the importlib
         # library so that files are accessible
         # on other people's machines.
@@ -469,7 +487,38 @@ def validate_and_transform_args(
         blosum_file_name = "".join([scoring_mat_name, ".mtx"])
         blo = data_traversable.joinpath("scoring_matrices", blosum_file_name)
         with resources.as_file(blo) as f:
-            scoring_mat_2 = read_scoring_mat(f)
+            scoring_mat_b = read_scoring_mat(f)
+
+        # Check that the scoring matrix is symmetric.
+        if not check_symmetric(mat=scoring_mat_b):
+            raise RuntimeError("The scoring matrix is not symmetric.")
+        
+        # For each row, the entry on the main diagonal
+        # should be greater than or equal to the other entries in the row.
+        if not check_big_main_diag(mat=scoring_mat_b):
+            raise RuntimeError("The scoring matrix does not make sense because the maximum for each row does not occur on the main diagonal.")
+        # Check that the sequences
+        # only contain letters present in the scoring matrix.
+        scoring_mat_letters = scoring_mat_b.keys()
+        seq_1_letter_ok = [letter in scoring_mat_letters for letter in seq_1]
+        if not all(seq_1_letter_ok):
+            not_ok_letters = [letter for letter in seq_1 if letter not in scoring_mat_letters]
+            raise RuntimeError(f"There were letters in seq_1 not present in scoring_mat, i.e. {not_ok_letters}")
+        
+        seq_2_letter_ok = [letter in scoring_mat_letters for letter in seq_2]
+        if not all(seq_2_letter_ok):
+            not_ok_letters = [letter for letter in seq_2 if letter not in scoring_mat_letters]
+            raise RuntimeError(f"There were letters in seq_2 not present in scoring_mat, i.e. {not_ok_letters}")
+    
+        # https://curiouscoding.nl/posts/alignment-scores-transform/
+        max_score = get_max_val(scoring_mat)
+        
+        costing_mat = get_costing_mat(
+            scoring_mat=scoring_mat,
+            max_score=max_score
+        )
+    elif scoring_mat_path is not None and all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
+        scoring_mat = read_scoring_mat(scoring_mat_path)
     if match_score is None:
         match_score_b = 1
     if mismatch_score is None:
@@ -491,7 +540,7 @@ def validate_and_transform_args(
         seq_1_validated,
         seq_2_validated,
         scoring_mat,
-        cost_mat,
+        costing_mat,
         gap_open_score,
         gap_open_cost,
         output_validated 
@@ -571,7 +620,14 @@ def create_scoring_mat(
 
     return scoring_mat
 
-
+def validate_scoring_mat_keys(
+    scoring_mat_keys: set,
+    common_alphabet: list
+):
+    if scoring_mat_keys.issuperset(common_alphabet):
+        return None
+    else:
+        raise RuntimeError("common_alphabet contains values not in scoring_mat_keys.")
 
 def get_max_val(m:dict[dict]) -> int|float:
     """Get the max value inside a nested dictionary.
@@ -585,7 +641,7 @@ def get_max_val(m:dict[dict]) -> int|float:
     return cur_max
 
 
-def get_cost_mat(
+def get_costing_mat(
     scoring_mat:dict[dict], 
     max_score:int|float,
     delta_d:int|float=None,
@@ -617,15 +673,15 @@ def get_cost_mat(
     Reference: https://curiouscoding.nl/posts/alignment-scores-transform/
     """
     # Make sure we don't mutate the scoring_mat
-    cost_mat = deepcopy(scoring_mat)
+    costing_mat = deepcopy(scoring_mat)
     b = max_score
     if delta_d is None:
         delta_d = math.floor(b/2)
     if delta_i is None:
         delta_i = math.ceil(b/2)
     
-    for seq_1_letter, seq_2_scores in cost_mat.items():
-        # seq_1_letter is a key for cost_mat.
+    for seq_1_letter, seq_2_scores in costing_mat.items():
+        # seq_1_letter is a key for costing_mat.
         # seq_2_scores is the inner dict for the outer
         # key of seq_1_letter.
         for seq_2_letter, score in seq_2_scores.items():
@@ -642,7 +698,7 @@ def get_cost_mat(
                 # Update matches and mismatches.
                 seq_2_scores[seq_2_letter] = -score + delta_d + delta_i
    
-    return cost_mat
+    return costing_mat
 
 def final_cost_to_score(
     cost:int|float, 
@@ -762,14 +818,14 @@ def find_global_alignment(
 ) -> dict:
     """
     Args:
-        cost_mat: keys are symbols representing nucleotides
+        costing_mat: keys are symbols representing nucleotides
             or amino acid residues. A symbol of '-' is used
             for a gap. The inner dict contains the same 
             keys as the outer dict and contains values
             that are numbers representing edit costs.
-            For example, cost_mat["-"]["A"] is the cost
+            For example, costing_mat["-"]["A"] is the cost
             for inserting a gap in seq_1 while accepting
-            an "A" from seq_2 and cost_mat["T"]["C"]
+            an "A" from seq_2 and costing_mat["T"]["C"]
             is the cost of a mismatch of a "T" in seq_1
             and a "C" in seq_2.
         gap_open_cost: The cost for a gap just to exist.
@@ -828,7 +884,7 @@ def find_global_alignment(
     dp_array = make_dp_array(
         seq_1=seq_1,
         seq_2=seq_2,
-        cost_mat=cost_mat,
+        costing_mat=costing_mat,
         gap_open_cost=gap_open_cost
     )
 
@@ -838,7 +894,7 @@ def find_global_alignment(
         dp_array=dp_array,
         seq_1=seq_1,
         seq_2=seq_2,
-        cost_mat=cost_mat,
+        costing_mat=costing_mat,
         gap_open_cost=gap_open_cost
     )
 
@@ -849,7 +905,7 @@ def find_global_alignment(
         dp_array=dp_array,
         seq_1=seq_1,
         seq_2=seq_2,
-        cost_mat=cost_mat,
+        costing_mat=costing_mat,
         gap_open_cost=gap_open_cost
     )
 
@@ -860,7 +916,7 @@ def get_next_best_costs(
     j: int,
     seq_1: str,
     seq_2: str,
-    cost_mat: dict[dict],
+    costing_mat: dict[dict],
     gap_open_cost: int
 ) -> tuple[int]:
     seq_1_index = i - 1
@@ -873,7 +929,7 @@ def get_next_best_costs(
         dp_array[i - 1][j - 1][1],
         dp_array[i - 1][j - 1][2]
     )
-    step_cost_0 = cost_mat[seq_1[seq_1_index]][seq_2[seq_2_index]]
+    step_cost_0 = costing_mat[seq_1[seq_1_index]][seq_2[seq_2_index]]
 
     ###############################################
     # The following are the previous costs
@@ -884,7 +940,7 @@ def get_next_best_costs(
         dp_array[i][j - 1][1],
         dp_array[i][j - 1][2] + gap_open_cost
     )
-    step_cost_1 = cost_mat["-"][seq_2[seq_2_index]]
+    step_cost_1 = costing_mat["-"][seq_2[seq_2_index]]
 
     # The following are the previous costs
     # plus relevant gap_open_costs 
@@ -894,7 +950,7 @@ def get_next_best_costs(
         dp_array[i - 1][j][1] + gap_open_cost,
         dp_array[i - 1][j][2]
     )
-    step_cost_2 = cost_mat[seq_1[seq_1_index]]["-"]
+    step_cost_2 = costing_mat[seq_1[seq_1_index]]["-"]
     #################################################
     return (
         min(previous_costs_0) + step_cost_0,
@@ -907,7 +963,7 @@ def dp_array_forward(
     dp_array:list[list[None]],
     seq_1:str,
     seq_2:str,
-    cost_mat:dict[dict],
+    costing_mat:dict[dict],
     gap_open_cost:int|float
 ):
     """
@@ -925,7 +981,7 @@ def dp_array_forward(
                 j=j,
                 seq_1=seq_1,
                 seq_2=seq_2,
-                cost_mat=cost_mat,
+                costing_mat=costing_mat,
                 gap_open_cost=gap_open_cost
             )
 
@@ -942,7 +998,7 @@ def dp_array_backward(
     dp_array: list[list[tuple[int]]],
     seq_1: str,
     seq_2: str,
-    cost_mat: dict[dict],
+    costing_mat: dict[dict],
     gap_open_cost:int
 ) -> AlignmentResults:
     """
@@ -1028,19 +1084,19 @@ def dp_array_backward(
         # there are different costs_to_add to costs_to_compare_1.
         if level == 0:
             costs_to_add = [
-                cost_mat[seq_1[seq_1_index]][seq_2[seq_2_index]]
+                costing_mat[seq_1[seq_1_index]][seq_2[seq_2_index]]
             ]*3
         elif level == 1:
             costs_to_add = [
-                gap_open_cost + cost_mat["-"][seq_2[seq_2_index]],
-                cost_mat["-"][seq_2[seq_2_index]],
-                gap_open_cost + cost_mat["-"][seq_2[seq_2_index]]
+                gap_open_cost + costing_mat["-"][seq_2[seq_2_index]],
+                costing_mat["-"][seq_2[seq_2_index]],
+                gap_open_cost + costing_mat["-"][seq_2[seq_2_index]]
             ]
         else:
             costs_to_add = [
-                gap_open_cost + cost_mat["-"][seq_2[seq_2_index]],
-                gap_open_cost + cost_mat["-"][seq_2[seq_2_index]],
-                cost_mat["-"][seq_2[seq_2_index]]
+                gap_open_cost + costing_mat["-"][seq_2[seq_2_index]],
+                gap_open_cost + costing_mat["-"][seq_2[seq_2_index]],
+                costing_mat["-"][seq_2[seq_2_index]]
             ]
         # costs_to_add contains the costs that 
         # would have to be added to get to the cell
@@ -1459,7 +1515,7 @@ def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str|None) -> list
 def make_dp_array(
     seq_1: str, 
     seq_2: str,
-    cost_mat: dict[dict],
+    costing_mat: dict[dict],
     max_cost: int,
     gap_open_cost: int|float
     ) -> list[list]:
@@ -1482,7 +1538,7 @@ def make_dp_array(
     try:
         dp_array[0][1] = (
             big_num,
-            gap_open_cost + cost_mat["-"][seq_2[0]],
+            gap_open_cost + costing_mat["-"][seq_2[0]],
             big_num
         )
     except IndexError:
@@ -1492,7 +1548,7 @@ def make_dp_array(
         dp_array[1][0] = (
             big_num,
             big_num,
-            gap_open_cost + cost_mat[seq_1[0]]["-"]
+            gap_open_cost + costing_mat[seq_1[0]]["-"]
         )
     except IndexError:
         return dp_array
@@ -1507,7 +1563,7 @@ def make_dp_array(
 
         dp_array[0][j] = (
             big_num,  # level 0
-            dp_array[0][j - 1][1] + cost_mat["-"][seq_2[seq_2_index]],  # level 1
+            dp_array[0][j - 1][1] + costing_mat["-"][seq_2[seq_2_index]],  # level 1
             big_num  # level 2
         )
 
@@ -1518,7 +1574,7 @@ def make_dp_array(
         dp_array[i][0] = (
             big_num,  # level 0
             big_num,  # level 1
-            dp_array[i - 1][0][2] + cost_mat[seq_1[seq_1_index]]["-"]  # level 2
+            dp_array[i - 1][0][2] + costing_mat[seq_1[seq_1_index]]["-"]  # level 2
         )
 
     return dp_array
