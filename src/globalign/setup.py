@@ -53,15 +53,7 @@ def validate_and_transform_args(
         # Extract sequences.
         # Verify sequences are formatted correctly.
         # Handle sequences of 0 length.
-        counter = 0
-        for desc_and_seq in read_seq_from_fasta(fasta_path=input_fasta_b):
-            counter += 1
-            if counter == 1:
-                desc_1, seq_1 = desc_and_seq
-            elif counter == 2:
-                desc_2, seq_2 = desc_and_seq
-            else:
-                break
+        seq_1, seq_2 = read_first_2_seqs_from_fasta(input_fasta_b)
 
         # Check that the product of the lengths of the sequences is
         # less than 20_000_000.     
@@ -118,18 +110,6 @@ def validate_and_transform_args(
             scoring_mat_keys=scoring_mat_b.keys(),
             common_alphabet=common_alphabet
         )
-
-
-        scoring_mat_letters = scoring_mat_b.keys()
-        seq_1_letter_ok = [letter in scoring_mat_letters for letter in seq_1]
-        if not all(seq_1_letter_ok):
-            not_ok_letters = [letter for letter in seq_1 if letter not in scoring_mat_letters]
-            raise RuntimeError(f"There were letters in seq_1 not present in scoring_mat, i.e. {not_ok_letters}")
-        
-        seq_2_letter_ok = [letter in scoring_mat_letters for letter in seq_2]
-        if not all(seq_2_letter_ok):
-            not_ok_letters = [letter for letter in seq_2 if letter not in scoring_mat_letters]
-            raise RuntimeError(f"There were letters in seq_2 not present in scoring_mat, i.e. {not_ok_letters}")
     
         # https://curiouscoding.nl/posts/alignment-scores-transform/
         max_score = get_max_val(scoring_mat)
@@ -397,6 +377,25 @@ def read_seq_from_fasta(fasta_path:Path):
             raise RuntimeError("Empty sequence detected in FASTA.")
         
         yield (desc, seq)
+
+
+def read_first_2_seqs_from_fasta(fasta_path: Path) -> tuple[str]:
+    counter = 0
+    seq_1 = None
+    seq_2 = None
+    for desc_and_seq in read_seq_from_fasta(fasta_path=fasta_path):
+        counter += 1
+        if counter == 1:
+            desc_1, seq_1 = desc_and_seq
+        elif counter == 2:
+            desc_2, seq_2 = desc_and_seq
+        else:
+            break
+
+    if seq_1 is not None and seq_2 is not None:    
+        return (seq_1, seq_2)
+    else:
+        raise RuntimeError("Two sequences could not be read from the FASTA file.")
 
 class Sequence:
     def __init__(
