@@ -98,14 +98,6 @@ def validate_and_transform_args(
         with resources.as_file(blo) as f:
             scoring_mat_b = read_scoring_mat(f)
 
-        # Check that the scoring matrix is symmetric.
-        if not check_symmetric(mat=scoring_mat_b):
-            raise RuntimeError("The scoring matrix is not symmetric.")
-        
-        # For each row, the entry on the main diagonal
-        # should be greater than or equal to the other entries in the row.
-        if not check_big_main_diag(mat=scoring_mat_b):
-            raise RuntimeError("The scoring matrix does not make sense because the maximum for each row does not occur on the main diagonal.")
         # Check that the sequences
         # only contain letters present in the scoring matrix.
         common_alphabet = get_common_alphabet(seq_1, seq_2)
@@ -123,6 +115,20 @@ def validate_and_transform_args(
         )
     elif scoring_mat_path is not None and all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
         scoring_mat = read_scoring_mat(scoring_mat_path)
+        # Check that the scoring matrix is symmetric.
+        check_suitability_scoring_mat(
+            seq_1=seq_1,
+            seq_2=seq_2,
+            scoring_mat=scoring_mat
+        )
+    
+        # https://curiouscoding.nl/posts/alignment-scores-transform/
+        max_score = get_max_val(scoring_mat)
+        
+        costing_mat = get_costing_mat(
+            scoring_mat=scoring_mat,
+            max_score=max_score
+        )
     if match_score is None:
         match_score_b = 1
     if mismatch_score is None:
@@ -259,6 +265,24 @@ def validate_scoring_mat_keys(
         return None
     else:
         raise RuntimeError(f"common_alphabet contains values not in scoring_mat_keys, e.g. {diff}.  Please check your sequences and your scoring matrix.")
+
+def check_suitability_scoring_mat(seq_1, seq_2, scoring_mat) -> None:
+    # Check that the scoring matrix is symmetric.
+    if not check_symmetric(mat=scoring_mat):
+        raise RuntimeError("The scoring matrix is not symmetric.")
+    
+    # For each row, the entry on the main diagonal
+    # should be greater than or equal to the other entries in the row.
+    if not check_big_main_diag(mat=scoring_mat):
+        raise RuntimeError("The scoring matrix does not make sense because the maximum for each row does not occur on the main diagonal.")
+    # Check that the sequences
+    # only contain letters present in the scoring matrix.
+    common_alphabet = get_common_alphabet(seq_1, seq_2)
+    validate_scoring_mat_keys(
+        scoring_mat_keys=scoring_mat.keys(),
+        common_alphabet=common_alphabet
+    )
+    return None
 
 def get_max_val(m:dict[dict]) -> int|float:
     """Get the max value inside a nested dictionary.
