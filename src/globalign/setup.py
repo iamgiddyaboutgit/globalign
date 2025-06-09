@@ -68,7 +68,9 @@ def validate_and_transform_args(
     else:
         raise RuntimeError("The combination of arguments for input_fasta, seq_1, and seq_2 does not make sense.")
     
-    if all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
+    if all([x is None for x in (scoring_mat_name, scoring_mat_path, mismatch_cost, gap_open_cost, gap_extension_cost)]):
+        # Set defaults for
+        # match_score, mismatch_score, gap_open_score, gap_extension_score
         match_score_b = 1
         mismatch_score_b = -2
         gap_open_score_b = -5
@@ -129,6 +131,9 @@ def validate_and_transform_args(
             scoring_mat=scoring_mat,
             max_score=max_score
         )
+    elif False:
+        ...
+    #######################3
     if match_score is None:
         match_score_b = 1
     if mismatch_score is None:
