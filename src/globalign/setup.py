@@ -115,6 +115,9 @@ def validate_and_transform_args(
             gap_open_cost_validated,
             output_validated
     """
+    ##################################################################
+    # Validate and transform output argument.
+    ##################################################################
     try:
         output_b = Path(output)
     except:
@@ -128,7 +131,11 @@ def validate_and_transform_args(
     else:
         raise FileNotFoundError("The parent directory of output does not exist.")
     ##################################################################
-    input_seqs_condition = input_fasta is not None and seq_1 is None and seq_2 is None
+    # Validate and transform: 
+    # input_fasta
+    # seq_1
+    # seq_2
+    ##################################################################
     if input_fasta is not None and seq_1 is None and seq_2 is None:
         input_fasta_b = Path(input_fasta)
         try:
@@ -144,6 +151,8 @@ def validate_and_transform_args(
     check_seq_lengths(seq_1, seq_2, 20_000_000)
     seq_1_validated = seq_1
     seq_2_validated = seq_2
+    ##################################################################
+    # Validate and transform scoring and costing settings.
     ##################################################################
     if all([x is None for x in (scoring_mat_name, scoring_mat_path, mismatch_cost, gap_open_cost, gap_extension_cost)]):
         # Set defaults as necessary.
@@ -249,6 +258,13 @@ def validate_and_transform_args(
     elif scoring_mat_name is not None and any([x is not None for x in [match_score, mismatch_score, gap_open_score, gap_extension_score]]):
         raise RuntimeError("Do not specify scoring_mat_name if you would like to use a different scoring scheme or if you are aligning nucleotide sequences.  If set, then none of the other options with scores or costs should be set, except for the gap_open options.")
     elif scoring_mat_name is not None and gap_open_score is not None:
+        try:
+            gap_open_score_validated = int(gap_open_score)
+        except:
+            print("gap_open_score could not be converted to an int.")
+            raise
+
+        gap_open_cost_validated = gap_open_score_validated
         # Do fancy stuff with the importlib
         # library so that files are accessible
         # on other people's machines.
@@ -278,9 +294,15 @@ def validate_and_transform_args(
     elif scoring_mat_name is None and scoring_mat_path is not None and any([x is not None for x in [match_score, mismatch_score, mismatch_cost, gap_extension_score, gap_extension_cost]]):
         raise RuntimeError("Do not specify scoring_mat_path if you would like to use a different scoring/costing scheme or if you are aligning nucleotide sequences.  If set, then none of the other options with scores or costs should be set, except for the gap_open options.")
     elif all([x is None for x in [scoring_mat_name, match_score, mismatch_score, mismatch_cost, gap_extension_score, gap_extension_cost]]) and all([x is not None for x in [scoring_mat_path, gap_open_score]]):
+        try:
+            gap_open_score_validated = int(gap_open_score)
+        except:
+            print("gap_open_score could not be converted to an int.")
+            raise
+
+        gap_open_cost_validated = gap_open_score_validated
         scoring_mat = read_scoring_mat(scoring_mat_path)
-        # Check that the scoring matrix is symmetric.
-        # Check that the scoring matrix is symmetric.
+       
         if not check_symmetric(mat=scoring_mat):
             raise RuntimeError("The scoring matrix is not symmetric.")
         
@@ -296,12 +318,13 @@ def validate_and_transform_args(
             common_alphabet=common_alphabet
         )
 
+        scoring_mat_validated = scoring_mat
     
         # https://curiouscoding.nl/posts/alignment-scores-transform/
-        max_score = get_max_val(scoring_mat)
+        max_score = get_max_val(scoring_mat_validated)
         
-        costing_mat = scoring_mat_to_costing_mat(
-            scoring_mat=scoring_mat,
+        costing_mat_validated = scoring_mat_to_costing_mat(
+            scoring_mat=scoring_mat_validated,
             max_score=max_score
         )
     else:
