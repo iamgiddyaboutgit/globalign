@@ -42,7 +42,6 @@ import argparse
 from pathlib import Path
 import random
 from typing import NamedTuple
-from dataclasses import dataclass
 
 from setup import validate_and_transform_args
 
@@ -97,15 +96,15 @@ or amino acid sequences."
     parser.add_argument(
         "--match_score",
         required=False,
-        default=1,
-        help="Score for a match.  Should be positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: 1."
+        default=2,
+        help="Score for a match.  Should be positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: 2."
     ) 
 
     parser.add_argument(
         "--mismatch_score",
         required=False,
-        default=-2,
-        help="Score for a mismatch.  Should be negative.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -1."
+        default=-3,
+        help="Score for a mismatch.  Should be negative.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -3."
     ) 
 
     parser.add_argument(
@@ -117,8 +116,8 @@ or amino acid sequences."
     parser.add_argument(
         "--gap_open_score",
         required=False,
-        default=-5,
-        help="Score for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -5."
+        default=-4,
+        help="Score for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -4."
     ) 
 
     parser.add_argument(
