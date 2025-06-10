@@ -110,7 +110,8 @@ or amino acid sequences."
     parser.add_argument(
         "--mismatch_cost",
         required=False,
-        help="Cost for a mismatch.  Should be positive.  If set, then none of the options with scores should be set."
+        default=5,
+        help="Cost for a mismatch.  Should be positive.  If set, then none of the options with scores should be set.  Default: 5."
     ) 
 
     parser.add_argument(
@@ -123,7 +124,8 @@ or amino acid sequences."
     parser.add_argument(
         "--gap_open_cost",
         required=False,
-        help="Cost for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-negative.  If set, then none of the options with scores should be set."
+        default=4,
+        help="Cost for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-negative.  If set, then none of the options with scores should be set.  Default: 4."
     ) 
 
     parser.add_argument(
@@ -136,7 +138,8 @@ or amino acid sequences."
     parser.add_argument(
         "--gap_extension_cost",
         required=False,
-        help="Cost for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be positive.  If set, then none of the options with scores should be set."
+        default=3,
+        help="Cost for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be positive.  If set, then none of the options with scores should be set.  Default: 3."
     ) 
 
     cmd_line_args = parser.parse_args()
