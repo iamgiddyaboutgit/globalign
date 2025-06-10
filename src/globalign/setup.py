@@ -13,9 +13,9 @@ class SimpleScoringSettings:
     
     such as when a custom scoring matrix is used.
     """
-    match_score: int = 1
-    mismatch_score: int = -2
-    gap_open_score: int = -5
+    match_score: int = 2
+    mismatch_score: int = -3
+    gap_open_score: int = -4
     gap_extension_score: int = -2
 
     # https://stackoverflow.com/questions/60179799/python-dataclass-whats-a-pythonic-way-to-validate-initialization-arguments
@@ -50,7 +50,7 @@ class SimpleScoringSettings:
             raise e
 
         return None
-    
+
 
 def validate_and_transform_args(
     input_fasta: str|Path=None,
@@ -132,7 +132,7 @@ def validate_and_transform_args(
             gap_extension_score=simple_scoring_settings.gap_extension_score
         )
 
-        costing_mat = get_costing_mat(
+        costing_mat = scoring_mat_to_costing_mat(
             scoring_mat=scoring_mat,
             max_score=simple_scoring_settings.match_score
         )
@@ -158,11 +158,11 @@ def validate_and_transform_args(
         # https://curiouscoding.nl/posts/alignment-scores-transform/
         max_score = get_max_val(scoring_mat)
         
-        costing_mat = get_costing_mat(
+        costing_mat = scoring_mat_to_costing_mat(
             scoring_mat=scoring_mat,
             max_score=max_score
         )
-    elif scoring_mat_path is not None and all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
+    elif scoring_mat_path is not None and all([x is None for x in (scoring_mat_name, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
         scoring_mat = read_scoring_mat(scoring_mat_path)
         # Check that the scoring matrix is symmetric.
         check_suitability_scoring_mat(
@@ -174,13 +174,19 @@ def validate_and_transform_args(
         # https://curiouscoding.nl/posts/alignment-scores-transform/
         max_score = get_max_val(scoring_mat)
         
-        costing_mat = get_costing_mat(
+        costing_mat = scoring_mat_to_costing_mat(
             scoring_mat=scoring_mat,
             max_score=max_score
         )
-    elif False:
-        ...
-    #######################3
+    elif all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score)]):
+        simple_scoring_settings = SimpleScoringSettings(
+            match_score=match_score,
+            mismatch_score=mismatch_score,
+            gap_open_score=gap_open_score,
+            gap_extension_score=gap_extension_score
+        )
+
+    #######################
     if match_score is None:
         match_score_b = 1
     if mismatch_score is None:
@@ -348,7 +354,7 @@ def get_max_val(m:dict[dict]) -> int|float:
     return cur_max
 
 
-def get_costing_mat(
+def scoring_mat_to_costing_mat(
     scoring_mat:dict[dict], 
     max_score:int|float,
     delta_d:int|float=None,
@@ -406,6 +412,61 @@ def get_costing_mat(
                 seq_2_scores[seq_2_letter] = -score + delta_d + delta_i
    
     return costing_mat
+
+def costing_mat_to_scoring_mat(
+    costing_mat:dict[dict], 
+    max_score:int|float,
+    delta_d:int|float=None,
+    delta_i:int|float=None
+) -> dict[dict]:
+    """Get a scoring matrix from a costing matrix.
+
+    Args: 
+        costing_mat: Nested dict representation of 
+            a distance matrix
+        max_score: Max in scoring_mat
+        delta_d: amount to increase the cost of a
+            horizontal step in the dynamic programming
+            matrix. `delta_d + delta_i >= max_score`.
+            Default: None.
+        delta_i: amount to increase the cost of a
+            vertical step in the dynamic programming
+            matrix. 
+            `delta_d + delta_i >= max_score`.
+            Default: None.
+
+    Returns:
+        Nested dict representation of a scoring matrix
+
+    Reference: https://curiouscoding.nl/posts/alignment-scores-transform/
+    """
+    # Make sure we don't mutate the costing_mat
+    scoring_mat = deepcopy(costing_mat)
+    b = max_score
+    if delta_d is None:
+        delta_d = math.floor(b/2)
+    if delta_i is None:
+        delta_i = math.ceil(b/2)
+    
+    for seq_1_letter, seq_2_costs in scoring_mat.items():
+        # seq_1_letter is a key for costing_mat.
+        # seq_2_costs is the inner dict for the outer
+        # key of seq_1_letter.
+        for seq_2_letter, cost in seq_2_costs.items():
+            # The costs are transformed differently
+            # for insertions and deletions, than they
+            # are for matches and mismatches.
+            if seq_1_letter == "-" and seq_2_letter != "-":
+                # Update deletions (horizontal steps)
+                seq_2_costs[seq_2_letter] = delta_d - cost
+            elif seq_2_letter == "-" and seq_1_letter != "-":
+                # Update insertions (vertical steps)
+                seq_2_costs[seq_2_letter] = delta_i - cost
+            else:
+                # Update matches and mismatches.
+                seq_2_costs[seq_2_letter] = delta_d + delta_i - cost
+   
+    return scoring_mat
 
 def read_seq_from_fasta(fasta_path:Path):
     """Read in a FASTA file. 
