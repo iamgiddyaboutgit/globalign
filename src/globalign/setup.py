@@ -50,6 +50,38 @@ class SimpleScoringSettings:
             raise e
 
         return None
+    
+@dataclass
+class SimpleCostingSettings:
+    mismatch_cost: int = 5
+    gap_open_cost: int = 4
+    gap_extension_cost: int = 3
+
+    # https://stackoverflow.com/questions/60179799/python-dataclass-whats-a-pythonic-way-to-validate-initialization-arguments
+    def __post_init__(self):
+        mismatch_cost = self.mismatch_cost
+        gap_open_cost = self.gap_open_cost
+        gap_extension_cost = self.gap_extension_cost
+
+        try:
+            self.mismatch_cost = int(mismatch_cost)
+        except (TypeError, ValueError) as e:
+            print("mismatch_cost must be convertible to an integer.")
+            raise e
+        
+        try:
+            self.gap_open_cost = int(gap_open_cost)
+        except (TypeError, ValueError) as e:
+            print("gap_open_cost must be convertible to an integer.")
+            raise e
+        
+        try:
+            self.gap_extension_cost = int(gap_extension_cost)
+        except (TypeError, ValueError) as e:
+            print("gap_extension_cost must be convertible to an integer.")
+            raise e
+
+        return None
 
 
 def validate_and_transform_args(
@@ -77,43 +109,42 @@ def validate_and_transform_args(
         tuple with entries of
             seq_1_validated,
             seq_2_validated,
-            scoring_mat,
-            costing_mat,
-            gap_open_score,
-            gap_open_cost,
+            scoring_mat_validated,
+            costing_mat_validated,
+            gap_open_score_validated,
+            gap_open_cost_validated,
             output_validated
     """
-    if output is None:
-        output_validated = output
-    else:
+    try:
         output_b = Path(output)
-        if output_b.parent.exists():
-            output_validated = output_b
-        else:
-            raise FileNotFoundError("The parent directory of output does not exist.")
-        
+    except:
+        output_validated = None
+
+    if output_b.is_file():
+        output_validated = output_b
+        raise RuntimeWarning(f"Overwriting {output_b}")
+    elif not output_b.is_file() and output_b.parent.exists():
+        output_validated = output_b
+    else:
+        raise FileNotFoundError("The parent directory of output does not exist.")
+    ##################################################################
+    input_seqs_condition = input_fasta is not None and seq_1 is None and seq_2 is None
     if input_fasta is not None and seq_1 is None and seq_2 is None:
         input_fasta_b = Path(input_fasta)
-        if not input_fasta_b.is_file():
-            raise FileNotFoundError("input_fasta does not point to a valid file.")
-        
-        # Read in descriptions and sequences from FASTA file.
-        # Verify FASTA file is in the correct format.
-        # Extract sequences.
-        # Verify sequences are formatted correctly.
-        # Handle sequences of 0 length.
-        seq_1, seq_2 = read_first_2_seqs_from_fasta(input_fasta_b)
-
-        # Check that the product of the lengths of the sequences is
-        # less than 20_000_000.     
-        check_seq_lengths(seq_1, seq_2, 20_000_000)
-    elif input_fasta is None and seq_1 is not None and seq_2 is not None:
-        # Check that the product of the lengths of the sequences is
-        # less than 20_000_000.  
-        check_seq_lengths(seq_1, seq_2, 20_000_000)
-    else:
+        try:
+            seq_1, seq_2 = read_first_2_seqs_from_fasta(input_fasta_b)
+        except FileNotFoundError:
+            print("input_fasta does not point to a valid file.")
+            raise   
+    elif (input_fasta is None and seq_2 is None) or (input_fasta is not None and seq_1 is not None) or (seq_1 is None and seq_2 is not None):
         raise RuntimeError("The combination of arguments for input_fasta, seq_1, and seq_2 does not make sense.")
     
+    # Check that the product of the lengths of the sequences is
+    # less than 20_000_000.     
+    check_seq_lengths(seq_1, seq_2, 20_000_000)
+    seq_1_validated = seq_1
+    seq_2_validated = seq_2
+    ##################################################################
     if all([x is None for x in (scoring_mat_name, scoring_mat_path, mismatch_cost, gap_open_cost, gap_extension_cost)]):
         # Set defaults as necessary.
         simple_scoring_settings = SimpleScoringSettings(
@@ -125,15 +156,15 @@ def validate_and_transform_args(
 
         common_alphabet = get_common_alphabet(seq_1, seq_2)
 
-        scoring_mat = create_scoring_mat(
+        scoring_mat_validated = create_scoring_mat(
             common_alphabet=common_alphabet,
             match_score=simple_scoring_settings.match_score,
             mismatch_score=simple_scoring_settings.mismatch_score,
             gap_extension_score=simple_scoring_settings.gap_extension_score
         )
 
-        costing_mat = scoring_mat_to_costing_mat(
-            scoring_mat=scoring_mat,
+        costing_mat_validated = scoring_mat_to_costing_mat(
+            scoring_mat=scoring_mat_validated,
             max_score=simple_scoring_settings.match_score
         )
         
@@ -154,64 +185,136 @@ def validate_and_transform_args(
             scoring_mat_keys=scoring_mat_b.keys(),
             common_alphabet=common_alphabet
         )
+        scoring_mat_validated = scoring_mat_b
     
         # https://curiouscoding.nl/posts/alignment-scores-transform/
-        max_score = get_max_val(scoring_mat)
+        max_score = get_max_val(scoring_mat_validated)
         
-        costing_mat = scoring_mat_to_costing_mat(
-            scoring_mat=scoring_mat,
+        costing_mat_validated = scoring_mat_to_costing_mat(
+            scoring_mat=scoring_mat_validated,
             max_score=max_score
         )
     elif scoring_mat_path is not None and all([x is None for x in (scoring_mat_name, match_score, mismatch_score, gap_open_score, gap_extension_score, mismatch_cost, gap_open_cost, gap_extension_cost)]):
         scoring_mat = read_scoring_mat(scoring_mat_path)
         # Check that the scoring matrix is symmetric.
-        check_suitability_scoring_mat(
-            seq_1=seq_1,
-            seq_2=seq_2,
-            scoring_mat=scoring_mat
+        
+        if not check_symmetric(mat=scoring_mat):
+            raise RuntimeError("The scoring matrix is not symmetric.")
+        
+        # For each row, the entry on the main diagonal
+        # should be greater than or equal to the other entries in the row.
+        if not check_big_main_diag(mat=scoring_mat):
+            raise RuntimeError("The scoring matrix does not make sense because the maximum for each row does not occur on the main diagonal.")
+        # Check that the sequences
+        # only contain letters present in the scoring matrix.
+        common_alphabet = get_common_alphabet(seq_1, seq_2)
+        validate_scoring_mat_keys(
+            scoring_mat_keys=scoring_mat.keys(),
+            common_alphabet=common_alphabet
         )
+        scoring_mat_validated = scoring_mat
     
         # https://curiouscoding.nl/posts/alignment-scores-transform/
-        max_score = get_max_val(scoring_mat)
+        max_score = get_max_val(scoring_mat_validated)
         
-        costing_mat = scoring_mat_to_costing_mat(
-            scoring_mat=scoring_mat,
+        costing_mat_validated = scoring_mat_to_costing_mat(
+            scoring_mat=scoring_mat_validated,
             max_score=max_score
         )
     elif all([x is None for x in (scoring_mat_name, scoring_mat_path, match_score, mismatch_score, gap_open_score, gap_extension_score)]):
+        simple_costing_settings = SimpleCostingSettings(
+            mismatch_cost=mismatch_cost,
+            gap_open_cost=gap_open_cost,
+            gap_extension_cost=gap_extension_cost
+        )
+        common_alphabet = get_common_alphabet(seq_1, seq_2)
+        costing_mat_validated = create_costing_mat(
+            common_alphabet=common_alphabet,
+            mismatch_cost=simple_costing_settings.mismatch_cost,
+            gap_open_cost=simple_costing_settings.gap_open_cost,
+            gap_extension_cost=simple_costing_settings.gap_extension_cost
+        )
         simple_scoring_settings = SimpleScoringSettings(
             match_score=match_score,
             mismatch_score=mismatch_score,
             gap_open_score=gap_open_score,
             gap_extension_score=gap_extension_score
         )
+        scoring_mat_validated = costing_mat_to_scoring_mat(
+            costing_mat=costing_mat_validated,
+            max_score=simple_scoring_settings.match_score
+        )
+    elif scoring_mat_name is not None and scoring_mat_path is not None:
+        raise RuntimeError("scoring_mat_name and scoring_mat_path should not both be specified.")
+    elif scoring_mat_name is not None and any([x is not None for x in [match_score, mismatch_score, gap_open_score, gap_extension_score]]):
+        raise RuntimeError("Do not specify scoring_mat_name if you would like to use a different scoring scheme or if you are aligning nucleotide sequences.  If set, then none of the other options with scores or costs should be set, except for the gap_open options.")
+    elif scoring_mat_name is not None and gap_open_score is not None:
+        # Do fancy stuff with the importlib
+        # library so that files are accessible
+        # on other people's machines.
+        data_traversable = resources.files("data")
+        blosum_file_name = "".join([scoring_mat_name, ".mtx"])
+        blo = data_traversable.joinpath("scoring_matrices", blosum_file_name)
+        with resources.as_file(blo) as f:
+            scoring_mat_b = read_scoring_mat(f)
 
-    #######################
-    if match_score is None:
-        match_score_b = 1
-    if mismatch_score is None:
-        mismatch_score_b = -1
-    if mismatch_cost is None:
-        mismatch_cost_b = 1
-    if gap_open_score is None:
-        gap_open_score_b = 0
-    if gap_open_cost is None:
-        gap_open_cost_b = 0
-    if gap_extension_score is None:
-        gap_extension_score_b = -2
-    if gap_extension_cost is None:
-        gap_extension_cost_b = 2
+        # Check that the sequences
+        # only contain letters present in the scoring matrix.
+        common_alphabet = get_common_alphabet(seq_1, seq_2)
+        validate_scoring_mat_keys(
+            scoring_mat_keys=scoring_mat_b.keys(),
+            common_alphabet=common_alphabet
+        )
+        scoring_mat_validated = scoring_mat_b
+        # https://curiouscoding.nl/posts/alignment-scores-transform/
+        max_score = get_max_val(scoring_mat_validated)
+        
+        costing_mat_validated = scoring_mat_to_costing_mat(
+            scoring_mat=scoring_mat_validated,
+            max_score=max_score
+        )
+    elif scoring_mat_name is not None and any([x is not None for x in [mismatch_cost, gap_extension_cost]]):
+        raise RuntimeError("Do not specify scoring_mat_name if you would like to use a different scoring/costing scheme or if you are aligning nucleotide sequences.  If set, then none of the other options with scores or costs should be set, except for the gap_open options.")
+    elif scoring_mat_name is None and scoring_mat_path is not None and any([x is not None for x in [match_score, mismatch_score, mismatch_cost, gap_extension_score, gap_extension_cost]]):
+        raise RuntimeError("Do not specify scoring_mat_path if you would like to use a different scoring/costing scheme or if you are aligning nucleotide sequences.  If set, then none of the other options with scores or costs should be set, except for the gap_open options.")
+    elif all([x is None for x in [scoring_mat_name, match_score, mismatch_score, mismatch_cost, gap_extension_score, gap_extension_cost]]) and all([x is not None for x in [scoring_mat_path, gap_open_score]]):
+        scoring_mat = read_scoring_mat(scoring_mat_path)
+        # Check that the scoring matrix is symmetric.
+        # Check that the scoring matrix is symmetric.
+        if not check_symmetric(mat=scoring_mat):
+            raise RuntimeError("The scoring matrix is not symmetric.")
+        
+        # For each row, the entry on the main diagonal
+        # should be greater than or equal to the other entries in the row.
+        if not check_big_main_diag(mat=scoring_mat):
+            raise RuntimeError("The scoring matrix does not make sense because the maximum for each row does not occur on the main diagonal.")
+        # Check that the sequences
+        # only contain letters present in the scoring matrix.
+        common_alphabet = get_common_alphabet(seq_1, seq_2)
+        validate_scoring_mat_keys(
+            scoring_mat_keys=scoring_mat.keys(),
+            common_alphabet=common_alphabet
+        )
 
-    input_fasta_path = Path(input_fasta)
-
+    
+        # https://curiouscoding.nl/posts/alignment-scores-transform/
+        max_score = get_max_val(scoring_mat)
+        
+        costing_mat = scoring_mat_to_costing_mat(
+            scoring_mat=scoring_mat,
+            max_score=max_score
+        )
+    else:
+        raise RuntimeError("Invalid combination of args.")
+    ##################################################################
     return (
         seq_1_validated,
         seq_2_validated,
-        scoring_mat,
-        costing_mat,
-        gap_open_score,
-        gap_open_cost,
-        output_validated 
+        scoring_mat_validated,
+        costing_mat_validated,
+        gap_open_score_validated,
+        gap_open_cost_validated,
+        output_validated
     )
 
 def get_common_alphabet(seq_1, seq_2):
@@ -308,6 +411,27 @@ def create_scoring_mat(
 
     return scoring_mat
 
+def create_costing_mat(
+    common_alphabet: list, 
+    mismatch_cost: int, 
+    gap_open_cost: int,
+    gap_extension_cost: int
+) -> dict[dict]:
+    common_alphabet.append("-")
+    costing_mat = dict()
+    for common_key_outer in common_alphabet:
+        costing_mat[common_key_outer] = dict()
+        for common_key_inner in common_alphabet:
+            if common_key_outer == common_key_inner:
+                costing_mat[common_key_outer][common_key_inner] = 0
+            elif common_key_outer == "-" or common_key_inner == "-":
+                costing_mat[common_key_outer][common_key_inner] = gap_extension_cost
+            else:
+                costing_mat[common_key_outer][common_key_inner] = mismatch_cost
+
+    return costing_mat
+
+
 def validate_scoring_mat_keys(
     scoring_mat_keys: set,
     common_alphabet: list
@@ -324,23 +448,6 @@ def validate_scoring_mat_keys(
     else:
         raise RuntimeError(f"common_alphabet contains values not in scoring_mat_keys, e.g. {diff}.  Please check your sequences and your scoring matrix.")
 
-def check_suitability_scoring_mat(seq_1, seq_2, scoring_mat) -> None:
-    # Check that the scoring matrix is symmetric.
-    if not check_symmetric(mat=scoring_mat):
-        raise RuntimeError("The scoring matrix is not symmetric.")
-    
-    # For each row, the entry on the main diagonal
-    # should be greater than or equal to the other entries in the row.
-    if not check_big_main_diag(mat=scoring_mat):
-        raise RuntimeError("The scoring matrix does not make sense because the maximum for each row does not occur on the main diagonal.")
-    # Check that the sequences
-    # only contain letters present in the scoring matrix.
-    common_alphabet = get_common_alphabet(seq_1, seq_2)
-    validate_scoring_mat_keys(
-        scoring_mat_keys=scoring_mat.keys(),
-        common_alphabet=common_alphabet
-    )
-    return None
 
 def get_max_val(m:dict[dict]) -> int|float:
     """Get the max value inside a nested dictionary.
@@ -471,6 +578,8 @@ def costing_mat_to_scoring_mat(
 def read_seq_from_fasta(fasta_path:Path):
     """Read in a FASTA file. 
 
+    Raises:
+        RuntimeError
     Yields:
         2-tuples where the 0th element is the description
         and the 1st element is the sequence
@@ -520,6 +629,12 @@ def read_seq_from_fasta(fasta_path:Path):
 
 
 def read_first_2_seqs_from_fasta(fasta_path: Path) -> tuple[str]:
+    """
+    Returns:
+        (seq_1, seq_2)
+    Raises:
+        RuntimeError
+    """
     counter = 0
     seq_1 = None
     seq_2 = None
@@ -853,6 +968,9 @@ def check_symmetric(mat:dict[dict]) -> bool:
     
     Returns:
         True if mat is symmetric and False otherwise.
+
+    Raises:
+        AttributeError if mat is not a nested dictionary.
     """
     # https://realpython.com/iterate-through-dictionary-python/#traversing-a-dictionary-directly
     # https://softwareengineering.stackexchange.com/questions/187715/validation-of-the-input-parameter-in-caller-code-duplication
