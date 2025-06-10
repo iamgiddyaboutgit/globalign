@@ -144,79 +144,10 @@ or amino acid sequences."
 
     cmd_line_args = parser.parse_args()
 
-    # Transform and validate command line arguments.
-    path_to_score_matrix_file = Path(cmd_line_args.s)
-    path_to_fasta_file = Path(cmd_line_args.i)
-    if not path_to_fasta_file.is_file():
-        raise FileNotFoundError("path_to_fasta_file does not point to a valid file.")
-    gap_existence_cost = int(cmd_line_args.g)
-    path_to_output = Path(cmd_line_args.o)
-    if not path_to_output.parent.exists():
-        raise FileNotFoundError("The parent directory of path_to_output does not exist.")
-    
-    #################################################################
-    #################################################################
-
-    # Read in descriptions and sequences from FASTA file.
-    # Verify FASTA file is in the correct format.
-    # Extract sequences.
-    # Verify sequences are formatted correctly.
-    # Handle sequences of 0 length.
-    counter = 0
-    for desc_and_seq in read_seq_from_fasta(fasta_path=path_to_fasta_file):
-        counter += 1
-        if counter == 1:
-            desc_1, seq_1 = desc_and_seq
-        elif counter == 2:
-            desc_2, seq_2 = desc_and_seq
-        else:
-            break
-
-    
-    # Check that the product of the lengths of the sequences is
-    # less than 20_000_000.  
-    m = len(seq_1)
-    n = len(seq_2)
-    seq_len_prod = m*n
-    if not seq_len_prod < 20_000_000:
-        raise RuntimeError(f"Your sequences are too long.  The product of their lengths should be less than 20,000,000.  They have lengths of {m} and {n}")
-    # Read in scoring matrix file.
-    # Verify format of scoring matrix file.
-    # Get the data from the scoring matrix into a nested dictionary
-    # with codes for the letters as keys.
-    scoring_mat = read_scoring_mat(scoring_mat_path=path_to_score_matrix_file)
-    
-    # Check that the scoring matrix is symmetric.
-    if not check_symmetric(mat=scoring_mat):
-        raise RuntimeError("The scoring matrix is not symmetric.")
-    
-    # For each row, the entry on the main diagonal
-    # should be greater than or equal to the other entries in the row.
-    if not check_big_main_diag(mat=scoring_mat):
-        raise RuntimeError("The scoring matrix does not make sense because the maximum for each row does not occur on the main diagonal.")
-    # Check that the sequences
-    # only contain letters present in the scoring matrix.
-    scoring_mat_letters = scoring_mat.keys()
-    seq_1_letter_ok = [letter in scoring_mat_letters for letter in seq_1]
-    if not all(seq_1_letter_ok):
-        not_ok_letters = [letter for letter in seq_1 if letter not in scoring_mat_letters]
-        raise RuntimeError(f"There were letters in seq_1 not present in scoring_mat, i.e. {not_ok_letters}")
-    
-    seq_2_letter_ok = [letter in scoring_mat_letters for letter in seq_2]
-    if not all(seq_2_letter_ok):
-        not_ok_letters = [letter for letter in seq_2 if letter not in scoring_mat_letters]
-        raise RuntimeError(f"There were letters in seq_2 not present in scoring_mat, i.e. {not_ok_letters}")
-    
-    # Get the costing_mat.
-    # https://curiouscoding.nl/posts/alignment-scores-transform/
-    max_score = get_max_val(scoring_mat)
-
-    costing_mat = get_costing_mat(
-        scoring_mat=scoring_mat,
-        max_score=max_score
+    find_global_alignment(
+        **cmd_line_args
     )
-
-    max_cost = get_max_val(costing_mat)
+    
 
     # Perform the alignment, insert gaps, and compute the score.
     alignment = find_global_alignment(
