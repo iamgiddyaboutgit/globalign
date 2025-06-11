@@ -139,11 +139,11 @@ def validate_and_transform_args(
     ##################################################################
     # Validate and transform output argument.
     ##################################################################
-    try:
-        output_b = Path(output)
-    except:
+    if output is None:
         output_validated = None
-
+    else:
+        output_b = Path(output)
+    
     if output_b.is_file():
         output_validated = output_b
         raise RuntimeWarning(f"Overwriting {output_b}")
