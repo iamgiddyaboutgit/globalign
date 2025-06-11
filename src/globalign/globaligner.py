@@ -43,7 +43,11 @@ from pathlib import Path
 import random
 from typing import NamedTuple
 
-from setup import validate_and_transform_args
+from setup import (
+    validate_and_transform_args,
+    get_max_val
+)
+from conclude import final_cost_to_score
 
 def main():
     usage = "Perform optimal global alignment of two nucleotide \
@@ -144,44 +148,29 @@ or amino acid sequences."
 
     cmd_line_args = parser.parse_args()
 
-    find_global_alignment(
+    alignment_results = find_global_alignment(
         **cmd_line_args
     )
-    
+    # TODO: Improve printing and writing
+    print(alignment_results)
 
-    # Perform the alignment, insert gaps, and compute the score.
-    alignment = find_global_alignment(
-        seq_1=seq_1,
-        seq_2=seq_2,
-        costing_mat=costing_mat,
-        gap_open_cost=gap_existence_cost
-    )
-
-    score = final_cost_to_score(
-        cost=alignment["cost"],
-        m=len(seq_1),
-        n=len(seq_2),
-        max_score=max_score
-    )
-
-    print_alignment(
-        seq_1_aligned=alignment["seq_1_aligned"],
-        mid=alignment["middle_part"],
-        seq_2_aligned=alignment["seq_2_aligned"],
-        score=score,
-        desc_1=desc_1,
-        desc_2=desc_2
-    )
+    # print_alignment(
+    #     seq_1_aligned=alignment["seq_1_aligned"],
+    #     mid=alignment["middle_part"],
+    #     seq_2_aligned=alignment["seq_2_aligned"],
+    #     score=score,
+    #     desc_1=desc_1,
+    #     desc_2=desc_2
+    # )
    
-    # Write the outputs to a file.
-    write_alignment(
-        out_path=path_to_output,
-        desc_1=desc_1,
-        desc_2=desc_2,
-        alignment=alignment
-    )
+    # # Write the outputs to a file.
+    # write_alignment(
+    #     out_path=path_to_output,
+    #     desc_1=desc_1,
+    #     desc_2=desc_2,
+    #     alignment=alignment
+    # )
     return None
-
 
 
 def find_global_alignment(
@@ -198,19 +187,9 @@ def find_global_alignment(
     gap_open_cost: str|int=None,
     gap_extension_score: str|int=None,
     gap_extension_cost: str|int=None
-) -> dict:
+) -> NamedTuple:
     """
     Args:
-        costing_mat: keys are symbols representing nucleotides
-            or amino acid residues. A symbol of '-' is used
-            for a gap. The inner dict contains the same 
-            keys as the outer dict and contains values
-            that are numbers representing edit costs.
-            For example, costing_mat["-"]["A"] is the cost
-            for inserting a gap in seq_1 while accepting
-            an "A" from seq_2 and costing_mat["T"]["C"]
-            is the cost of a mismatch of a "T" in seq_1
-            and a "C" in seq_2.
         gap_open_cost: The cost for a gap just to exist.
             This cost should be non-negative.
             It can be incurred multiple times
@@ -224,11 +203,16 @@ def find_global_alignment(
             incurs the gap_open_cost twice.
 
     Returns:
-        dictionary with keys of (
-            seq_1_aligned_out,
-            middle_part_out,
-            seq_2_aligned_out,
-            cost
+        AlignmentResults with entries of (
+            seq_1_aligned,
+            middle_part,
+            seq_2_aligned,
+            cost,
+            score,
+            scoring_mat,
+            costing_mat,
+            gap_open_score,
+            gap_open_cost
         )
     """
     good_args = validate_and_transform_args(
@@ -246,7 +230,16 @@ def find_global_alignment(
         gap_extension_score,
         gap_extension_cost
     )
-    # Imagine a 3-d parking garage like in Mario.
+    (
+        seq_1, 
+        seq_2, 
+        scoring_mat, 
+        costing_mat, 
+        gap_open_score, 
+        gap_open_cost, 
+        output
+    ) = good_args
+    # Imagine a 3-d parking garage.
     # Movement through this "parking garage"
     # is movement through the alignment graph.
     # The parking garage has 3 levels and we
@@ -284,12 +277,38 @@ def find_global_alignment(
     # Traceback the dp_array to determine
     # the sequence of moves in reverse
     # order needed to produce an optimal alignment.
-    return dp_array_backward(
+    traceback_results = dp_array_backward(
         dp_array=dp_array,
         seq_1=seq_1,
         seq_2=seq_2,
         costing_mat=costing_mat,
         gap_open_cost=gap_open_cost
+    )
+    (
+        seq_1_aligned,
+        middle_part,
+        seq_2_aligned,
+        cost
+    ) = traceback_results
+
+    max_score = get_max_val(scoring_mat)
+
+    score = final_cost_to_score(
+        cost=cost,
+        m=len(seq_1),
+        n=len(seq_2),
+        max_score=max_score
+    )
+    return AlignmentResults(
+        seq_1_aligned,
+        middle_part,
+        seq_2_aligned,
+        cost,
+        score,
+        scoring_mat,
+        costing_mat,
+        gap_open_score,
+        gap_open_cost
     )
 
 
@@ -375,7 +394,12 @@ class AlignmentResults(NamedTuple):
     middle_part: str
     seq_2_aligned: str
     cost: int
-       
+    score: int
+    scoring_mat: dict[dict]
+    costing_mat: dict[dict]
+    gap_open_score: int
+    gap_open_cost: int
+
 
 def dp_array_backward(
     dp_array: list[list[tuple[int]]],
@@ -383,14 +407,14 @@ def dp_array_backward(
     seq_2: str,
     costing_mat: dict[dict],
     gap_open_cost:int
-) -> AlignmentResults:
+) -> tuple:
     """
     Traces backward through the dp_array
 
     to determine which alignment moves are best.
 
     Returns:
-        dictionary with keys of
+        tuple with entries of:
             seq_1_aligned,
             middle_part,
             seq_2_aligned,
@@ -522,11 +546,11 @@ def dp_array_backward(
     seq_2_aligned.reverse()
     middle_part.reverse()
 
-    return AlignmentResults(
-        seq_1_aligned="".join(seq_1_aligned),
-        middle_part="".join(middle_part),
-        seq_2_aligned="".join(seq_2_aligned),
-        cost=cost
+    return (
+        "".join(seq_1_aligned),
+        "".join(middle_part),
+        "".join(seq_2_aligned),
+        cost
     )
 
 def cost_ranks_dispatcher(cost_ranks: list|tuple, is_match: bool):
