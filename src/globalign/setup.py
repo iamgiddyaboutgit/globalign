@@ -204,8 +204,10 @@ def validate_and_transform_args(
     # Check that the product of the lengths of the sequences is
     # less than 20_000_000.     
     check_seq_lengths(seq_1, seq_2, 20_000_000)
-    seq_1_validated = seq_1
-    seq_2_validated = seq_2
+    seq_1_validated = seq_1.upper()
+    seq_2_validated = seq_2.upper()
+    del seq_1
+    del seq_2
     ##################################################################
     # Validate and transform scoring and costing settings.
     ##################################################################
@@ -244,7 +246,7 @@ def validate_and_transform_args(
 
         # Check that the sequences
         # only contain letters present in the scoring matrix.
-        common_alphabet = get_common_alphabet(seq_1, seq_2)
+        common_alphabet = get_common_alphabet(seq_1_validated, seq_2_validated)
         validate_scoring_mat_keys(
             scoring_mat_keys=scoring_mat_b.keys(),
             common_alphabet=common_alphabet
@@ -271,7 +273,7 @@ def validate_and_transform_args(
             raise RuntimeError("The scoring matrix does not make sense because the maximum for each row does not occur on the main diagonal.")
         # Check that the sequences
         # only contain letters present in the scoring matrix.
-        common_alphabet = get_common_alphabet(seq_1, seq_2)
+        common_alphabet = get_common_alphabet(seq_1_validated, seq_2_validated)
         validate_scoring_mat_keys(
             scoring_mat_keys=scoring_mat.keys(),
             common_alphabet=common_alphabet
@@ -286,7 +288,7 @@ def validate_and_transform_args(
             max_score=max_score
         )
     elif any([x is not None for x in [mismatch_cost, gap_open_cost, gap_extension_cost]]):
-        common_alphabet = get_common_alphabet(seq_1, seq_2)
+        common_alphabet = get_common_alphabet(seq_1_validated, seq_2_validated)
         costing_mat_validated = create_costing_mat(
             common_alphabet=common_alphabet,
             mismatch_cost=simple_costing_settings.mismatch_cost,
@@ -298,7 +300,7 @@ def validate_and_transform_args(
             max_score=simple_scoring_settings.match_score
         )
     else:
-        common_alphabet = get_common_alphabet(seq_1, seq_2)
+        common_alphabet = get_common_alphabet(seq_1_validated, seq_2_validated)
 
         scoring_mat_validated = create_scoring_mat(
             common_alphabet=common_alphabet,
