@@ -251,10 +251,13 @@ def find_global_alignment(
 
     # Create the dynamic programming array (dp_array).
     # Initialize the dp_array.
+    max_cost = get_max_val(costing_mat)
+
     dp_array = make_dp_array(
         seq_1=seq_1,
         seq_2=seq_2,
         costing_mat=costing_mat,
+        max_cost=max_cost,
         gap_open_cost=gap_open_cost
     )
 
