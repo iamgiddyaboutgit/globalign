@@ -48,7 +48,11 @@ from setup import (
     get_max_val,
     make_matrix
 )
-from conclude import final_cost_to_score
+from conclude import (
+    final_cost_to_score,
+    print_alignment,
+    AlignmentResults
+)
 
 def main():
     usage = "Perform optimal global alignment of two nucleotide \
@@ -147,16 +151,7 @@ or amino acid sequences."
         **vars(cmd_line_args)
     )
     # TODO: Improve printing and writing
-    print(alignment_results)
-
-    # print_alignment(
-    #     seq_1_aligned=alignment["seq_1_aligned"],
-    #     mid=alignment["middle_part"],
-    #     seq_2_aligned=alignment["seq_2_aligned"],
-    #     score=score,
-    #     desc_1=desc_1,
-    #     desc_2=desc_2
-    # )
+    print_alignment(alignment_results)
    
     # # Write the outputs to a file.
     # write_alignment(
@@ -386,17 +381,6 @@ def dp_array_forward(
             )
 
     return None
-
-class AlignmentResults(NamedTuple):
-    seq_1_aligned: str
-    middle_part: str
-    seq_2_aligned: str
-    cost: int
-    score: int
-    scoring_mat: dict[dict]
-    costing_mat: dict[dict]
-    gap_open_score: int
-    gap_open_cost: int
 
 
 def dp_array_backward(

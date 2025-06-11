@@ -2,6 +2,19 @@
 
 import math
 from pathlib import Path
+from typing import NamedTuple
+
+class AlignmentResults(NamedTuple):
+    seq_1_aligned: str
+    middle_part: str
+    seq_2_aligned: str
+    cost: int
+    score: int
+    scoring_mat: dict[dict]
+    costing_mat: dict[dict]
+    gap_open_score: int
+    gap_open_cost: int
+
 
 def final_cost_to_score(
     cost:int|float, 
@@ -98,13 +111,10 @@ def print_nested_list_aligned(nested_list: list[list[int|float|str]]):
 
 
 def print_alignment(
-    seq_1_aligned:str, 
-    mid:str, 
-    seq_2_aligned:str, 
-    score:int|float|str=math.nan, 
-    desc_1:str="seq_1", 
-    desc_2:str="seq_2", 
-    chars_per_line:int=70
+    alignment_results: AlignmentResults,
+    desc_1: str="seq_1", 
+    desc_2: str="seq_2", 
+    chars_per_line: int=70
 ):
     
     print(desc_1)
@@ -112,7 +122,7 @@ def print_alignment(
     print("")
 
     # Handle long alignments with proper line breaking.
-    alignment_len = len(seq_1_aligned)
+    alignment_len = len(alignment_results.middle_part)
     num_sets_needed = math.ceil(alignment_len / chars_per_line)
     
     # Prep for loop
@@ -124,15 +134,15 @@ def print_alignment(
 
     for u in range(num_sets_needed):
         # Loop body
-        print(seq_1_aligned[lower:upper])
-        print(mid[lower:upper])
-        print(seq_2_aligned[lower:upper])
+        print(alignment_results.seq_1_aligned[lower:upper])
+        print(alignment_results.middle_part[lower:upper])
+        print(alignment_results.seq_2_aligned[lower:upper])
         # Prep for next iteration
         print("")
         lower = upper
         upper = lower + chars_per_line
 
-    print(f"score={str(score)}")
+    
 
 
 def write_alignment(out_path:Path, desc_1:str, desc_2:str, alignment:tuple[str, str, str, int]):
