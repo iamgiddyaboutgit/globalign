@@ -100,49 +100,42 @@ or amino acid sequences."
     parser.add_argument(
         "--match_score",
         required=False,
-        default=2,
         help="Score for a match.  Should be positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: 2."
     ) 
 
     parser.add_argument(
         "--mismatch_score",
         required=False,
-        default=-3,
         help="Score for a mismatch.  Should be negative.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -3."
     ) 
 
     parser.add_argument(
         "--mismatch_cost",
         required=False,
-        default=5,
         help="Cost for a mismatch.  Should be positive.  If set, then none of the options with scores should be set.  Default: 5."
     ) 
 
     parser.add_argument(
         "--gap_open_score",
         required=False,
-        default=-4,
         help="Score for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -4."
     ) 
 
     parser.add_argument(
         "--gap_open_cost",
         required=False,
-        default=4,
         help="Cost for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-negative.  If set, then none of the options with scores should be set.  Default: 4."
     ) 
 
     parser.add_argument(
         "--gap_extension_score",
         required=False,
-        default=-2,
         help="Score for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be negative.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -2."
     ) 
 
     parser.add_argument(
         "--gap_extension_cost",
         required=False,
-        default=3,
         help="Cost for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be positive.  If set, then none of the options with scores should be set.  Default: 3."
     ) 
 
