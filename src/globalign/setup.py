@@ -139,18 +139,17 @@ def validate_and_transform_args(
     ##################################################################
     # Validate and transform output argument.
     ##################################################################
-    if output is None:
-        output_validated = None
-    else:
+    if output is not None:
         output_b = Path(output)
-    
-    if output_b.is_file():
-        output_validated = output_b
-        raise RuntimeWarning(f"Overwriting {output_b}")
-    elif not output_b.is_file() and output_b.parent.exists():
-        output_validated = output_b
+        if output_b.is_file():
+            output_validated = output_b
+            raise RuntimeWarning(f"Overwriting {output_b}")
+        elif not output_b.is_file() and output_b.parent.exists():
+            output_validated = output_b
+        else:
+            raise FileNotFoundError("The parent directory of output does not exist.")
     else:
-        raise FileNotFoundError("The parent directory of output does not exist.")
+        output_validated = None
     ##################################################################
     # Validate and transform: 
     # input_fasta
