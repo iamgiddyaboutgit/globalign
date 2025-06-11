@@ -24,41 +24,61 @@ class SimpleScoringSettings:
         mismatch_score = self.mismatch_score
         gap_open_score = self.gap_open_score
         gap_extension_score = self.gap_extension_score
+        
+        if match_score is None:
+            match_score_2 = 2
+        else:
+            match_score_2 = match_score
+        
+        if mismatch_score is None:
+            mismatch_score_2 = -3
+        else:
+            mismatch_score_2 = mismatch_score
+
+        if gap_open_score is None:
+            gap_open_score_2 = -4
+        else:
+            gap_open_score_2 = gap_open_score
+
+        if gap_extension_score is None:
+            gap_extension_score_2 = -2
+        else:
+            gap_extension_score_2 = gap_extension_score
 
         try:
-            self.match_score = int(match_score)
+            self.match_score = int(match_score_2)
         except (TypeError, ValueError) as e:
             print("match_score must be convertible to an integer.")
             raise e
         
         try:
-            self.mismatch_score = int(mismatch_score)
+            self.mismatch_score = int(mismatch_score_2)
         except (TypeError, ValueError) as e:
             print("mismatch_score must be convertible to an integer.")
             raise e
         
         try:
-            self.gap_open_score = int(gap_open_score)
+            self.gap_open_score = int(gap_open_score_2)
         except (TypeError, ValueError) as e:
             print("gap_open_score must be convertible to an integer.")
             raise e
 
         try:
-            self.gap_extension_score = int(gap_extension_score)
+            self.gap_extension_score = int(gap_extension_score_2)
         except (TypeError, ValueError) as e:
             print("gap_extension_score must be convertible to an integer.")
             raise e
         
-        if match_score <= 0:
+        if match_score_2 <= 0:
             raise ValueError
         
-        if mismatch_score >= 0:
+        if mismatch_score_2 >= 0:
             raise ValueError
         
-        if gap_open_score > 0:
+        if gap_open_score_2 > 0:
             raise ValueError
         
-        if gap_extension_score >= 0:
+        if gap_extension_score_2 >= 0:
             raise ValueError
 
         return None
@@ -75,31 +95,46 @@ class SimpleCostingSettings:
         gap_open_cost = self.gap_open_cost
         gap_extension_cost = self.gap_extension_cost
 
+        if mismatch_cost is None:
+            mismatch_cost_2 = 5
+        else:
+            mismatch_cost_2 = mismatch_cost
+
+        if gap_open_cost is None:
+            gap_open_cost_2 = 4
+        else:
+            gap_open_cost_2 = gap_open_cost
+
+        if gap_extension_cost is None:
+            gap_extension_cost_2 = 3
+        else:
+            gap_extension_cost_2 = gap_extension_cost
+
         try:
-            self.mismatch_cost = int(mismatch_cost)
+            self.mismatch_cost = int(mismatch_cost_2)
         except (TypeError, ValueError) as e:
             print("mismatch_cost must be convertible to an integer.")
             raise e
         
         try:
-            self.gap_open_cost = int(gap_open_cost)
+            self.gap_open_cost = int(gap_open_cost_2)
         except (TypeError, ValueError) as e:
             print("gap_open_cost must be convertible to an integer.")
             raise e
         
         try:
-            self.gap_extension_cost = int(gap_extension_cost)
+            self.gap_extension_cost = int(gap_extension_cost_2)
         except (TypeError, ValueError) as e:
             print("gap_extension_cost must be convertible to an integer.")
             raise e
         
-        if mismatch_cost <= 0:
+        if mismatch_cost_2 <= 0:
             raise ValueError
         
-        if gap_open_cost < 0:
+        if gap_open_cost_2 < 0:
             raise ValueError
         
-        if gap_extension_cost <= 0:
+        if gap_extension_cost_2 <= 0:
             raise ValueError
 
         return None
@@ -250,7 +285,19 @@ def validate_and_transform_args(
             scoring_mat=scoring_mat_validated,
             max_score=max_score
         )
-    elif any([x is not None for x in [match_score, mismatch_score, gap_open_score, gap_extension_score]]):
+    elif any([x is not None for x in [mismatch_cost, gap_open_cost, gap_extension_cost]]):
+        common_alphabet = get_common_alphabet(seq_1, seq_2)
+        costing_mat_validated = create_costing_mat(
+            common_alphabet=common_alphabet,
+            mismatch_cost=simple_costing_settings.mismatch_cost,
+            gap_open_cost=simple_costing_settings.gap_open_cost,
+            gap_extension_cost=simple_costing_settings.gap_extension_cost
+        )
+        scoring_mat_validated = costing_mat_to_scoring_mat(
+            costing_mat=costing_mat_validated,
+            max_score=simple_scoring_settings.match_score
+        )
+    else:
         common_alphabet = get_common_alphabet(seq_1, seq_2)
 
         scoring_mat_validated = create_scoring_mat(
@@ -262,18 +309,6 @@ def validate_and_transform_args(
         
         costing_mat_validated = scoring_mat_to_costing_mat(
             scoring_mat=scoring_mat_validated,
-            max_score=simple_scoring_settings.match_score
-        )
-    elif any([x is not None for x in [mismatch_cost, gap_open_cost, gap_extension_cost]]):
-        common_alphabet = get_common_alphabet(seq_1, seq_2)
-        costing_mat_validated = create_costing_mat(
-            common_alphabet=common_alphabet,
-            mismatch_cost=simple_costing_settings.mismatch_cost,
-            gap_open_cost=simple_costing_settings.gap_open_cost,
-            gap_extension_cost=simple_costing_settings.gap_extension_cost
-        )
-        scoring_mat_validated = costing_mat_to_scoring_mat(
-            costing_mat=costing_mat_validated,
             max_score=simple_scoring_settings.match_score
         )
 
