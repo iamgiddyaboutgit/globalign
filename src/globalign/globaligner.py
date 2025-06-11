@@ -45,7 +45,8 @@ from typing import NamedTuple
 
 from setup import (
     validate_and_transform_args,
-    get_max_val
+    get_max_val,
+    make_matrix
 )
 from conclude import final_cost_to_score
 
