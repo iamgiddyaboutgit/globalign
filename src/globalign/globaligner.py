@@ -148,8 +148,9 @@ or amino acid sequences."
 
     cmd_line_args = parser.parse_args()
 
+    # https://stackoverflow.com/a/33637806/8423001
     alignment_results = find_global_alignment(
-        **cmd_line_args
+        **vars(cmd_line_args)
     )
     # TODO: Improve printing and writing
     print(alignment_results)
