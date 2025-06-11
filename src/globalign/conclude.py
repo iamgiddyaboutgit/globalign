@@ -3,6 +3,7 @@
 import math
 from pathlib import Path
 from typing import NamedTuple
+import sys
 
 class AlignmentResults(NamedTuple):
     seq_1_aligned: str
@@ -14,6 +15,7 @@ class AlignmentResults(NamedTuple):
     costing_mat: dict[dict]
     gap_open_score: int
     gap_open_cost: int
+    output: Path
 
 
 def final_cost_to_score(
@@ -115,8 +117,7 @@ def print_alignment(
     desc_1: str="seq_1", 
     desc_2: str="seq_2", 
     chars_per_line: int=70
-):
-    
+) -> None:
     print(desc_1)
     print(desc_2)
     print("")
@@ -141,22 +142,64 @@ def print_alignment(
         print("")
         lower = upper
         upper = lower + chars_per_line
+    
+    return None
 
     
+def write_alignment(
+    alignment_results: AlignmentResults,
+    desc_1: str="seq_1", 
+    desc_2: str="seq_2", 
+    chars_per_line: int=70,
+    output: Path|str=None
+) -> None:
+    """
+    Args:
+        output: The path to a file to which the results will be written.
+            If output is specified, then it overwrites
+            alignment_results.output; otherwise, alignment_results.output
+            will be used.
+            Use the string "stdout", to write to sys.stdout. 
+            If alignment_results.output
+            is None, then the results will be written to sys.stdout.
+    """
+    if (output is None and alignment_results.output is None) or output == "stdout":
+        print_alignment(
+            alignment_results=alignment_results,
+            desc_1=desc_1,
+            desc_2=desc_2,
+            chars_per_line=chars_per_line
+        )
+        return None
+    elif output is None and alignment_results.output is not None:
+        file = alignment_results.output
+    else:
+        file = output
+    
+    # Handle long alignments with proper line breaking.
+    alignment_len = len(alignment_results.middle_part)
+    num_sets_needed = math.ceil(alignment_len / chars_per_line)
+    
+    # Prep for loop
+    lower = 0
+    if num_sets_needed == 1:
+        upper = alignment_len
+    else:   
+        upper = chars_per_line
 
+    with open(file=file, mode="w+") as f:
+        print(desc_1, file=f)
+        print(desc_2, file=f)
+        print("", file=f)
 
-def write_alignment(out_path:Path, desc_1:str, desc_2:str, alignment:tuple[str, str, str, int]):
-    seq_1_aligned, mid, seq_2_aligned, score = alignment
-    with out_path.open(mode="w") as f:
-        f.writelines([
-            "".join([desc_1, "; score=", str(score)]),
-            "\n",
-            seq_1_aligned,
-            "\n"
-        ])
-        f.writelines([
-            "".join([desc_2, "; score=", str(score)]),
-            "\n",
-            seq_2_aligned,
-            "\n"
-        ])
+        for u in range(num_sets_needed):
+            # Loop body
+            print(alignment_results.seq_1_aligned[lower:upper], file=f)
+            print(alignment_results.middle_part[lower:upper], file=f)
+            print(alignment_results.seq_2_aligned[lower:upper], file=f)
+            # Prep for next iteration
+            print("", file=f)
+            lower = upper
+            upper = lower + chars_per_line
+    
+    return None

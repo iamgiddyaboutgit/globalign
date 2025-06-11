@@ -202,7 +202,8 @@ def find_global_alignment(
             scoring_mat,
             costing_mat,
             gap_open_score,
-            gap_open_cost
+            gap_open_cost,
+            output
         )
     """
     good_args = validate_and_transform_args(
@@ -301,7 +302,8 @@ def find_global_alignment(
         scoring_mat,
         costing_mat,
         gap_open_score,
-        gap_open_cost
+        gap_open_cost,
+        output
     )
 
 
