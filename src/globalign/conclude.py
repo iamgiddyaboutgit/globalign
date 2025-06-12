@@ -26,6 +26,13 @@ class AlignmentResults(NamedTuple):
         seq_1_aligned = self.seq_1_aligned
         middle_part = self.middle_part
         seq_2_aligned = self.seq_2_aligned
+        cost = self.cost
+        score = self.score
+        scoring_mat = self.scoring_mat
+        costing_mat = self.costing_mat
+        gap_open_score = self.gap_open_score
+        gap_open_cost = self.gap_open_cost
+
         # Handle long alignments with proper line breaking.
         alignment_len = len(middle_part)
         num_sets_needed = math.ceil(alignment_len / chars_per_line)
@@ -54,6 +61,17 @@ class AlignmentResults(NamedTuple):
             upper = lower + chars_per_line
         
         yield "\n\n"
+
+        yield f"score: {score}\n"
+        yield f"cost: {cost}\n"
+        yield f"###########################################\n# Settings\n###########################################\n"
+        yield f"scoring_mat:\n"
+        yield prettify_mat(scoring_mat)
+        yield f"\n\ngap_open_score: {gap_open_score}\n"
+
+        yield "\ncosting_mat:\n"
+        yield prettify_mat(costing_mat)
+        yield f"\n\ngap_open_cost: {gap_open_cost}\n"
         
         return None
 
@@ -166,10 +184,11 @@ def print_nested_list_aligned(nested_list: list[list[int|float|str]]) -> None:
     return None
 
 
-def pprint_mat(mat: dict[dict]) -> None:
-    """Pretty-prints a nested dictionary
+def prettify_mat(mat: dict[dict]) -> str:
+    """Makes a nested dictionary 
     
-    representation of a matrix.
+    representation of a matrix look better
+    prior to printing.
     
     Args:
         mat: 
@@ -223,9 +242,7 @@ def pprint_mat(mat: dict[dict]) -> None:
             cell = mat[row_header][col_header]
             representation.append(f"{str(cell):>{w + 1}}")
     
-    print("".join(representation))
-    
-    return None
+    return "".join(representation)
 
 def print_alignment(
     alignment_results: AlignmentResults,
