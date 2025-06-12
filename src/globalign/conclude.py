@@ -75,15 +75,81 @@ class AlignmentResults(NamedTuple):
         
         return None
 
-    def __str__(self):
-        return "".join(self._generate_alignment_printout())
+    def __str__(
+            self, 
+            desc_1: str="seq_1", 
+            desc_2: str="seq_2", 
+            chars_per_line: int=70
+        ):
+        return "".join(
+            self._generate_alignment_printout(
+                desc_1=desc_1,
+                desc_2=desc_2,
+                chars_per_line=chars_per_line
+            )
+        )
+    
+    def print(
+        self, 
+        desc_1: str="seq_1", 
+        desc_2: str="seq_2", 
+        chars_per_line: int=70
+    ) -> None:
+        __str__ = self.__str__
+        print(
+            __str__(
+                desc_1=desc_1,
+                desc_2=desc_2,
+                chars_per_line=chars_per_line
+            )
+        )
+        return None
 
-    def write(self, file):
+    def write(
+        self, 
+        file: Path|str=None,
+        desc_1: str="seq_1", 
+        desc_2: str="seq_2", 
+        chars_per_line: int=70
+    ):
         """Write the alignment results
         
         to a file or to sys.stdout.
+
+        Args:
+            file: The path to a file to which the results will be written.
+                If file is specified, then it overwrites
+                self.output; otherwise, self.output
+                will be used.
+                Use the string "stdout", to write to sys.stdout. 
+                If self.output
+                is None, then the results will be written to sys.stdout.
         """
-        ...
+        output = self.output
+        _print = self.print
+        __str__ = self.__str__
+
+        if (file is None and output is None) or file == "stdout":
+            _print(
+                desc_1=desc_1,
+                desc_2=desc_2,
+                chars_per_line=chars_per_line
+            )
+            return None
+        elif file is None and output is not None:
+            file_2 = output
+        else:
+            file_2 = file 
+
+        s = __str__(
+            desc_1=desc_1,
+            desc_2=desc_2,
+            chars_per_line=chars_per_line
+        )
+        with open(file=file_2, mode="w+") as fh:
+            fh.write(s)
+        
+        return None
 
 
 def final_cost_to_score(
