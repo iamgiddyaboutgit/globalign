@@ -43,12 +43,12 @@ from pathlib import Path
 import random
 from typing import NamedTuple
 
-from setup import (
+from globalign.start import (
     validate_and_transform_args,
     get_max_val,
     make_matrix
 )
-from conclude import (
+from globalign.conclude import (
     final_cost_to_score,
     AlignmentResults
 )

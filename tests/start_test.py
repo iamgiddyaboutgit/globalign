@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pytest
 
-from globalign import setup
+from src.globalign import start
 
 @pytest.mark.parametrize(
     argnames=("test_input", "expected"),
@@ -40,7 +40,7 @@ from globalign import setup
     )
 )
 def test_check_symmetric_valid_input(test_input, expected):
-    assert setup.check_symmetric(test_input) == expected
+    assert start.check_symmetric(test_input) == expected
 
 
 @pytest.mark.parametrize(
@@ -62,7 +62,7 @@ def test_check_symmetric_valid_input(test_input, expected):
 )
 def test_check_symmetric_invalid_input(test_input, expected):
     with pytest.raises(expected):
-        setup.check_symmetric(test_input)
+        start.check_symmetric(test_input)
 
 
 @pytest.mark.parametrize(
@@ -105,7 +105,7 @@ def test_draw_random_seq(
     seed, 
     expected
 ):
-    res = setup.draw_random_seq(
+    res = start.draw_random_seq(
         alphabet,
         min_len,
         max_len,
@@ -170,7 +170,7 @@ def test_draw_random_seq_invalid_input(
     expected
 ):
     with pytest.raises(expected):
-        setup.draw_random_seq(
+        start.draw_random_seq(
             alphabet,
             min_len,
             max_len,
