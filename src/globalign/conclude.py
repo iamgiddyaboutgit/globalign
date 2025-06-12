@@ -17,6 +17,56 @@ class AlignmentResults(NamedTuple):
     gap_open_cost: int
     output: Path
 
+    def _generate_alignment_printout(
+        self,
+        desc_1: str="seq_1", 
+        desc_2: str="seq_2", 
+        chars_per_line: int=70
+    ):
+        seq_1_aligned = self.seq_1_aligned
+        middle_part = self.middle_part
+        seq_2_aligned = self.seq_2_aligned
+        # Handle long alignments with proper line breaking.
+        alignment_len = len(middle_part)
+        num_sets_needed = math.ceil(alignment_len / chars_per_line)
+        
+        # Prep for loop
+        lower = 0
+        if num_sets_needed == 1:
+            upper = alignment_len
+        else:   
+            upper = chars_per_line
+
+        yield desc_1
+        yield "\n"
+        yield desc_2
+        
+        for u in range(num_sets_needed):
+            yield "\n\n"
+            # Loop body
+            yield seq_1_aligned[lower:upper]
+            yield "\n"
+            yield middle_part[lower:upper]
+            yield "\n"
+            yield seq_2_aligned[lower:upper]
+            # Prep for next iteration
+            lower = upper
+            upper = lower + chars_per_line
+        
+        yield "\n\n"
+        
+        return None
+
+    def __str__(self):
+        return "".join(self._generate_alignment_printout())
+
+    def write(self, file):
+        """Write the alignment results
+        
+        to a file or to sys.stdout.
+        """
+        ...
+
 
 def final_cost_to_score(
     cost:int|float, 
@@ -68,7 +118,7 @@ def final_score_to_cost(
         delta_i = math.ceil(b/2)
     return -score + n*delta_d + m*delta_i 
 
-def print_nested_list_aligned(nested_list: list[list[int|float|str]]):
+def print_nested_list_aligned(nested_list: list[list[int|float|str]]) -> None:
     """Pretty-prints a nested list.
     
     Args:
@@ -101,16 +151,81 @@ def print_nested_list_aligned(nested_list: list[list[int|float|str]]):
         widths.append(width_required)
 
     # Print the numbers with formatting
+    nested_list_representation = []
     for row in nested_list:
-        row_2 = ""
+        row_formatted = []
         for j, cell in enumerate(row):
             # The format specification of :>{width}
             # right-aligns the string within the width.
-            row_2 += f"{cell:>{widths[j] + 1}}"
-        print(row_2)
+            row_formatted.append(f"{str(cell):>{widths[j] + 1}}")
+        row_formatted.append("\n")
+        nested_list_representation.extend(row_formatted)
+    
+    print("".join(nested_list_representation))
     
     return None
 
+
+def pprint_mat(mat: dict[dict]) -> None:
+    """Pretty-prints a nested dictionary
+    
+    representation of a matrix.
+    
+    Args:
+        mat: 
+    """
+    # Determine the column width in the pretty-printed result.
+    # Consider how wide each cell is
+    # as well as the column headers.
+    widths = []
+    # Because we assume that each inner dict in mat
+    # is the same length, we can get the number of columns
+    # from the number of entries in the 0-th "row"
+    # of mat.
+    try:
+        col_headers = list(list(mat.values())[0].keys())
+    except:
+        print("mat does not appear to represent a matrix as a nested dictionary.")
+        raise
+
+    
+    # Loop through the "columns" of the nested dict.
+    for col_header in col_headers:
+        # If each cell in the j-th "column" of the nested dict,
+        # is given a string representation, what is the 
+        # length of the longest representation?
+        width_required = len(str(col_header))
+        for row_header in mat.keys():
+            # Is the length of the string representation of the 
+            # current cell longer than the longest such 
+            # representation found so far for the 
+            # current col_header?
+            # If it is, then save it and check the next cell
+            # down with the same col_header.
+            cell = mat[row_header][col_header]
+            width_required = max(width_required, len(str(cell)))
+        widths.append(width_required)
+
+    # Print the numbers with formatting
+    representation = []
+    # Start with some extra spacing to get the columns
+    # to line up.
+    longest_row_header_len = max([len(str(x)) for x in col_headers])
+    initial_space = "".join([" "]*(longest_row_header_len + 1))
+    representation.append(initial_space)
+    # Add the column headers.
+    representation.extend([f"{str(col_header):>{w + 1}}" for col_header, w in zip(col_headers, widths)])
+    # Loop to get the rest of representation.
+    for row_header in mat.keys():
+        representation.append("\n")
+        representation.append(f"{str(row_header):<{longest_row_header_len + 1}}")
+        for col_header, w in zip(col_headers, widths):
+            cell = mat[row_header][col_header]
+            representation.append(f"{str(cell):>{w + 1}}")
+    
+    print("".join(representation))
+    
+    return None
 
 def print_alignment(
     alignment_results: AlignmentResults,
@@ -203,3 +318,5 @@ def write_alignment(
             upper = lower + chars_per_line
     
     return None
+
+
