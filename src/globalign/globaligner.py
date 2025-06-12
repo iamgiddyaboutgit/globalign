@@ -41,7 +41,6 @@ import sys
 import argparse
 from pathlib import Path
 import random
-from typing import NamedTuple
 
 from globalign.start import (
     validate_and_transform_args,
