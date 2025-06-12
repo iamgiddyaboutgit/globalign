@@ -50,7 +50,6 @@ from setup import (
 )
 from conclude import (
     final_cost_to_score,
-    print_alignment,
     AlignmentResults
 )
 
@@ -150,16 +149,9 @@ or amino acid sequences."
     alignment_results = find_global_alignment(
         **vars(cmd_line_args)
     )
-    # TODO: Improve printing and writing
-    print_alignment(alignment_results)
-   
-    # # Write the outputs to a file.
-    # write_alignment(
-    #     out_path=path_to_output,
-    #     desc_1=desc_1,
-    #     desc_2=desc_2,
-    #     alignment=alignment
-    # )
+    
+    alignment_results.write()
+
     return None
 
 
@@ -177,7 +169,7 @@ def find_global_alignment(
     gap_open_cost: str|int=None,
     gap_extension_score: str|int=None,
     gap_extension_cost: str|int=None
-) -> NamedTuple:
+) -> AlignmentResults:
     """
     Args:
         gap_open_cost: The cost for a gap just to exist.
@@ -193,7 +185,7 @@ def find_global_alignment(
             incurs the gap_open_cost twice.
 
     Returns:
-        AlignmentResults with entries of (
+        AlignmentResults instance with attributes of:
             seq_1_aligned,
             middle_part,
             seq_2_aligned,
@@ -204,7 +196,6 @@ def find_global_alignment(
             gap_open_score,
             gap_open_cost,
             output
-        )
     """
     good_args = validate_and_transform_args(
         input_fasta,
