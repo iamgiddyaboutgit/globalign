@@ -42,12 +42,12 @@ import argparse
 from pathlib import Path
 import random
 
-from globalign.start import (
+from src.globalign.start import (
     validate_and_transform_args,
     get_max_val,
     make_matrix
 )
-from globalign.conclude import (
+from src.globalign.conclude import (
     final_cost_to_score,
     AlignmentResults
 )
