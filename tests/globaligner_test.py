@@ -120,6 +120,198 @@ def test_dp_array_forward(dp_array, seq_1, seq_2, costing_mat, gap_open_cost, ex
             # expected_cost
             24
         ),
+        (
+            # input_fasta
+            None,
+            # output
+            None,
+            # seq_1
+            "TGGATGAGGCTCCACGCACTAA",
+            # seq_2
+            "GATTGGTGAGGCTCAGCAT",
+            # scoring_mat_name
+            None,
+            # scoring_mat_path
+            None,
+            # match_score
+            2,
+            # mismatch_score
+            -3,
+            # mismatch_cost
+            None,
+            # gap_open_score
+            -5,
+            # gap_open_cost
+            None,
+            # gap_extension_score
+            -2,
+            # gap_extension_cost
+            None,
+            # expected_score
+            -15,
+            # expected_cost
+            56
+        ),
+        (
+            # input_fasta
+            None,
+            # output
+            None,
+            # seq_1
+            "CGGTCTTAGCATATGTTGGCATAC",
+            # seq_2
+            "ATTAGCATCATAGTGGA",
+            # scoring_mat_name
+            None,
+            # scoring_mat_path
+            None,
+            # match_score
+            2,
+            # mismatch_score
+            -3,
+            # mismatch_cost
+            None,
+            # gap_open_score
+            -5,
+            # gap_open_cost
+            None,
+            # gap_extension_score
+            -2,
+            # gap_extension_cost
+            None,
+            # expected_score
+            -21,
+            # expected_cost
+            62
+        ),
+        (
+            # input_fasta
+            None,
+            # output
+            None,
+            # seq_1
+            "CGGTCTTAGCATATGTTGGCATAC",
+            # seq_2
+            "ATTAGCATCATAGTGGA",
+            # scoring_mat_name
+            None,
+            # scoring_mat_path
+            None,
+            # match_score
+            4,
+            # mismatch_score
+            -5,
+            # mismatch_cost
+            None,
+            # gap_open_score
+            -3,
+            # gap_open_cost
+            None,
+            # gap_extension_score
+            -5,
+            # gap_extension_cost
+            None,
+            # expected_score
+            -20,
+            # expected_cost
+            102
+        ),
+        (
+            # input_fasta
+            None,
+            # output
+            None,
+            # seq_1
+            "GTAGGCGGTC",
+            # seq_2
+            "CAGCTGC",
+            # scoring_mat_name
+            None,
+            # scoring_mat_path
+            None,
+            # match_score
+            1,
+            # mismatch_score
+            -2,
+            # mismatch_cost
+            None,
+            # gap_open_score
+            -5,
+            # gap_open_cost
+            None,
+            # gap_extension_score
+            -2,
+            # gap_extension_cost
+            None,
+            # expected_score
+            -18,
+            # expected_cost
+            28
+        ),
+        (
+            # input_fasta
+            None,
+            # output
+            None,
+            # seq_1
+            "CTGTACCG",
+            # seq_2
+            "CGGAACAGTCCGAT",
+            # scoring_mat_name
+            None,
+            # scoring_mat_path
+            None,
+            # match_score
+            1,
+            # mismatch_score
+            -2,
+            # mismatch_cost
+            None,
+            # gap_open_score
+            -5,
+            # gap_open_cost
+            None,
+            # gap_extension_score
+            -2,
+            # gap_extension_cost
+            None,
+            # expected_score
+            -18,
+            # expected_cost
+            26
+        ),
+        (
+            # input_fasta
+            None,
+            # output
+            None,
+            # seq_1
+            "GGAGGACGTT",
+            # seq_2
+            "GAG",
+            # scoring_mat_name
+            None,
+            # scoring_mat_path
+            None,
+            # match_score
+            1,
+            # mismatch_score
+            -2,
+            # mismatch_cost
+            None,
+            # gap_open_score
+            -5,
+            # gap_open_cost
+            None,
+            # gap_extension_score
+            -2,
+            # gap_extension_cost
+            None,
+            # expected_score
+            -21,
+            # expected_cost
+            31
+        ),
     ]
 )
 def test_find_global_alignment(
