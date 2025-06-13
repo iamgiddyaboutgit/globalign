@@ -35,3 +35,125 @@ from src.globalign import globaligner
 def test_dp_array_forward(dp_array, seq_1, seq_2, costing_mat, gap_open_cost, expected):
     globaligner.dp_array_forward(dp_array, seq_1, seq_2, costing_mat, gap_open_cost)
     assert dp_array == expected
+
+
+@pytest.mark.parametrize(
+    argnames=(
+        "input_fasta",
+        "output",
+        "seq_1",
+        "seq_2",
+        "scoring_mat_name",
+        "scoring_mat_path",
+        "match_score",
+        "mismatch_score",
+        "mismatch_cost",
+        "gap_open_score",
+        "gap_open_cost",
+        "gap_extension_score",
+        "gap_extension_cost",
+        "expected_score",
+        "expected_cost"
+    ),
+    argvalues=[
+        (
+            # input_fasta
+            None,
+            # output
+            None,
+            # seq_1
+            "TT",
+            # seq_2
+            "TA",
+            # scoring_mat_name
+            None,
+            # scoring_mat_path
+            None,
+            # match_score
+            3,
+            # mismatch_score
+            -4,
+            # mismatch_cost
+            None,
+            # gap_open_score
+            -5,
+            # gap_open_cost
+            None,
+            # gap_extension_score
+            -2,
+            # gap_extension_cost
+            None,
+            # expected_score
+            -1,
+            # expected_cost
+            7
+        ),
+        (
+            # input_fasta
+            None,
+            # output
+            None,
+            # seq_1
+            "TAAAGCTAA",
+            # seq_2
+            "TAGCTC",
+            # scoring_mat_name
+            None,
+            # scoring_mat_path
+            None,
+            # match_score
+            2,
+            # mismatch_score
+            -3,
+            # mismatch_cost
+            None,
+            # gap_open_score
+            -5,
+            # gap_open_cost
+            None,
+            # gap_extension_score
+            -2,
+            # gap_extension_cost
+            None,
+            # expected_score
+            -9,
+            # expected_cost
+            24
+        ),
+    ]
+)
+def test_find_global_alignment(
+    input_fasta,
+    output,
+    seq_1,
+    seq_2,
+    scoring_mat_name,
+    scoring_mat_path,
+    match_score,
+    mismatch_score,
+    mismatch_cost,
+    gap_open_score,
+    gap_open_cost,
+    gap_extension_score,
+    gap_extension_cost,
+    expected_score,
+    expected_cost
+):
+    alignment_results = globaligner.find_global_alignment(
+        input_fasta,
+        output,
+        seq_1,
+        seq_2,
+        scoring_mat_name,
+        scoring_mat_path,
+        match_score,
+        mismatch_score,
+        mismatch_cost,
+        gap_open_score,
+        gap_open_cost,
+        gap_extension_score,
+        gap_extension_cost
+    )
+
+    assert alignment_results.score == expected_score
+    assert alignment_results.cost == expected_cost
