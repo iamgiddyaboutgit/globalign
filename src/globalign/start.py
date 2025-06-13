@@ -234,6 +234,22 @@ def validate_and_transform_args(
         gap_extension_cost=gap_extension_cost
     )
 
+    # gap_open_score and gap_open_cost should always
+    # be opposites of each other.  
+    if gap_open_score is not None:
+        # gap_open_score was specified but
+        # gap_open_cost was not.  Therefore,
+        # gap_open_cost was set to a default
+        # that we do not care about.
+        simple_costing_settings.gap_open_cost = - simple_scoring_settings.gap_open_score
+    else:
+        # gap_open_score was set to a default value.
+        # gap_open_cost was either specified
+        # or set to a default value.  Either
+        # way, we want to use gap_open_cost.
+        simple_scoring_settings.gap_open_score = - simple_costing_settings.gap_open_cost
+
+
     if scoring_mat_name is not None:
         # Do fancy stuff with the importlib
         # library so that files are accessible
