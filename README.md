@@ -2,6 +2,10 @@
 
 Performs global sequence alignment of two strings.  Allows for affine gap penalties.
 
+# Acknowledgements
+
+A special thanks goes to Mykola Akulov and Ragnar Groot Koerkamp for their insightful [blog post](https://curiouscoding.nl/posts/alignment-scores-transform/) without which I would not have known how to make this package work with both scoring and costing schemes.
+
 # References
 
 1. https://web.stanford.edu/class/cs262/archives/presentations/lecture3.pdf
