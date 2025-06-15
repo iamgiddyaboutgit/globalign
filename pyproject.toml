@@ -58,6 +58,9 @@ check = "mypy --install-types --non-interactive {args:src/globalign tests}"
 source_pkgs = ["globalign", "tests"]
 branch = true
 parallel = true
+omit = [
+  "src/globalign/__about__.py",
+]
 
 [tool.coverage.paths]
 globalign = ["src/globalign", "*/globalign/src/globalign"]
