@@ -7,6 +7,7 @@ import sys
 import argparse
 from pathlib import Path
 import random
+from importlib.metadata import version
 
 from globalign.start import (
     validate_and_transform_args,
@@ -17,7 +18,7 @@ from globalign.conclude import (
     final_cost_to_score,
     AlignmentResults
 )
-from globalign.__about__ import __version__
+
 
 def main():
     usage = "Perform optimal global alignment of two nucleotide \
@@ -32,7 +33,7 @@ or amino acid sequences."
         "--version",
         required=False,
         action="version",
-        version=f"{__version__}",
+        version=f"{version("globalign")}",
         help="Prints the version and exits."
     )
 
