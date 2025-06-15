@@ -8,15 +8,16 @@ import argparse
 from pathlib import Path
 import random
 
-from src.globalign.start import (
+from globalign.start import (
     validate_and_transform_args,
     get_max_val,
     make_matrix
 )
-from src.globalign.conclude import (
+from globalign.conclude import (
     final_cost_to_score,
     AlignmentResults
 )
+from globalign.__about__ import __version__
 
 def main():
     usage = "Perform optimal global alignment of two nucleotide \
@@ -25,6 +26,14 @@ or amino acid sequences."
     # line.
     parser = argparse.ArgumentParser(
         description=usage
+    )
+
+    parser.add_argument(
+        "--version",
+        required=False,
+        action="version",
+        version=f"{__version__}",
+        help="Prints the version and exits."
     )
 
     parser.add_argument(
