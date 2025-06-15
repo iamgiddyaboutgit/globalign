@@ -26,6 +26,9 @@ classifiers = [
 ]
 dependencies = []
 
+[project.scripts]
+globaligner = "globalign.globaligner:main"
+
 [project.urls]
 Documentation = "https://github.com/iamgiddyaboutgit/globalign#readme"
 Issues = "https://github.com/iamgiddyaboutgit/globalign/issues"
@@ -41,7 +44,7 @@ version_scheme = "no-guess-dev"
 hatch-vcs = "*"
 
 [tool.hatch.build.targets.wheel]
-version-file = "_version.py"
+version-file = "src/globalign/__about__.py"
 
 [tool.hatch.envs.types]
 extra-dependencies = [
