@@ -34,6 +34,9 @@ Source = "https://github.com/iamgiddyaboutgit/globalign"
 [tool.hatch.version]
 source = "vcs"
 
+[tool.hatch.version.raw-options]
+version_scheme = "no-guess-dev"
+
 [tool.hatch.build.requires]
 hatch-vcs = "*"
 
