@@ -31,11 +31,14 @@ Documentation = "https://github.com/iamgiddyaboutgit/globalign#readme"
 Issues = "https://github.com/iamgiddyaboutgit/globalign/issues"
 Source = "https://github.com/iamgiddyaboutgit/globalign"
 
+[tool.hatch.version]
+source = "vcs
+
 [tool.hatch.build.requires]
 hatch-vcs = "*"
 
-[tool.hatch.version]
-source = "vcs
+[tool.hatch.build.targets.wheel]
+version-file = "src/globalign/__about__.py"
 
 [tool.hatch.envs.types]
 extra-dependencies = [
