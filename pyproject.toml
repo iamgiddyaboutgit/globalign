@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
@@ -32,7 +32,7 @@ Issues = "https://github.com/iamgiddyaboutgit/globalign/issues"
 Source = "https://github.com/iamgiddyaboutgit/globalign"
 
 [tool.hatch.version]
-source = "vcs
+source = "vcs"
 
 [tool.hatch.build.requires]
 hatch-vcs = "*"
