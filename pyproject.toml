@@ -32,7 +32,7 @@ Issues = "https://github.com/iamgiddyaboutgit/globalign/issues"
 Source = "https://github.com/iamgiddyaboutgit/globalign"
 
 [tool.hatch.version]
-path = "src/globalign/__about__.py"
+source = "vcs
 
 [tool.hatch.envs.types]
 extra-dependencies = [
