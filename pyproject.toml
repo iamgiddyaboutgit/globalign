@@ -40,6 +40,9 @@ source = "vcs"
 [tool.hatch.version.raw-options]
 version_scheme = "no-guess-dev"
 
+[tool.hatch.build]
+sources = ["src"]
+
 [tool.hatch.build.requires]
 hatch-vcs = "*"
 
