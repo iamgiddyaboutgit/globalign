@@ -416,11 +416,15 @@ def dp_array_backward(
     j += delta_j
 
     if i == 0 and j == 0:
-        return AlignmentResults(
-            seq_1_aligned="".join(seq_1_aligned),
-            middle_part="".join(middle_part),
-            seq_2_aligned="".join(seq_2_aligned),
-            cost=cost
+        seq_1_aligned="".join(seq_1_aligned)
+        middle_part="".join(middle_part)
+        seq_2_aligned="".join(seq_2_aligned)
+        
+        return (
+            seq_1_aligned,
+            middle_part,
+            seq_2_aligned,
+            cost
         )
 
     # Prepare for loop.
