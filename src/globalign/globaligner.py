@@ -378,6 +378,9 @@ def dp_array_backward(
     # cell of dp_array before the loop.
     dim_1 = len(seq_1) + 1
     dim_2 = len(seq_2) + 1
+    # The minimum of this cell
+    # is the ultimate cost.
+    cost = min(dp_array[dim_1 - 1][dim_2 - 1])
     
     i = dim_1 - 1
     j = dim_2 - 1
@@ -490,7 +493,6 @@ def dp_array_backward(
         if i == 0 and j == 0:
             break
 
-    cost = min(dp_array[dim_1 - 1][dim_2 - 1])
     seq_1_aligned.reverse()
     seq_2_aligned.reverse()
     middle_part.reverse()
