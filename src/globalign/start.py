@@ -4,7 +4,6 @@ from pathlib import Path
 import random
 from importlib import resources
 import math
-import sys
 from copy import deepcopy
 from dataclasses import dataclass
 
@@ -194,19 +193,11 @@ def validate_and_transform_args(
     ##################################################################
     if input_fasta is not None and seq_1 is None and seq_2 is None:
         input_fasta_b = Path(input_fasta)
-        if input_fasta_b.is_file():
-            try:
-                seq_1, seq_2 = read_first_2_seqs_from_fasta(input_fasta_b)
-            except FileNotFoundError:
-                print("input_fasta does not point to a valid file.  Please make sure it is in the correct FASTA format.")
-                raise 
-        else:
-            input_fasta_c = sys.stdin  
-            try:
-                seq_1, seq_2 = read_first_2_seqs_from_fasta(input_fasta_c)
-            except FileNotFoundError:
-                print("input_fasta does not point to a valid file.  Please make sure it is in the correct FASTA format.")
-                raise 
+        try:
+            seq_1, seq_2 = read_first_2_seqs_from_fasta(input_fasta_b)
+        except FileNotFoundError:
+            print("input_fasta does not point to a valid file.  Please make sure it is in the correct FASTA format.  Note that reading from standard input is not supported at this time.")
+            raise 
     elif (input_fasta is None and seq_2 is None) or (input_fasta is not None and seq_1 is not None) or (seq_1 is None and seq_2 is not None):
         raise RuntimeError("The combination of arguments for input_fasta, seq_1, and seq_2 does not make sense.")
     
@@ -623,7 +614,6 @@ def read_seq_from_fasta(fasta_path:Path):
     https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=BlastHelp
     """
     with fasta_path.open() as f:
-        desc_and_seq_complete = False
         seq_list = []
         line = f.readline()
         line_stripped = line.strip()
