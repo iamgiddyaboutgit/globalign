@@ -47,7 +47,6 @@ sources = ["src"]
 hatch-vcs = "*"
 
 [tool.hatch.build.targets.wheel]
-packages = ["globalign"]
 version-file = "src/globalign/__about__.py"
 
 [tool.hatch.envs.types]
