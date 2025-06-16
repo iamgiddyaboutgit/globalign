@@ -33,7 +33,7 @@ or amino acid sequences."
         "--version",
         required=False,
         action="version",
-        version=f"{version("globalign")}",
+        version=f"{version('globalign')}",
         help="Prints the version and exits."
     )
 
