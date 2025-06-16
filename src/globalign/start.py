@@ -202,7 +202,7 @@ def validate_and_transform_args(
         raise RuntimeError("The combination of arguments for input_fasta, seq_1, and seq_2 does not make sense.")
     
     # Check that the product of the lengths of the sequences is
-    # less than 20_000_000.     
+    # positive and less than 20_000_000.     
     check_seq_lengths(seq_1, seq_2, 20_000_000)
     seq_1_validated = seq_1.upper()
     seq_2_validated = seq_2.upper()
@@ -350,7 +350,7 @@ def get_common_alphabet(seq_1, seq_2):
 def check_seq_lengths(seq_1, seq_2, max_seq_len_prod):
     """Check that the product of the lengths of the sequences is
     
-    reasonable, i.e. less than max_seq_len_prod.
+    reasonable, i.e. positive and less than max_seq_len_prod.
 
     Raises:
         RuntimeError
@@ -360,6 +360,8 @@ def check_seq_lengths(seq_1, seq_2, max_seq_len_prod):
     seq_len_prod = m*n
     if not seq_len_prod < max_seq_len_prod:
         raise RuntimeError(f"Your sequences are too long.  The product of their lengths should be less than {max_seq_len_prod}.  They have lengths of {m} and {n}")
+    elif seq_len_prod == 0:
+        raise RuntimeError(f"Detected a sequence of length 0.")
     return None
 
 def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
