@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "globalign"
+dynamic = ["version"]
+description = 'Global Sequence Alignment'
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = ["Global Sequence Alignment", "Needleman–Wunsch", "bioinformatics", "sequence", "alignment", "sequence alignment"]
+authors = [
+  { name = "Justin Patterson" },
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Natural Language :: English",
+  "Topic :: Scientific/Engineering :: Bio-Informatics"
+]
+dependencies = []
+
+[project.scripts]
+globaligner = "globalign.globaligner:main"
+
+[project.urls]
+Documentation = "https://github.com/iamgiddyaboutgit/globalign#readme"
+Issues = "https://github.com/iamgiddyaboutgit/globalign/issues"
+Source = "https://github.com/iamgiddyaboutgit/globalign"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "no-guess-dev"
+
+[tool.hatch.build]
+sources = ["src"]
+
+[tool.hatch.build.requires]
+hatch-vcs = "*"
+
+[tool.hatch.build.targets.wheel]
+version-file = "src/globalign/__about__.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/globalign tests}"
+
+[tool.coverage.run]
+source_pkgs = ["globalign", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/globalign/__about__.py",
+]
+
+[tool.coverage.paths]
+globalign = ["src/globalign", "*/globalign/src/globalign"]
+tests = ["tests", "*/globalign/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]

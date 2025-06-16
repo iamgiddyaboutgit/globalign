@@ -3,7 +3,6 @@
 import math
 from pathlib import Path
 from typing import NamedTuple
-import sys
 
 class AlignmentResults(NamedTuple):
     seq_1_aligned: str

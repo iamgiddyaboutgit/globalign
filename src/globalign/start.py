@@ -196,13 +196,13 @@ def validate_and_transform_args(
         try:
             seq_1, seq_2 = read_first_2_seqs_from_fasta(input_fasta_b)
         except FileNotFoundError:
-            print("input_fasta does not point to a valid file.")
-            raise   
+            print("input_fasta does not point to a valid file.  Please make sure it is in the correct FASTA format.  Note that reading from standard input is not supported at this time.")
+            raise 
     elif (input_fasta is None and seq_2 is None) or (input_fasta is not None and seq_1 is not None) or (seq_1 is None and seq_2 is not None):
         raise RuntimeError("The combination of arguments for input_fasta, seq_1, and seq_2 does not make sense.")
     
     # Check that the product of the lengths of the sequences is
-    # less than 20_000_000.     
+    # positive and less than 20_000_000.     
     check_seq_lengths(seq_1, seq_2, 20_000_000)
     seq_1_validated = seq_1.upper()
     seq_2_validated = seq_2.upper()
@@ -254,7 +254,7 @@ def validate_and_transform_args(
         # Do fancy stuff with the importlib
         # library so that files are accessible
         # on other people's machines.
-        data_traversable = resources.files("data")
+        data_traversable = resources.files("globalign.data")
         blosum_file_name = "".join([scoring_mat_name, ".mtx"])
         blo = data_traversable.joinpath("scoring_matrices", blosum_file_name)
         with resources.as_file(blo) as f:
@@ -277,7 +277,8 @@ def validate_and_transform_args(
             max_score=max_score
         )
     elif scoring_mat_path is not None:
-        scoring_mat = read_scoring_mat(scoring_mat_path)
+        scoring_mat_path_2 = Path(scoring_mat_path)
+        scoring_mat = read_scoring_mat(scoring_mat_path_2)
         
         # Check that the scoring matrix is symmetric.
         if not check_symmetric(mat=scoring_mat):
@@ -349,7 +350,7 @@ def get_common_alphabet(seq_1, seq_2):
 def check_seq_lengths(seq_1, seq_2, max_seq_len_prod):
     """Check that the product of the lengths of the sequences is
     
-    reasonable, i.e. less than max_seq_len_prod.
+    reasonable, i.e. positive and less than max_seq_len_prod.
 
     Raises:
         RuntimeError
@@ -359,6 +360,8 @@ def check_seq_lengths(seq_1, seq_2, max_seq_len_prod):
     seq_len_prod = m*n
     if not seq_len_prod < max_seq_len_prod:
         raise RuntimeError(f"Your sequences are too long.  The product of their lengths should be less than {max_seq_len_prod}.  They have lengths of {m} and {n}")
+    elif seq_len_prod == 0:
+        raise RuntimeError(f"Detected a sequence of length 0.")
     return None
 
 def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
@@ -611,7 +614,6 @@ def read_seq_from_fasta(fasta_path:Path):
     https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=BlastHelp
     """
     with fasta_path.open() as f:
-        desc_and_seq_complete = False
         seq_list = []
         line = f.readline()
         line_stripped = line.strip()
