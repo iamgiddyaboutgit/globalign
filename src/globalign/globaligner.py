@@ -31,7 +31,6 @@ or amino acid sequences."
 
     parser.add_argument(
         "--version",
-        required=False,
         action="version",
         version=f"{version('globalign')}",
         help="Prints the version and exits."
