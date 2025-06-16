@@ -254,7 +254,7 @@ def validate_and_transform_args(
         # Do fancy stuff with the importlib
         # library so that files are accessible
         # on other people's machines.
-        data_traversable = resources.files("data")
+        data_traversable = resources.files("globalign.data")
         blosum_file_name = "".join([scoring_mat_name, ".mtx"])
         blo = data_traversable.joinpath("scoring_matrices", blosum_file_name)
         with resources.as_file(blo) as f:
@@ -277,7 +277,8 @@ def validate_and_transform_args(
             max_score=max_score
         )
     elif scoring_mat_path is not None:
-        scoring_mat = read_scoring_mat(scoring_mat_path)
+        scoring_mat_path_2 = Path(scoring_mat_path)
+        scoring_mat = read_scoring_mat(scoring_mat_path_2)
         
         # Check that the scoring matrix is symmetric.
         if not check_symmetric(mat=scoring_mat):
