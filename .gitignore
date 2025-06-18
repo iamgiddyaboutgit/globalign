@@ -1,6 +1,7 @@
 __pycache__
-/dist
+/dist/
 __about__.py
 
 /.quarto/
 objects.json
+/docs/
