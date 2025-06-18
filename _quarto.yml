@@ -1,0 +1,58 @@
+# https://quarto-tdg.org/yaml.html
+project:
+  type: website
+  output-dir: docs
+
+# tell quarto to read the generated sidebar
+metadata-files:
+  - reference/_sidebar.yml
+
+website:
+  title: "globalign"
+  description: "Global Sequence Alignment"
+  bread-crumbs: false
+  page-navigation: true
+  back-to-top-navigation: false
+  sidebar:
+    - style: "docked"
+    - title: "Tutorial"
+      contents:
+        - reference/tutorial.qmd
+  navbar:
+    tools:
+      - icon: github
+        menu:
+          - text: Source Code
+            href: https://github.com/iamgiddyaboutgit/globalign
+    search: true
+    left:
+      - text: Tutorial
+        href: reference/tutorial.qmd
+      - text: Reference
+        href: reference/index.qmd
+
+format:
+  html:
+    embed-resources: true
+    theme: darkly
+    fontsize: 1.05em
+    toc: true
+    toc-location: right
+    echo: false
+    code-overflow: wrap
+
+quartodoc:
+  style: pkgdown
+  package: globalign
+  dir: reference
+  sidebar: _sidebar.yml
+  # sidebar sections:
+  sections:
+    - title: "Reference"
+      contents:
+        - start
+        - globaligner
+        - conclude
+
+
+      

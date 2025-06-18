@@ -1,0 +1,21 @@
+# Tutorial
+
+## Intallation
+
+The package can be installed via pip, conda, or mamba.
+
+### Check Installation
+
+Try running 
+
+```bash
+globaligner --version
+```
+
+## Basic Usage
+
+### Command Line Usage
+
+```bash
+globaligner --seq_1 "ACGT" --seq_2 "AGT"
+```
