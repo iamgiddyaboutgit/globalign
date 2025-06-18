@@ -5,3 +5,4 @@ __about__.py
 /.quarto/
 objects.json
 /docs/
+_sidebar.yml
