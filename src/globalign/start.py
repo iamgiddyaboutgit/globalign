@@ -26,42 +26,67 @@ class SimpleScoringSettings:
         mismatch_score = self.mismatch_score
         gap_open_score = self.gap_open_score
         gap_extension_score = self.gap_extension_score
+        
+        if match_score is None:
+            match_score_2 = 2
+        else:
+            match_score_2 = match_score
+        
+        if mismatch_score is None:
+            mismatch_score_2 = -3
+        else:
+            mismatch_score_2 = mismatch_score
+
+        if gap_open_score is None:
+            gap_open_score_2 = -4
+        else:
+            gap_open_score_2 = gap_open_score
+
+        if gap_extension_score is None:
+            gap_extension_score_2 = -2
+        else:
+            gap_extension_score_2 = gap_extension_score
 
         try:
-            self.match_score = int(match_score_2)
+            match_score_3 = int(match_score_2)
         except (TypeError, ValueError) as e:
             print("match_score must be convertible to an integer.")
             raise e
         
         try:
-            self.mismatch_score = int(mismatch_score_2)
+            mismatch_score_3 = int(mismatch_score_2)
         except (TypeError, ValueError) as e:
             print("mismatch_score must be convertible to an integer.")
             raise e
         
         try:
-            self.gap_open_score = int(gap_open_score_2)
+            gap_open_score_3 = int(gap_open_score_2)
         except (TypeError, ValueError) as e:
             print("gap_open_score must be convertible to an integer.")
             raise e
 
         try:
-            self.gap_extension_score = int(gap_extension_score_2)
+            gap_extension_score_3 = int(gap_extension_score_2)
         except (TypeError, ValueError) as e:
             print("gap_extension_score must be convertible to an integer.")
             raise e
         
-        if match_score_2 <= 0:
+        if match_score_3 <= 0:
             raise ValueError
         
-        if mismatch_score_2 >= 0:
+        if mismatch_score_3 >= 0:
             raise ValueError
         
-        if gap_open_score_2 > 0:
+        if gap_open_score_3 > 0:
             raise ValueError
         
-        if gap_extension_score_2 >= 0:
+        if gap_extension_score_3 >= 0:
             raise ValueError
+        
+        self.match_score = match_score_3
+        self.mismatch_score = mismatch_score_3
+        self.gap_open_score = gap_open_score_3
+        self.gap_extension_score = gap_extension_score_3
 
         return None
     
