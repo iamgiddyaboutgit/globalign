@@ -13,11 +13,15 @@ website:
   bread-crumbs: false
   page-navigation: true
   back-to-top-navigation: false
-  sidebar:
-    - style: "docked"
-    - title: "Tutorial"
-      contents:
-        - reference/tutorial.qmd
+  # sidebar:
+  #   style: "docked"
+  #   contents:
+  #     - section: "Tutorial"
+  #       contents:
+  #         - reference/tutorial.qmd
+  #     - section: "Reference"
+  #       contents:
+  #         - reference/index.qmd
   navbar:
     tools:
       - icon: github
@@ -46,14 +50,6 @@ quartodoc:
   parser: google
   package: globalign
   dir: reference
-  sidebar: _sidebar.yml
-  # sidebar sections:
-  sections:
-    - title: "Reference"
-      contents:
-        - start
-        - globaligner
-        - conclude
 
 
       
