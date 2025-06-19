@@ -6,3 +6,7 @@ __about__.py
 objects.json
 /docs/
 _sidebar.yml
+
+reference/conclude.qmd
+reference/globaligner.qmd
+reference/start.qmd
