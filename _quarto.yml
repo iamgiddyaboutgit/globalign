@@ -43,6 +43,7 @@ format:
 
 quartodoc:
   style: pkgdown
+  parser: google
   package: globalign
   dir: reference
   sidebar: _sidebar.yml
