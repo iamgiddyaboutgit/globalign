@@ -1,0 +1,9 @@
+# Function reference {.doc .doc-index}
+
+## Reference
+
+| | |
+| --- | --- |
+| [start](start.qmd#globalign.start) |  |
+| [globaligner](globaligner.qmd#globalign.globaligner) | Perform optimal global alignment of two nucleotide or amino acid sequences. |
+| [conclude](conclude.qmd#globalign.conclude) |  |

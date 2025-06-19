@@ -47,7 +47,7 @@ or amino acid sequences."
         "-o",
         "--output",
         required=False,
-        help="Output file path to which a FASTA file containing the global alignment will be written.  If not provided, then the alignment will be written to stdout."
+        help="Output file path to which a file containing the global alignment will be written.  If not provided, then the alignment will be written to stdout."
     ) 
 
     parser.add_argument(
@@ -615,11 +615,7 @@ def take_match(
     middle_part.append("|")
     seq_2_aligned.append(seq_2[seq_2_index])
 
-    return (
-        seq_1_aligned,
-        middle_part,
-        seq_2_aligned
-    )
+    return None
 
 
 def take_mismatch(
@@ -636,11 +632,7 @@ def take_mismatch(
     middle_part.append("*")
     seq_2_aligned.append(seq_2[seq_2_index])
 
-    return (
-        seq_1_aligned,
-        middle_part,
-        seq_2_aligned
-    )
+    return None
 
 
 def take_gap_in_seq_1( 
@@ -657,11 +649,7 @@ def take_gap_in_seq_1(
     middle_part.append(" ")
     seq_2_aligned.append(seq_2[seq_2_index])
 
-    return (
-        seq_1_aligned,
-        middle_part,
-        seq_2_aligned
-    )
+    return None
 
 
 def take_gap_in_seq_2( 
@@ -678,11 +666,7 @@ def take_gap_in_seq_2(
     middle_part.append(" ")
     seq_2_aligned.append("-")
 
-    return (
-        seq_1_aligned,
-        middle_part,
-        seq_2_aligned
-    )
+    return None
 
 
 def make_dp_array(
