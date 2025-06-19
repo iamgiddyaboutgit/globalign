@@ -20,30 +20,12 @@ class SimpleScoringSettings:
 
     # https://stackoverflow.com/questions/60179799/python-dataclass-whats-a-pythonic-way-to-validate-initialization-arguments
     def __post_init__(self):
+        # Create locally defined variables
+        # for use within the __post_init__ scope.
         match_score = self.match_score
         mismatch_score = self.mismatch_score
         gap_open_score = self.gap_open_score
         gap_extension_score = self.gap_extension_score
-        
-        if match_score is None:
-            match_score_2 = 2
-        else:
-            match_score_2 = match_score
-        
-        if mismatch_score is None:
-            mismatch_score_2 = -3
-        else:
-            mismatch_score_2 = mismatch_score
-
-        if gap_open_score is None:
-            gap_open_score_2 = -4
-        else:
-            gap_open_score_2 = gap_open_score
-
-        if gap_extension_score is None:
-            gap_extension_score_2 = -2
-        else:
-            gap_extension_score_2 = gap_extension_score
 
         try:
             self.match_score = int(match_score_2)
@@ -353,7 +335,7 @@ def check_seq_lengths(seq_1, seq_2, max_seq_len_prod):
     reasonable, i.e. positive and less than max_seq_len_prod.
 
     Raises:
-        RuntimeError
+        RuntimeError: For a variety of a reasons.
     """
     m = len(seq_1)
     n = len(seq_2)
@@ -368,9 +350,9 @@ def read_scoring_mat(scoring_mat_path:Path) -> dict[dict]:
     """Read in scoring matrix.
     
     Raises:
-        FileNotFoundError if not scoring_mat_path.is_file().
-        RunTimeError if the header row did not have single letters spaced apart.
-        RunTimeError if row headers do not match column headers.
+        FileNotFoundError: if not scoring_mat_path.is_file().
+        RunTimeError: if the header row did not have single letters spaced apart.
+        RunTimeError: if row headers do not match column headers.
     """
     if not scoring_mat_path.is_file():
         raise FileNotFoundError("scoring_mat_path does not point to a valid file.")
@@ -605,7 +587,7 @@ def read_seq_from_fasta(fasta_path:Path):
     """Read in a FASTA file. 
 
     Raises:
-        RuntimeError
+        RuntimeError: If invalid FASTA format is detected.
     Yields:
         2-tuples where the 0th element is the description
         and the 1st element is the sequence
@@ -880,7 +862,7 @@ def check_symmetric(mat:dict[dict]) -> bool:
         True if mat is symmetric and False otherwise.
 
     Raises:
-        AttributeError if mat is not a nested dictionary.
+        AttributeError: if mat is not a nested dictionary.
     """
     # https://realpython.com/iterate-through-dictionary-python/#traversing-a-dictionary-directly
     # https://softwareengineering.stackexchange.com/questions/187715/validation-of-the-input-parameter-in-caller-code-duplication
