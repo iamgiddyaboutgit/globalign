@@ -1,6 +1,6 @@
 # Tutorial
 
-## Intallation
+## Installation
 
 The package can be installed via pip, conda, or mamba.
 
@@ -16,6 +16,60 @@ globaligner --version
 
 ### Command Line Usage
 
+The entrypoint to the package is through `globaligner`.  For example, to perform an alignment with the default settings, enter a command similar to the following from the environment in which globalign has been installed.
+
 ```bash
 globaligner --seq_1 "ACGT" --seq_2 "AGT"
+```
+
+::: {.callout-note appearance="default" collapse=true icon=false title="Output"}
+
+```
+seq_1
+seq_2
+
+ACGT
+| ||
+A-GT
+
+score: 0
+cost: 7
+###########################################
+# Settings
+###########################################
+scoring_mat:
+    A  C  G  T  -
+A   2 -3 -3 -3 -2
+C  -3  2 -3 -3 -2
+G  -3 -3  2 -3 -2
+T  -3 -3 -3  2 -2
+-  -2 -2 -2 -2  2
+
+gap_open_score: -4
+
+costing_mat:
+   A C G T -
+A  0 5 5 5 3
+C  5 0 5 5 3
+G  5 5 0 5 3
+T  5 5 5 0 3
+-  3 3 3 3 0
+
+gap_open_cost: 4
+```
+:::
+
+### Running within Python
+
+```python
+from globalign.globaligner import find_global_alignment
+
+find_global_alignment(
+    seq_1="CCTGAA",
+    seq_2="GCCGA",
+    match_score=1,
+    mismatch_score=-1,
+    gap_open_score=-2,
+    gap_extension_score=-1
+)
 ```
