@@ -72,7 +72,7 @@ or amino acid sequences."
     parser.add_argument(
         "--scoring_mat_path", 
         required=False,
-        help="File path to a scoring matrix file.  If set, then none of the other options with scores or costs should be set, except for the gap_open options."
+        help="File path to a custom scoring matrix file.  If set, then none of the other options with scores or costs should be set, except for the gap_open options."
     ) 
 
     parser.add_argument(
@@ -96,25 +96,25 @@ or amino acid sequences."
     parser.add_argument(
         "--gap_open_score",
         required=False,
-        help="Score for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -4."
+        help="Score for opening a run of gaps.  It is accumulated even for a run with just one gap in it.  Should be non-positive.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -4."
     ) 
 
     parser.add_argument(
         "--gap_open_cost",
         required=False,
-        help="Cost for opening a run of gaps.  It is accumulated whenever a match/mismatch is followed by a gap.  Should be non-negative.  If set, then none of the options with scores should be set.  Default: 4."
+        help="Cost for opening a run of gaps.  It is accumulated even for a run with just one gap in it.  Should be non-negative.  If set, then none of the options with scores should be set.  Default: 4."
     ) 
 
     parser.add_argument(
         "--gap_extension_score",
         required=False,
-        help="Score for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be negative.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -2."
+        help="Score for extending a run of gaps.  It is accumulated even for a run with just one gap in it.  Should be negative.  Only used if scoring_mat is not specified.  If set, then none of the options with costs should be set.  Default: -2."
     ) 
 
     parser.add_argument(
         "--gap_extension_cost",
         required=False,
-        help="Cost for extending a run of gaps.  It is accumulated even for gaps of length 1.  Should be positive.  If set, then none of the options with scores should be set.  Default: 3."
+        help="Cost for extending a run of gaps.  It is accumulated even for a run with just one gap in it.  Should be positive.  If set, then none of the options with scores should be set.  Default: 3."
     ) 
 
     cmd_line_args = parser.parse_args()
@@ -146,17 +146,59 @@ def find_global_alignment(
 ) -> AlignmentResults:
     """
     Args:
-        gap_open_cost: The cost for a gap just to exist.
-            This cost should be non-negative.
+        input_fasta: File path to a FASTA file containing two 
+            sequences to align.  Do not include if seq_1 and 
+            seq_2 are provided.  If the file contains more than 
+            2 sequences, only the first 2 will be used.
+        output: Output file path to which a file containing 
+            the global alignment will be written.  If not 
+            provided, then the alignment will be written to 
+            stdout.
+        seq_1: First sequence to align.  Do not include if 
+            input_fasta is provided.
+        seq_2: Second sequence to align.  Do not include 
+            if input_fasta is provided.
+        scoring_mat_name: Either 'BLOSUM50' or 'BLOSUM62'.  
+            Do not include this option if you would like 
+            to use a different scoring scheme or if you 
+            are aligning nucleotide sequences.  If set, 
+            then none of the other options with scores 
+            or costs should be set, except for the 
+            gap_open options.
+        scoring_mat_path: File path to a custom scoring 
+            matrix file.  If set, then none of the other 
+            options with scores or costs should be set, 
+            except for the gap_open options.
+        match_score: Score for a match.  Should be positive.  
+            Only used if scoring_mat is not specified.  
+            If set, then none of the options with costs should 
+            be set.  Default: 2.
+        mismatch_score: Score for a mismatch.  Should be negative.  
+            Only used if scoring_mat is not specified.  If set, 
+            then none of the options with costs should be set.  
+            Default: -3.
+        mismatch_cost: Cost for a mismatch.  Should be positive.  
+            If set, then none of the options with scores should 
+            be set.  Default: 5.
+        gap_open_score: Score for opening a run of gaps.  It is 
+            accumulated even for a run with just one gap in it.  
+            Should be non-positive.  Only used if scoring_mat 
+            is not specified.  If set, then none of the options 
+            with costs should be set.  Default: -4.
+        gap_open_cost: Cost for opening a run of gaps.  It is 
+            accumulated even for a run with just one gap in it.  
+            Should be non-negative.  If set, then none of the 
+            options with scores should be set.  
             It can be incurred multiple times
             if there are multiple runs of gaps in the
             alignment. Note that an alignment like
 
-                    AT-CG
-                    ||  |
+                    A--CG
+                    |   |
                     ATT-G
 
             incurs the gap_open_cost twice.
+            Default: 4.
 
     Returns:
         AlignmentResults instance with attributes of:
