@@ -2,6 +2,43 @@
 
 Performs global sequence alignment of two strings.  Allows for affine gap penalties.
 
+# Installation
+
+The package can be installed via `pip`, `conda`, or `mamba`.
+
+## pip
+
+Run the following in a terminal.
+
+```
+python3 -m venv my_venv_for_globalign
+source my_venv_for_globalign/bin/activate
+pip install globalign
+```
+
+# Contributing
+
+You will need to install [quarto](https://quarto.org/) and [quartodoc](https://github.com/machow/quartodoc/) to be able to publish documentation updates.  To build the documentation locally and publish it to GitHub, do the following: From the project root, run:
+
+```bash
+quartodoc build
+quarto render
+```
+
+If you are happy with the resulting website, then push your changes to a branch other than `gh-pages`.  Then, (from a branch other than `gh-pages`), execute the command:
+
+```bash
+quarto publish gh-pages
+```
+
+The public-facing website should now be updated.
+
+To run unit tests, make sure [pytest](https://docs.pytest.org/en/stable/) and [hatch](https://hatch.pypa.io/latest/) are installed and available.  From the directory in which `globalign` has been installed, run
+
+```bash
+hatch test
+```
+
 # Acknowledgements
 
 A special thanks goes to Mykola Akulov and Ragnar Groot Koerkamp for their insightful [blog post](https://curiouscoding.nl/posts/alignment-scores-transform/) without which I would not have known how to make this package work with both scoring and costing schemes.
