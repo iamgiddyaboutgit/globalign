@@ -3,25 +3,12 @@ project:
   type: website
   output-dir: docs
 
-# tell quarto to read the generated sidebar
-# metadata-files:
-#   - reference/_sidebar.yml
-
 website:
   title: "globalign"
   description: "Global Sequence Alignment"
   bread-crumbs: false
   page-navigation: true
   back-to-top-navigation: false
-  # sidebar:
-  #   style: "docked"
-  #   contents:
-  #     - section: "Tutorial"
-  #       contents:
-  #         - reference/tutorial.qmd
-  #     - section: "Reference"
-  #       contents:
-  #         - reference/index.qmd
   navbar:
     tools:
       - icon: github
