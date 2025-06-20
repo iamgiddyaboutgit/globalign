@@ -33,10 +33,24 @@ quarto publish gh-pages
 
 The public-facing website should now be updated.
 
-To run unit tests, make sure [pytest](https://docs.pytest.org/en/stable/) and [hatch](https://hatch.pypa.io/latest/) are installed and available.  From the directory in which `globalign` has been installed, run
+To run unit tests, make sure [pytest](https://docs.pytest.org/en/stable/) and [hatch](https://hatch.pypa.io/latest/) are installed and available.  From the project root, run
 
 ```bash
+rm -rf dist/
+hatch build
 hatch test
+```
+
+To install from source, run the following from the project root after building:
+
+```bash
+pip install --editable .
+```
+
+Versions can be changed via git tags.  For example, run this with the version you want:
+
+```bash
+git tag -a "v0.0.0"
 ```
 
 # Acknowledgements

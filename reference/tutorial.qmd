@@ -55,62 +55,66 @@ options:
   -h, --help            show this help message and exit
   --version             Prints the version and exits.
   -i INPUT_FASTA, --input_fasta INPUT_FASTA
-                        File path to a FASTA file containing two sequences to
-                        align. Do not include if seq_1 and seq_2 are provided.
-                        If the file contains more than 2 sequences, only the
-                        first 2 will be used.
+                        File path to a FASTA file containing two sequences
+                        to align. Do not include if seq_1 and seq_2 are
+                        provided. If the file contains more than 2
+                        sequences, only the first 2 will be used.
   -o OUTPUT, --output OUTPUT
-                        Output file path to which a file containing the global
-                        alignment will be written. If not provided, then the
-                        alignment will be written to stdout.
-  --seq_1 SEQ_1         First sequence to align. Do not include if input_fasta
-                        is provided.
+                        Output file path to which a file containing the
+                        global alignment will be written. If not provided,
+                        then the alignment will be written to stdout.
+  --seq_1 SEQ_1         First sequence to align. Do not include if
+                        input_fasta is provided.
   --seq_2 SEQ_2         Second sequence to align. Do not include if
                         input_fasta is provided.
   --scoring_mat_name {BLOSUM50,BLOSUM62}
-                        Either 'BLOSUM50' or 'BLOSUM62'. Do not include this
-                        option if you would like to use a different scoring
-                        scheme or if you are aligning nucleotide sequences. If
-                        set, then none of the other options with scores or
-                        costs should be set, except for the gap_open options.
+                        Either 'BLOSUM50' or 'BLOSUM62'. Do not include
+                        this option if you would like to use a different
+                        scoring scheme or if you are aligning nucleotide
+                        sequences. If set, then none of the other options
+                        with scores or costs should be set, except for the
+                        gap_open options.
   --scoring_mat_path SCORING_MAT_PATH
-                        File path to a scoring matrix file. If set, then none
-                        of the other options with scores or costs should be
-                        set, except for the gap_open options.
+                        File path to a custom scoring matrix file. If set,
+                        then none of the other options with scores or
+                        costs should be set, except for the gap_open
+                        options.
   --match_score MATCH_SCORE
-                        Score for a match. Should be positive. Only used if
-                        scoring_mat is not specified. If set, then none of the
-                        options with costs should be set. Default: 2.
+                        Score for a match. Should be positive. Only used
+                        if scoring_mat is not specified. If set, then none
+                        of the options with costs should be set. Default:
+                        2.
   --mismatch_score MISMATCH_SCORE
-                        Score for a mismatch. Should be negative. Only used if
-                        scoring_mat is not specified. If set, then none of the
-                        options with costs should be set. Default: -3.
+                        Score for a mismatch. Should be negative. Only
+                        used if scoring_mat is not specified. If set, then
+                        none of the options with costs should be set.
+                        Default: -3.
   --mismatch_cost MISMATCH_COST
-                        Cost for a mismatch. Should be positive. If set, then
-                        none of the options with scores should be set.
-                        Default: 5.
+                        Cost for a mismatch. Should be positive. If set,
+                        then none of the options with scores should be
+                        set. Default: 5.
   --gap_open_score GAP_OPEN_SCORE
                         Score for opening a run of gaps. It is accumulated
-                        whenever a match/mismatch is followed by a gap. Should
-                        be non-positive. Only used if scoring_mat is not
-                        specified. If set, then none of the options with costs
-                        should be set. Default: -4.
+                        even for a run with just one gap in it. Should be
+                        non-positive. Only used if scoring_mat is not
+                        specified. If set, then none of the options with
+                        costs should be set. Default: -4.
   --gap_open_cost GAP_OPEN_COST
                         Cost for opening a run of gaps. It is accumulated
-                        whenever a match/mismatch is followed by a gap. Should
-                        be non-negative. If set, then none of the options with
-                        scores should be set. Default: 4.
+                        even for a run with just one gap in it. Should be
+                        non-negative. If set, then none of the options
+                        with scores should be set. Default: 4.
   --gap_extension_score GAP_EXTENSION_SCORE
-                        Score for extending a run of gaps. It is accumulated
-                        even for gaps of length 1. Should be negative. Only
-                        used if scoring_mat is not specified. If set, then
-                        none of the options with costs should be set. Default:
-                        -2.
+                        Score for extending a run of gaps. It is
+                        accumulated even for a run with just one gap in
+                        it. Should be negative. Only used if scoring_mat
+                        is not specified. If set, then none of the options
+                        with costs should be set. Default: -2.
   --gap_extension_cost GAP_EXTENSION_COST
-                        Cost for extending a run of gaps. It is accumulated
-                        even for gaps of length 1. Should be positive. If set,
-                        then none of the options with scores should be set.
-                        Default: 3.
+                        Cost for extending a run of gaps. It is
+                        accumulated even for a run with just one gap in
+                        it. Should be positive. If set, then none of the
+                        options with scores should be set. Default: 3.
 ```
 :::
 
@@ -166,5 +170,53 @@ T  2 2 2 0 2
 -  1 1 1 1 0
 
 gap_open_cost: 2
+```
+:::
+
+You can also generate random sequences to align.  The algorithm used allows you to generate random sequences that are similar to one another.
+
+```python
+from globalign.globaligner import find_global_alignment
+from globalign.start import draw_two_random_seqs
+
+seq_1, seq_2 = draw_two_random_seqs(["A", "C", "G", "T"], 3, 10, 6, 15, 0.5)
+alignment = find_global_alignment(seq_1=seq_1, seq_2=seq_2)
+alignment.write()
+```
+
+::: {.callout-note appearance="default" collapse=true icon=false title="Example Output"}
+
+```
+seq_1
+seq_2
+
+----GGATTCATCA
+    |||*||||| 
+GAGAGGAATCATC-
+
+score: -5
+cost: 28
+###########################################
+# Settings
+###########################################
+scoring_mat:
+    A  C  G  T  -
+A   2 -3 -3 -3 -2
+C  -3  2 -3 -3 -2
+G  -3 -3  2 -3 -2
+T  -3 -3 -3  2 -2
+-  -2 -2 -2 -2  2
+
+gap_open_score: -4
+
+costing_mat:
+   A C G T -
+A  0 5 5 5 3
+C  5 0 5 5 3
+G  5 5 0 5 3
+T  5 5 5 0 3
+-  3 3 3 3 0
+
+gap_open_cost: 4
 ```
 :::
