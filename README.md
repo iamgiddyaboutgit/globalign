@@ -8,6 +8,8 @@ The package can be installed via `pip`, `conda`, or `mamba`.
 
 ## pip
 
+Run the following in a terminal.
+
 ```
 python3 -m venv my_venv_for_globalign
 source my_venv_for_globalign/bin/activate
