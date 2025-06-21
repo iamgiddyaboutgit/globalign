@@ -3854,26 +3854,21 @@ vertical-align: -.125em;
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
+    <a class="nav-link" href="../reference/index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
     <a class="nav-link active" href="../reference/tutorial.html" aria-current="page"> 
 <span class="menu-text">Tutorial</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../reference/index.html"> 
-<span class="menu-text">Reference</span></a>
+    <a class="nav-link" href="../reference/docs/index.html"> 
+<span class="menu-text">Documentation</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-    <div class="dropdown">
-      <a href title id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label><i class="bi bi-github"></i></a>
-      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
-          <li>
-            <a class="dropdown-item quarto-navbar-tools-item" href="https://github.com/iamgiddyaboutgit/globalign">
-            Source Code
-            </a>
-          </li>
-      </ul>
-    </div>
+    <a href="https://github.com/iamgiddyaboutgit/globalign" title class="quarto-navigation-tool px-1" aria-label><i class="bi bi-github"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
@@ -3889,11 +3884,6 @@ vertical-align: -.125em;
   <ul>
   <li><a href="#tutorial" id="toc-tutorial" class="nav-link active" data-scroll-target="#tutorial">Tutorial</a>
   <ul class="collapse">
-  <li><a href="#installation" id="toc-installation" class="nav-link" data-scroll-target="#installation">Installation</a>
-  <ul class="collapse">
-  <li><a href="#pip" id="toc-pip" class="nav-link" data-scroll-target="#pip">pip</a></li>
-  <li><a href="#check-installation" id="toc-check-installation" class="nav-link" data-scroll-target="#check-installation">Check Installation</a></li>
-  </ul></li>
   <li><a href="#basic-usage" id="toc-basic-usage" class="nav-link" data-scroll-target="#basic-usage">Basic Usage</a>
   <ul class="collapse">
   <li><a href="#command-line-usage" id="toc-command-line-usage" class="nav-link" data-scroll-target="#command-line-usage">Command Line Usage</a></li>
@@ -3911,28 +3901,12 @@ vertical-align: -.125em;
 
 <section id="tutorial" class="level1">
 <h1>Tutorial</h1>
-<section id="installation" class="level2">
-<h2 class="anchored" data-anchor-id="installation">Installation</h2>
-<p>The package can be installed via <code>pip</code>, <code>conda</code>, or <code>mamba</code>.</p>
-<section id="pip" class="level3">
-<h3 class="anchored" data-anchor-id="pip">pip</h3>
-<p>Run the following in a terminal.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> venv my_venv_for_globalign</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> my_venv_for_globalign/bin/activate</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install globalign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="check-installation" class="level3">
-<h3 class="anchored" data-anchor-id="check-installation">Check Installation</h3>
-<p>Try running</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">globaligner</span> <span class="at">--version</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-</section>
 <section id="basic-usage" class="level2">
 <h2 class="anchored" data-anchor-id="basic-usage">Basic Usage</h2>
 <section id="command-line-usage" class="level3">
 <h3 class="anchored" data-anchor-id="command-line-usage">Command Line Usage</h3>
 <p>The entrypoint to the package is through <code>globaligner</code>. For example, to perform an alignment with the default settings, enter a command similar to the following from the environment in which globalign has been installed.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">globaligner</span> <span class="at">--seq_1</span> <span class="st">&quot;ACGT&quot;</span> <span class="at">--seq_2</span> <span class="st">&quot;AGT&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">globaligner</span> <span class="at">--seq_1</span> <span class="st">&quot;ACGT&quot;</span> <span class="at">--seq_2</span> <span class="st">&quot;AGT&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="callout callout-style-default callout-note no-icon callout-titled" title="Output">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -3996,81 +3970,85 @@ Options
   -h, --help            show this help message and exit
   --version             Prints the version and exits.
   -i INPUT_FASTA, --input_fasta INPUT_FASTA
-                        File path to a FASTA file containing two sequences to
-                        align. Do not include if seq_1 and seq_2 are provided.
-                        If the file contains more than 2 sequences, only the
-                        first 2 will be used.
+                        File path to a FASTA file containing two sequences
+                        to align. Do not include if seq_1 and seq_2 are
+                        provided. If the file contains more than 2
+                        sequences, only the first 2 will be used.
   -o OUTPUT, --output OUTPUT
-                        Output file path to which a file containing the global
-                        alignment will be written. If not provided, then the
-                        alignment will be written to stdout.
-  --seq_1 SEQ_1         First sequence to align. Do not include if input_fasta
-                        is provided.
+                        Output file path to which a file containing the
+                        global alignment will be written. If not provided,
+                        then the alignment will be written to stdout.
+  --seq_1 SEQ_1         First sequence to align. Do not include if
+                        input_fasta is provided.
   --seq_2 SEQ_2         Second sequence to align. Do not include if
                         input_fasta is provided.
   --scoring_mat_name {BLOSUM50,BLOSUM62}
-                        Either &#39;BLOSUM50&#39; or &#39;BLOSUM62&#39;. Do not include this
-                        option if you would like to use a different scoring
-                        scheme or if you are aligning nucleotide sequences. If
-                        set, then none of the other options with scores or
-                        costs should be set, except for the gap_open options.
+                        Either &#39;BLOSUM50&#39; or &#39;BLOSUM62&#39;. Do not include
+                        this option if you would like to use a different
+                        scoring scheme or if you are aligning nucleotide
+                        sequences. If set, then none of the other options
+                        with scores or costs should be set, except for the
+                        gap_open options.
   --scoring_mat_path SCORING_MAT_PATH
-                        File path to a scoring matrix file. If set, then none
-                        of the other options with scores or costs should be
-                        set, except for the gap_open options.
+                        File path to a custom scoring matrix file. If set,
+                        then none of the other options with scores or
+                        costs should be set, except for the gap_open
+                        options.
   --match_score MATCH_SCORE
-                        Score for a match. Should be positive. Only used if
-                        scoring_mat is not specified. If set, then none of the
-                        options with costs should be set. Default: 2.
+                        Score for a match. Should be positive. Only used
+                        if scoring_mat is not specified. If set, then none
+                        of the options with costs should be set. Default:
+                        2.
   --mismatch_score MISMATCH_SCORE
-                        Score for a mismatch. Should be negative. Only used if
-                        scoring_mat is not specified. If set, then none of the
-                        options with costs should be set. Default: -3.
+                        Score for a mismatch. Should be negative. Only
+                        used if scoring_mat is not specified. If set, then
+                        none of the options with costs should be set.
+                        Default: -3.
   --mismatch_cost MISMATCH_COST
-                        Cost for a mismatch. Should be positive. If set, then
-                        none of the options with scores should be set.
-                        Default: 5.
+                        Cost for a mismatch. Should be positive. If set,
+                        then none of the options with scores should be
+                        set. Default: 5.
   --gap_open_score GAP_OPEN_SCORE
                         Score for opening a run of gaps. It is accumulated
-                        whenever a match/mismatch is followed by a gap. Should
-                        be non-positive. Only used if scoring_mat is not
-                        specified. If set, then none of the options with costs
-                        should be set. Default: -4.
+                        even for a run with just one gap in it. Should be
+                        non-positive. Only used if scoring_mat is not
+                        specified. If set, then none of the options with
+                        costs should be set. Default: -4.
   --gap_open_cost GAP_OPEN_COST
                         Cost for opening a run of gaps. It is accumulated
-                        whenever a match/mismatch is followed by a gap. Should
-                        be non-negative. If set, then none of the options with
-                        scores should be set. Default: 4.
+                        even for a run with just one gap in it. Should be
+                        non-negative. If set, then none of the options
+                        with scores should be set. Default: 4.
   --gap_extension_score GAP_EXTENSION_SCORE
-                        Score for extending a run of gaps. It is accumulated
-                        even for gaps of length 1. Should be negative. Only
-                        used if scoring_mat is not specified. If set, then
-                        none of the options with costs should be set. Default:
-                        -2.
+                        Score for extending a run of gaps. It is
+                        accumulated even for a run with just one gap in
+                        it. Should be negative. Only used if scoring_mat
+                        is not specified. If set, then none of the options
+                        with costs should be set. Default: -2.
   --gap_extension_cost GAP_EXTENSION_COST
-                        Cost for extending a run of gaps. It is accumulated
-                        even for gaps of length 1. Should be positive. If set,
-                        then none of the options with scores should be set.
-                        Default: 3.</code></pre>
+                        Cost for extending a run of gaps. It is
+                        accumulated even for a run with just one gap in
+                        it. Should be positive. If set, then none of the
+                        options with scores should be set. Default: 3.</code></pre>
 </div>
 </div>
 </div>
 </section>
 <section id="running-within-python" class="level3">
 <h3 class="anchored" data-anchor-id="running-within-python">Running within Python</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> globalign.globaligner <span class="im">import</span> find_global_alignment</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>alignment_results <span class="op">=</span> find_global_alignment(</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    output<span class="op">=</span><span class="st">&quot;alignment.txt&quot;</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    seq_1<span class="op">=</span><span class="st">&quot;CCTGAA&quot;</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    seq_2<span class="op">=</span><span class="st">&quot;GCCGA&quot;</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    match_score<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    mismatch_score<span class="op">=-</span><span class="dv">1</span>,</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    gap_open_score<span class="op">=-</span><span class="dv">2</span>,</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    gap_extension_score<span class="op">=-</span><span class="dv">1</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>alignment_results.write()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> globalign.globaligner <span class="im">import</span> find_global_alignment</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>alignment_results <span class="op">=</span> find_global_alignment(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    output<span class="op">=</span><span class="st">&quot;alignment.txt&quot;</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    seq_1<span class="op">=</span><span class="st">&quot;CCTGAA&quot;</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    seq_2<span class="op">=</span><span class="st">&quot;GCCGA&quot;</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    match_score<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    mismatch_score<span class="op">=-</span><span class="dv">1</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    gap_open_score<span class="op">=-</span><span class="dv">2</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    gap_extension_score<span class="op">=-</span><span class="dv">1</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>alignment_results.write()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="callout callout-style-default callout-note no-icon callout-titled" title="alignment.txt">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -4114,6 +4092,66 @@ T  2 2 2 0 2
 -  1 1 1 1 0
 
 gap_open_cost: 2</code></pre>
+</div>
+</div>
+</div>
+<p>You can also generate random sequences to align. The algorithm used allows you to generate random sequences that are similar to one another.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> globalign.globaligner <span class="im">import</span> find_global_alignment</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> globalign.start <span class="im">import</span> draw_two_random_seqs</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>seq_1, seq_2 <span class="op">=</span> draw_two_random_seqs(</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    alphabet<span class="op">=</span>[<span class="st">&quot;A&quot;</span>, <span class="st">&quot;C&quot;</span>, <span class="st">&quot;G&quot;</span>, <span class="st">&quot;T&quot;</span>], </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    min_len_seq_1<span class="op">=</span><span class="dv">3</span>, </span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    max_len_seq_1<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    min_len_seq_2<span class="op">=</span><span class="dv">6</span>, </span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    max_len_seq_2<span class="op">=</span><span class="dv">15</span>, </span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    divergence<span class="op">=</span><span class="fl">0.5</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>alignment <span class="op">=</span> find_global_alignment(seq_1<span class="op">=</span>seq_1, seq_2<span class="op">=</span>seq_2)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>alignment.write()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Example Output">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Example Output
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<pre><code>seq_1
+seq_2
+
+----GGATTCATCA
+    |||*||||| 
+GAGAGGAATCATC-
+
+score: -5
+cost: 28
+###########################################
+# Settings
+###########################################
+scoring_mat:
+    A  C  G  T  -
+A   2 -3 -3 -3 -2
+C  -3  2 -3 -3 -2
+G  -3 -3  2 -3 -2
+T  -3 -3 -3  2 -2
+-  -2 -2 -2 -2  2
+
+gap_open_score: -4
+
+costing_mat:
+   A C G T -
+A  0 5 5 5 3
+C  5 0 5 5 3
+G  5 5 0 5 3
+T  5 5 5 0 3
+-  3 3 3 3 0
+
+gap_open_cost: 4</code></pre>
 </div>
 </div>
 </div>

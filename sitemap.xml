@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://iamgiddyaboutgit.github.io/globalign/reference/conclude.html</loc>
-    <lastmod>2025-06-19T18:08:51.497Z</lastmod>
+    <loc>https://iamgiddyaboutgit.github.io/globalign/reference/docs/conclude.html</loc>
+    <lastmod>2025-06-20T17:25:20.319Z</lastmod>
+  </url>
+  <url>
+    <loc>https://iamgiddyaboutgit.github.io/globalign/reference/docs/globaligner.html</loc>
+    <lastmod>2025-06-20T21:16:52.955Z</lastmod>
   </url>
   <url>
     <loc>https://iamgiddyaboutgit.github.io/globalign/reference/tutorial.html</loc>
-    <lastmod>2025-06-20T03:16:41.134Z</lastmod>
+    <lastmod>2025-06-21T00:32:59.547Z</lastmod>
   </url>
   <url>
     <loc>https://iamgiddyaboutgit.github.io/globalign/reference/index.html</loc>
-    <lastmod>2025-06-19T22:56:56.335Z</lastmod>
+    <lastmod>2025-06-20T19:10:59.494Z</lastmod>
   </url>
   <url>
-    <loc>https://iamgiddyaboutgit.github.io/globalign/reference/globaligner.html</loc>
-    <lastmod>2025-06-19T18:08:51.476Z</lastmod>
+    <loc>https://iamgiddyaboutgit.github.io/globalign/reference/docs/index.html</loc>
+    <lastmod>2025-06-21T01:13:46.949Z</lastmod>
   </url>
   <url>
-    <loc>https://iamgiddyaboutgit.github.io/globalign/reference/start.html</loc>
-    <lastmod>2025-06-19T18:08:51.450Z</lastmod>
+    <loc>https://iamgiddyaboutgit.github.io/globalign/reference/docs/start.html</loc>
+    <lastmod>2025-06-20T21:16:52.926Z</lastmod>
   </url>
 </urlset>
