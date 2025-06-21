@@ -51,6 +51,7 @@ Versions can be changed via git tags.  For example, run this with the version yo
 
 ```bash
 git tag -a "v0.0.0"
+git push origin v0.0.0
 ```
 
 # Acknowledgements
