@@ -536,8 +536,50 @@ def dp_array_backward(
         i += delta_i
         j += delta_j
 
-        if i == 0 and j == 0:
+        # Shortcut the logic if we trace back
+        # to the top row or left column of
+        # dp_array.
+        if i == 0:
+            # There's only one way to do any
+            # more trace-backing.
+            # Trace-back until j == 0.
+            for j in range(j, 0, -1):
+                seq_2_index = j - 1
+
+                move_params = dict(
+                    seq_1 = seq_1,
+                    seq_2 = seq_2, 
+                    seq_1_index = seq_1_index,
+                    seq_2_index = seq_2_index,
+                    seq_1_aligned = seq_1_aligned,
+                    middle_part = middle_part,
+                    seq_2_aligned = seq_2_aligned
+                )
+
+                # Make the move in the alignment graph.
+                take_gap_in_seq_1(**move_params)
             break
+        elif j == 0:
+            # There's only one way to do any
+            # more trace-backing.
+            # Trace-back until i == 0.
+            for i in range(i, 0, -1):
+                seq_1_index = i - 1
+        
+                move_params = dict(
+                    seq_1 = seq_1,
+                    seq_2 = seq_2, 
+                    seq_1_index = seq_1_index,
+                    seq_2_index = seq_2_index,
+                    seq_1_aligned = seq_1_aligned,
+                    middle_part = middle_part,
+                    seq_2_aligned = seq_2_aligned
+                )
+
+                # Make the move in the alignment graph.
+                take_gap_in_seq_2(**move_params)
+            break
+            
 
     seq_1_aligned.reverse()
     seq_2_aligned.reverse()
