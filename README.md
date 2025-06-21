@@ -16,6 +16,8 @@ source my_venv_for_globalign/bin/activate
 pip install globalign
 ```
 
+# [Documentation](https://iamgiddyaboutgit.github.io/globalign/)
+
 # Contributing
 
 You will need to install [quarto](https://quarto.org/) and [quartodoc](https://github.com/machow/quartodoc/) to be able to publish documentation updates.  To build the documentation locally and publish it to GitHub, do the following: From the project root, run:
@@ -33,7 +35,7 @@ quarto publish gh-pages
 
 The public-facing website should now be updated.
 
-To run unit tests, make sure [pytest](https://docs.pytest.org/en/stable/) and [hatch](https://hatch.pypa.io/latest/) are installed and available.  From the project root, run
+To run unit tests, make sure [pytest](https://docs.pytest.org/en/stable/) and [hatch](https://hatch.pypa.io/latest/) are installed and available.  Building also requires the [hatch-vcs](https://github.com/ofek/hatch-vcs) plugin.  To build and test, do the following: From the project root, run:
 
 ```bash
 rm -rf dist/

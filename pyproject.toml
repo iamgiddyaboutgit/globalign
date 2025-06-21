@@ -30,7 +30,7 @@ dependencies = []
 globaligner = "globalign.globaligner:main"
 
 [project.urls]
-Documentation = "https://github.com/iamgiddyaboutgit/globalign#readme"
+Documentation = "https://iamgiddyaboutgit.github.io/globalign/"
 Issues = "https://github.com/iamgiddyaboutgit/globalign/issues"
 Source = "https://github.com/iamgiddyaboutgit/globalign"
 
