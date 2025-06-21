@@ -1,9 +1,21 @@
-# Function reference {.doc .doc-index}
+# Installation
 
-## Reference
+The package can be installed via `pip`, `conda`, or `mamba`.
 
-| | |
-| --- | --- |
-| [start](start.qmd#globalign.start) |  |
-| [globaligner](globaligner.qmd#globalign.globaligner) | Perform optimal global alignment of two nucleotide or amino acid sequences. |
-| [conclude](conclude.qmd#globalign.conclude) |  |
+## pip
+
+Run the following in a terminal.
+
+```bash
+python3 -m venv my_venv_for_globalign
+source my_venv_for_globalign/bin/activate
+pip install globalign
+```
+
+## Check Installation
+
+Try running 
+
+```bash
+globaligner --version
+```

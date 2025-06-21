@@ -689,7 +689,7 @@ def draw_random_seq(
     alphabet:list[str], 
     min_len:int, 
     max_len:int,
-    seed:int
+    seed:int=None
 ) -> str:
     """
     Raises:
@@ -727,7 +727,7 @@ def draw_two_random_seqs(
     divergence:float,
     seed_1:int=None,
     seed_2:int=None
-) -> list[str]:
+) -> tuple[str]:
     """
     Args:
         divergence: a number between 0 and 1, inclusive.
@@ -861,7 +861,7 @@ def draw_two_random_seqs(
         seq_2_list[seq_2_index_for_sub] = letters_to_sub[s]
 
     seq_2 = "".join(seq_2_list)
-    return [seq_1, seq_2]
+    return (seq_1, seq_2)
 
 def make_matrix(num_rows:int, num_cols:int, fill_val:int|float|str|None) -> list[list[int|float|str|None]]:
     """Make a matrix as a nested list.
