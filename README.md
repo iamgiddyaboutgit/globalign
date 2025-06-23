@@ -24,10 +24,9 @@ We recommend using mamba, but conda works too.  Be careful not to install into y
 conda create -n globalign_conda_test
 conda activate globalign_conda_test
 conda install --channel conda-forge globalign
-globaligner --version
 ```
 
-## mamba
+## [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html)
 
 A drop-in replacement for conda:
 
@@ -35,7 +34,6 @@ A drop-in replacement for conda:
 mamba create -n globalign_conda_test
 mamba activate globalign_conda_test
 mamba install --channel conda-forge globalign
-globaligner --version
 ```
 
 # [Documentation](https://iamgiddyaboutgit.github.io/globalign/)
