@@ -3885,6 +3885,8 @@ vertical-align: -.125em;
   <li><a href="#installation" id="toc-installation" class="nav-link active" data-scroll-target="#installation">Installation</a>
   <ul class="collapse">
   <li><a href="#pip" id="toc-pip" class="nav-link" data-scroll-target="#pip">pip</a></li>
+  <li><a href="#conda" id="toc-conda" class="nav-link" data-scroll-target="#conda">conda</a></li>
+  <li><a href="#mamba" id="toc-mamba" class="nav-link" data-scroll-target="#mamba">mamba</a></li>
   <li><a href="#check-installation" id="toc-check-installation" class="nav-link" data-scroll-target="#check-installation">Check Installation</a></li>
   </ul></li>
   </ul>
@@ -3906,10 +3908,24 @@ vertical-align: -.125em;
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> my_venv_for_globalign/bin/activate</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install globalign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
+<section id="conda" class="level2">
+<h2 class="anchored" data-anchor-id="conda">conda</h2>
+<p>We recommend using mamba, but conda works too. Be careful not to install into your base environment. Here, we create and activate an evironment first. For more information on using conda to install packages, refer to the <a href="https://www.anaconda.com/docs/tools/working-with-conda/packages/install-packages#using-the-channel-flag">documentation</a>. Run the following in a terminal.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> create <span class="at">-n</span> globalign_conda_test</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> activate globalign_conda_test</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">--channel</span> conda-forge globalign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="mamba" class="level2">
+<h2 class="anchored" data-anchor-id="mamba"><a href="https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html">mamba</a></h2>
+<p>A drop-in replacement for conda:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mamba</span> create <span class="at">-n</span> globalign_conda_test</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mamba</span> activate globalign_conda_test</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">mamba</span> install <span class="at">--channel</span> conda-forge globalign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
 <section id="check-installation" class="level2">
 <h2 class="anchored" data-anchor-id="check-installation">Check Installation</h2>
 <p>Try running</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">globaligner</span> <span class="at">--version</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">globaligner</span> <span class="at">--version</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>

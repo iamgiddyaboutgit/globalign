@@ -46,7 +46,7 @@
     "href": "reference/index.html",
     "title": "Installation",
     "section": "",
-    "text": "The package can be installed via pip, conda, or mamba.\n\n\nRun the following in a terminal.\npython3 -m venv my_venv_for_globalign\nsource my_venv_for_globalign/bin/activate\npip install globalign\n\n\n\nTry running\nglobaligner --version"
+    "text": "The package can be installed via pip, conda, or mamba.\n\n\nRun the following in a terminal.\npython3 -m venv my_venv_for_globalign\nsource my_venv_for_globalign/bin/activate\npip install globalign\n\n\n\nWe recommend using mamba, but conda works too. Be careful not to install into your base environment. Here, we create and activate an evironment first. For more information on using conda to install packages, refer to the documentation. Run the following in a terminal.\nconda create -n globalign_conda_test\nconda activate globalign_conda_test\nconda install --channel conda-forge globalign\n\n\n\nA drop-in replacement for conda:\nmamba create -n globalign_conda_test\nmamba activate globalign_conda_test\nmamba install --channel conda-forge globalign\n\n\n\nTry running\nglobaligner --version"
   },
   {
     "objectID": "reference/index.html#pip",
@@ -54,6 +54,20 @@
     "title": "Installation",
     "section": "",
     "text": "Run the following in a terminal.\npython3 -m venv my_venv_for_globalign\nsource my_venv_for_globalign/bin/activate\npip install globalign"
+  },
+  {
+    "objectID": "reference/index.html#conda",
+    "href": "reference/index.html#conda",
+    "title": "Installation",
+    "section": "",
+    "text": "We recommend using mamba, but conda works too. Be careful not to install into your base environment. Here, we create and activate an evironment first. For more information on using conda to install packages, refer to the documentation. Run the following in a terminal.\nconda create -n globalign_conda_test\nconda activate globalign_conda_test\nconda install --channel conda-forge globalign"
+  },
+  {
+    "objectID": "reference/index.html#mamba",
+    "href": "reference/index.html#mamba",
+    "title": "Installation",
+    "section": "",
+    "text": "A drop-in replacement for conda:\nmamba create -n globalign_conda_test\nmamba activate globalign_conda_test\nmamba install --channel conda-forge globalign"
   },
   {
     "objectID": "reference/index.html#check-installation",
