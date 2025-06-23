@@ -10,10 +10,32 @@ The package can be installed via `pip`, `conda`, or `mamba`.
 
 Run the following in a terminal.
 
-```
+```bash
 python3 -m venv my_venv_for_globalign
 source my_venv_for_globalign/bin/activate
 pip install globalign
+```
+
+## conda
+
+We recommend using mamba, but conda works too.  Be careful not to install into your base environment.  Here, we create and activate an evironment first.  For more information on using conda to install packages, refer to the [documentation](https://www.anaconda.com/docs/tools/working-with-conda/packages/install-packages#using-the-channel-flag).  Run the following in a terminal.
+
+```bash
+conda create -n globalign_conda_test
+conda activate globalign_conda_test
+conda install --channel conda-forge globalign
+globaligner --version
+```
+
+## mamba
+
+A drop-in replacement for conda:
+
+```bash
+mamba create -n globalign_conda_test
+mamba activate globalign_conda_test
+mamba install --channel conda-forge globalign
+globaligner --version
 ```
 
 # [Documentation](https://iamgiddyaboutgit.github.io/globalign/)
