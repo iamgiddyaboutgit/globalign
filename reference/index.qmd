@@ -22,7 +22,7 @@ conda activate globalign_conda_test
 conda install --channel conda-forge globalign
 ```
 
-## mamba
+## [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html)
 
 A drop-in replacement for conda:
 
