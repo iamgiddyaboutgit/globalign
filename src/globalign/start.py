@@ -316,7 +316,6 @@ def validate_and_transform_args(
         costing_mat_validated = create_costing_mat(
             common_alphabet=common_alphabet,
             mismatch_cost=simple_costing_settings.mismatch_cost,
-            gap_open_cost=simple_costing_settings.gap_open_cost,
             gap_extension_cost=simple_costing_settings.gap_extension_cost
         )
         scoring_mat_validated = costing_mat_to_scoring_mat(
@@ -447,7 +446,6 @@ def create_scoring_mat(
 def create_costing_mat(
     common_alphabet: list, 
     mismatch_cost: int, 
-    gap_open_cost: int,
     gap_extension_cost: int
 ) -> dict[dict]:
     common_alphabet.append("-")
