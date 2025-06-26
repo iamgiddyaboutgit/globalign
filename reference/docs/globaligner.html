@@ -3889,6 +3889,7 @@ vertical-align: -.125em;
   <li><a href="#globalign.globaligner.dp_array_backward" id="toc-globalign.globaligner.dp_array_backward" class="nav-link" data-scroll-target="#globalign.globaligner.dp_array_backward">dp_array_backward</a></li>
   <li><a href="#globalign.globaligner.dp_array_forward" id="toc-globalign.globaligner.dp_array_forward" class="nav-link" data-scroll-target="#globalign.globaligner.dp_array_forward">dp_array_forward</a></li>
   <li><a href="#globalign.globaligner.find_global_alignment" id="toc-globalign.globaligner.find_global_alignment" class="nav-link" data-scroll-target="#globalign.globaligner.find_global_alignment">find_global_alignment</a></li>
+  <li><a href="#globalign.globaligner.make_dp_array" id="toc-globalign.globaligner.make_dp_array" class="nav-link" data-scroll-target="#globalign.globaligner.make_dp_array">make_dp_array</a></li>
   <li><a href="#globalign.globaligner.take_gap_in_seq_1" id="toc-globalign.globaligner.take_gap_in_seq_1" class="nav-link" data-scroll-target="#globalign.globaligner.take_gap_in_seq_1">take_gap_in_seq_1</a></li>
   <li><a href="#globalign.globaligner.take_gap_in_seq_2" id="toc-globalign.globaligner.take_gap_in_seq_2" class="nav-link" data-scroll-target="#globalign.globaligner.take_gap_in_seq_2">take_gap_in_seq_2</a></li>
   <li><a href="#globalign.globaligner.take_match" id="toc-globalign.globaligner.take_match" class="nav-link" data-scroll-target="#globalign.globaligner.take_match">take_match</a></li>
@@ -3931,18 +3932,22 @@ vertical-align: -.125em;
 <td></td>
 </tr>
 <tr class="even">
+<td><a href="#globalign.globaligner.make_dp_array">make_dp_array</a></td>
+<td>Creates a dynamic programming array.</td>
+</tr>
+<tr class="odd">
 <td><a href="#globalign.globaligner.take_gap_in_seq_1">take_gap_in_seq_1</a></td>
 <td>Modifies the lists in-place.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="#globalign.globaligner.take_gap_in_seq_2">take_gap_in_seq_2</a></td>
 <td>Modifies the lists in-place.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="#globalign.globaligner.take_match">take_match</a></td>
 <td>Modifies the lists in-place.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="#globalign.globaligner.take_mismatch">take_mismatch</a></td>
 <td>Modifies the lists in-place.</td>
 </tr>
@@ -4118,22 +4123,14 @@ vertical-align: -.125em;
 </table>
 </section>
 </section>
+<section id="globalign.globaligner.make_dp_array" class="level3">
+<h3 class="anchored" data-anchor-id="globalign.globaligner.make_dp_array">make_dp_array</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>globaligner.make_dp_array(seq_1, seq_2, costing_mat, max_cost, gap_open_cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Creates a dynamic programming array.</p>
+</section>
 <section id="globalign.globaligner.take_gap_in_seq_1" class="level3">
 <h3 class="anchored" data-anchor-id="globalign.globaligner.take_gap_in_seq_1">take_gap_in_seq_1</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>globaligner.take_gap_in_seq_1(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    seq_1,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    seq_2,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    seq_1_index,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    seq_2_index,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    seq_1_aligned,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    middle_part,</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    seq_2_aligned,</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Modifies the lists in-place.</p>
-</section>
-<section id="globalign.globaligner.take_gap_in_seq_2" class="level3">
-<h3 class="anchored" data-anchor-id="globalign.globaligner.take_gap_in_seq_2">take_gap_in_seq_2</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>globaligner.take_gap_in_seq_2(</span>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>globaligner.take_gap_in_seq_1(</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    seq_1,</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    seq_2,</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    seq_1_index,</span>
@@ -4144,9 +4141,9 @@ vertical-align: -.125em;
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Modifies the lists in-place.</p>
 </section>
-<section id="globalign.globaligner.take_match" class="level3">
-<h3 class="anchored" data-anchor-id="globalign.globaligner.take_match">take_match</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>globaligner.take_match(</span>
+<section id="globalign.globaligner.take_gap_in_seq_2" class="level3">
+<h3 class="anchored" data-anchor-id="globalign.globaligner.take_gap_in_seq_2">take_gap_in_seq_2</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>globaligner.take_gap_in_seq_2(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    seq_1,</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    seq_2,</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    seq_1_index,</span>
@@ -4157,9 +4154,9 @@ vertical-align: -.125em;
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Modifies the lists in-place.</p>
 </section>
-<section id="globalign.globaligner.take_mismatch" class="level3">
-<h3 class="anchored" data-anchor-id="globalign.globaligner.take_mismatch">take_mismatch</h3>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>globaligner.take_mismatch(</span>
+<section id="globalign.globaligner.take_match" class="level3">
+<h3 class="anchored" data-anchor-id="globalign.globaligner.take_match">take_match</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>globaligner.take_match(</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    seq_1,</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    seq_2,</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    seq_1_index,</span>
@@ -4168,6 +4165,19 @@ vertical-align: -.125em;
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    middle_part,</span>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    seq_2_aligned,</span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Modifies the lists in-place.</p>
+</section>
+<section id="globalign.globaligner.take_mismatch" class="level3">
+<h3 class="anchored" data-anchor-id="globalign.globaligner.take_mismatch">take_mismatch</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>globaligner.take_mismatch(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    seq_1,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    seq_2,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    seq_1_index,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    seq_2_index,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    seq_1_aligned,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    middle_part,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    seq_2_aligned,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Modifies the lists in-place.</p>
 
 
