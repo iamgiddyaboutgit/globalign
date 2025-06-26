@@ -211,6 +211,11 @@ def validate_and_transform_args(
     # Check that the product of the lengths of the sequences is
     # positive and less than 20_000_000.     
     check_seq_lengths(seq_1, seq_2, 20_000_000)
+    # Check that the sequences do not contain a "-" character
+    # because this is used for gaps internally (and so cannot
+    # be used for a letter).
+    if "-" in seq_1 or "-" in seq_2:
+        raise RuntimeError("The current implementation does not allow for '-' characters in the sequences because they are used internally for gaps.  Please replace this character in your sequences.")
     seq_1_validated = seq_1.upper()
     seq_2_validated = seq_2.upper()
     del seq_1
