@@ -760,7 +760,7 @@ def make_dp_array(
     max_cost: int,
     gap_open_cost: int|float
     ) -> list[list]:
-    # Create the array.
+    """Creates a dynamic programming array."""
     seq_1_len = len(seq_1)
     seq_2_len = len(seq_2)
     dim_1 = seq_1_len + 1
